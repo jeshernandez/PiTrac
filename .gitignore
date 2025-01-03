@@ -1,0 +1,7 @@
+# Visual Code 
+# Ignoring root .vscode folder. 
+.vscode/
+
+/Software/LMSourceCode/
+# Ignoring ~/build inside LMSourceCode
+/Software/LMSourceCode/ImageProcessing/build
