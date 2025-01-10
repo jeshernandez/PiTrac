@@ -15,7 +15,7 @@ Configuration:
 
     RollingFile:
       - name: LogToRollingFile
-        fileName: llogs/golfsim_app.log
+        fileName: logs/golfsim_app.log
         filePattern: "logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz"
         PatternLayout:
           pattern: "[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"

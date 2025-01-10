@@ -454,7 +454,7 @@ public class MonitorServlet extends HttpServlet {
                 }
  
                 default: {
-                    s = "N/A (" + String.valueOf(t.ordinal()) + ")";
+                    s = "N/A (" + t.name() + ")";
                 break;
                 }
             }
@@ -615,7 +615,7 @@ public class MonitorServlet extends HttpServlet {
             JsonElement ipcInterfaceElement = gsConfigElement.getAsJsonObject().get("ipc_interface");
             JsonElement userInterfaceElement = gsConfigElement.getAsJsonObject().get("user_interface");
             
-            String pngSuffix = new String(".png");
+            String pngSuffix = ".png";
 
             JsonElement kWebServerTomcatShareDirectoryElement = userInterfaceElement.getAsJsonObject().get("kWebServerTomcatShareDirectory");
             JsonElement kWebServerResultBallExposureCandidatesElement = userInterfaceElement.getAsJsonObject().get("kWebServerResultBallExposureCandidates");
@@ -759,7 +759,7 @@ public class MonitorServlet extends HttpServlet {
             HttpSession httpSession = request.getSession();
             Long times = (Long) httpSession.getAttribute("times");
             if (times == null) {
-              httpSession.setAttribute("times", new Long(0));
+              httpSession.setAttribute("times", 0L);
             }
             
             long value = 1;
