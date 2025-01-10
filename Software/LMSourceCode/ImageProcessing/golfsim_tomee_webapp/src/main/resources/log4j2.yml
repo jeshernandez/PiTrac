@@ -7,15 +7,15 @@ Configuration:
       PatternLayout:
         Pattern: "[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"
 
-    #File:
-    #  name: File
-    #  fileName: logs/app.log
-    #  PatternLayout:
-    #    Pattern: "%d %p %C{1.} [%t] %m%n"
+    File:
+      name: File
+      fileName: logs/golfsim_app.log
+      PatternLayout:
+        Pattern: "%d %p %C{1.} [%t] %m%n"
 
     RollingFile:
       - name: LogToRollingFile
-        fileName: logs/app.log
+        fileName: llogs/golfsim_app.log
         filePattern: "logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz"
         PatternLayout:
           pattern: "[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"
@@ -27,12 +27,13 @@ Configuration:
 
   Loggers:
     logger:
-      - name: com.mkyong
-        level: debug
+      - name: com.verdanttechs.jakarta.ee9
+        level: info
         additivity: false
         AppenderRef:
           - ref: LogToConsole
           - ref: LogToRollingFile
+          - ref: File
 
     Root:
       level: error

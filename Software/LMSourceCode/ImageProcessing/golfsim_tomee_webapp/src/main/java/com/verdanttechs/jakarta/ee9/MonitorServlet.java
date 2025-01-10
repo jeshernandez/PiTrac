@@ -2,6 +2,8 @@ package com.verdanttechs.jakarta.ee9;
 
 import java.util.Vector;
 
+import com.verdanttechs.jakarta.ee9.types.GsClubType;
+import com.verdanttechs.jakarta.ee9.types.GsIPCResultType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.msgpack.core.MessagePack;
@@ -31,6 +33,7 @@ import jakarta.jms.JMSException;
 import jakarta.jms.ExceptionListener;
 
 import java.io.FileReader;
+import java.io.IOException;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
@@ -38,46 +41,18 @@ import com.google.gson.JsonElement;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import java.io.IOException;
-
 
 @WebServlet("/monitor")
 public class MonitorServlet extends HttpServlet {
 
     private static Logger logger =  LogManager.getLogger(MonitorServlet.class);
-    public enum GsIPCResultType { 
-        kUnknown,
-        kInitializing,
-        kWaitingForBallToAppear,
-        kWaitingForSimulatorArmed,
-        kPausingForBallStabilization,
-        kMultipleBallsPresent,
-        kBallPlacedAndReadyForHit,
-        kHit,
-        kError,
-        kCalibrationResults;
-    }
 
-    public enum IPCMessageType {
-        kUnknown,
-        kRequestForCamera2Image,
-        kCamera2Image,
-        kRequestForCamera2TestStillImage,
-        kResults,
-        kShutdown,
-        kCamera2ReturnPreImage,
-        kControlMessage;
-    }
-
-    public enum GsClubType { 
-   		kNotSelected,
-		kDriver,
-		kIron,
-		kPutter;
-    }
+    final static String MQ_HOST_ADDRESS = System.getenv("PITRAC_MQ_HOST_ADDRESS");
+    final static String MQ_HOST_PORT = "61616";
 
     final static int kClubChangeToPutterControlMsgType = 1;
     final static int kClubChangeToDriverControlMsgType = 2;
+
 
     public static class GsControlMessage {
         public GsClubType club_type_ = GsClubType.kNotSelected;
@@ -593,7 +568,7 @@ public class MonitorServlet extends HttpServlet {
 
     private static String kGolfSimTopic = "Golf.Sim";
     // Set from JSON file.  The default should probably be a symbolic address like rsp02
-    private static String kWebActiveMQHostAddress = "tcp://10.0.0.41:61616";
+    private static String kWebActiveMQHostAddress = "tcp://"+MQ_HOST_ADDRESS+":"+MQ_HOST_PORT;
     private static String kWebServerTomcatShareDirectory;
     private static String kWebServerResultBallExposureCandidates;
     private static String kWebServerResultSpinBall1Image;
@@ -650,9 +625,10 @@ public class MonitorServlet extends HttpServlet {
             JsonElement kWebServerErrorExposuresImageElement = userInterfaceElement.getAsJsonObject().get("kWebServerErrorExposuresImage");
             JsonElement kWebServerBallSearchAreaImageElement = userInterfaceElement.getAsJsonObject().get("kWebServerBallSearchAreaImage");
             JsonElement kRefreshTimeSecondsElement = userInterfaceElement.getAsJsonObject().get("kRefreshTimeSeconds");
-            
-            kWebActiveMQHostAddress = (String) ipcInterfaceElement.getAsJsonObject().get("kWebActiveMQHostAddress").getAsString();
-            
+
+            if(MQ_HOST_ADDRESS == null) {
+                kWebActiveMQHostAddress = (String) ipcInterfaceElement.getAsJsonObject().get("kWebActiveMQHostAddress").getAsString();
+            }
             kWebServerTomcatShareDirectory = (String) kWebServerTomcatShareDirectoryElement.getAsString();
             kWebServerResultBallExposureCandidates = (String) kWebServerResultBallExposureCandidatesElement.getAsString() + pngSuffix;
             kWebServerResultSpinBall1Image = (String) kWebServerResultSpinBall1ImageElement.getAsString() + pngSuffix;
