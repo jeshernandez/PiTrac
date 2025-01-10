@@ -804,6 +804,7 @@ public class MonitorServlet extends HttpServlet {
             try {
 
                 System.out.println("GolfSimConsumer started.");
+                logger.info("Log: GolfSimConsumer started.");
                 ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(kWebActiveMQHostAddress);
 
                 Connection connection = connectionFactory.createConnection();
