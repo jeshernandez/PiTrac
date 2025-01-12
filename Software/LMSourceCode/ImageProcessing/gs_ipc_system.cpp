@@ -26,7 +26,7 @@ using namespace std;
 
 namespace golf_sim {
 
-    std::string GolfSimIpcSystem::kWebActiveMQHostAddress = "tcp://10.0.0.41:61616";
+    std::string GolfSimIpcSystem::kWebActiveMQHostAddress = "tcp://10.0.0.81:61616";
 
     const std::string GolfSimIpcSystem::kGolfSimMessageTypeTag = "Message Type";
     const std::string GolfSimIpcSystem::kGolfSimMessageType = "GolfSimIPCMessage";

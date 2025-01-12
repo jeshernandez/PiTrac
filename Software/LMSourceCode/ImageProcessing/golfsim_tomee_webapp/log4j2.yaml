@@ -1,0 +1,27 @@
+Configuration:
+  Appenders:
+    Console: 
+      name: "CONSOLE"
+      PatternLayout:
+        pattern: "%p - %m%n"
+    File:
+      - name: "MAIN" 
+        fileName: "logs/golf_sim.log"
+        JsonTemplateLayout: {}
+      - name: "DEBUG_LOG" 
+        fileName: "logs/golf_sim_debug.log"
+        PatternLayout:
+          pattern: "%d [%t] %p %c - %m%n"
+  Loggers:
+    Root: 
+      level: "INFO"
+      AppenderRef:
+        - ref: "CONSOLE"
+          level: "WARN"
+        - ref: "MAIN"
+      Logger: 
+        name: "com.verdanttechs.jakarta.ee9"
+        level: "DEBUG"
+        AppenderRef:
+          ref: "DEBUG_LOG"
+          ref: "MAIN"

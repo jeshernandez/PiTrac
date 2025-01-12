@@ -33,6 +33,8 @@ import jakarta.jms.ExceptionListener;
 import java.io.FileReader;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
+import com.verdanttechs.jakarta.ee9.types.GsClubType;
+import com.verdanttechs.jakarta.ee9.types.GsIPCResultType;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 
@@ -44,38 +46,9 @@ import java.io.IOException;
 @WebServlet("/monitor")
 public class MonitorServlet extends HttpServlet {
 
-    private static Logger logger =  LogManager.getLogger(MonitorServlet.class);
-    public enum GsIPCResultType { 
-        kUnknown,
-        kInitializing,
-        kWaitingForBallToAppear,
-        kWaitingForSimulatorArmed,
-        kPausingForBallStabilization,
-        kMultipleBallsPresent,
-        kBallPlacedAndReadyForHit,
-        kHit,
-        kError,
-        kCalibrationResults;
-    }
-
-    public enum IPCMessageType {
-        kUnknown,
-        kRequestForCamera2Image,
-        kCamera2Image,
-        kRequestForCamera2TestStillImage,
-        kResults,
-        kShutdown,
-        kCamera2ReturnPreImage,
-        kControlMessage;
-    }
-
-    public enum GsClubType { 
-   		kNotSelected,
-		kDriver,
-		kIron,
-		kPutter;
-    }
-
+    private static Logger LOGGER =  LogManager.getLogger(MonitorServlet.class);
+    final static String MQ_HOST_ADDRESS = System.getenv("PITRAC_MQ_HOST_ADDRESS");
+    final static String MQ_HOST_PORT = "61616";
     final static int kClubChangeToPutterControlMsgType = 1;
     final static int kClubChangeToDriverControlMsgType = 2;
 
@@ -92,7 +65,7 @@ public class MonitorServlet extends HttpServlet {
     public static Destination producer_destination;
 
     public static void SetCurrentClubType(GsClubType club) {
-        logger.info("SetClubType called with club type = " + String.valueOf(club));
+        LOGGER.info("SetClubType called with club type = " + String.valueOf(club));
         System.out.println("SetClubType called with club type = " + String.valueOf(club));
 
             try {
@@ -593,7 +566,7 @@ public class MonitorServlet extends HttpServlet {
 
     private static String kGolfSimTopic = "Golf.Sim";
     // Set from JSON file.  The default should probably be a symbolic address like rsp02
-    private static String kWebActiveMQHostAddress = "tcp://10.0.0.41:61616";
+    private static String kWebActiveMQHostAddress = "tcp://" + MQ_HOST_ADDRESS + ":" + MQ_HOST_PORT;
     private static String kWebServerTomcatShareDirectory;
     private static String kWebServerResultBallExposureCandidates;
     private static String kWebServerResultSpinBall1Image;
@@ -640,7 +613,7 @@ public class MonitorServlet extends HttpServlet {
             JsonElement ipcInterfaceElement = gsConfigElement.getAsJsonObject().get("ipc_interface");
             JsonElement userInterfaceElement = gsConfigElement.getAsJsonObject().get("user_interface");
             
-            String pngSuffix = new String(".png");
+            String pngSuffix = ".png";
 
             JsonElement kWebServerTomcatShareDirectoryElement = userInterfaceElement.getAsJsonObject().get("kWebServerTomcatShareDirectory");
             JsonElement kWebServerResultBallExposureCandidatesElement = userInterfaceElement.getAsJsonObject().get("kWebServerResultBallExposureCandidates");
@@ -651,7 +624,12 @@ public class MonitorServlet extends HttpServlet {
             JsonElement kWebServerBallSearchAreaImageElement = userInterfaceElement.getAsJsonObject().get("kWebServerBallSearchAreaImage");
             JsonElement kRefreshTimeSecondsElement = userInterfaceElement.getAsJsonObject().get("kRefreshTimeSeconds");
             
-            kWebActiveMQHostAddress = (String) ipcInterfaceElement.getAsJsonObject().get("kWebActiveMQHostAddress").getAsString();
+            if (MQ_HOST_ADDRESS == null) {
+                kWebActiveMQHostAddress = (String) ipcInterfaceElement.getAsJsonObject().get("kWebActiveMQHostAddress")
+                        .getAsString();
+            }
+            System.out.println("Captured MQ_HOST" + MQ_HOST_ADDRESS + "and, port " + MQ_HOST_PORT);
+            LOGGER.info("MQ Host Captured" + MQ_HOST_ADDRESS);
             
             kWebServerTomcatShareDirectory = (String) kWebServerTomcatShareDirectoryElement.getAsString();
             kWebServerResultBallExposureCandidates = (String) kWebServerResultBallExposureCandidatesElement.getAsString() + pngSuffix;
@@ -662,8 +640,8 @@ public class MonitorServlet extends HttpServlet {
             kWebServerBallSearchAreaImage = (String) kWebServerBallSearchAreaImageElement.getAsString() + pngSuffix;
             kRefreshTimeSeconds = (int) kRefreshTimeSecondsElement.getAsInt();
 
-        } catch(Exception e) {
-            System.out.println("Failed to parse JSON config file: " + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse JSON config file: " + e.getMessage());
             return false;
         }
         System.out.println("Golf Sim Configuration Settings: ");
@@ -783,12 +761,12 @@ public class MonitorServlet extends HttpServlet {
             HttpSession httpSession = request.getSession();
             Long times = (Long) httpSession.getAttribute("times");
             if (times == null) {
-              httpSession.setAttribute("times", new Long(0));
+              httpSession.setAttribute("times", 0L);
             }
             
             long value = 1;
             if (times != null) {
-                value = (times.longValue()) + 1;
+                value = times + 1;
             }
 
             time_since_last_reset_seconds += kRefreshTimeSeconds;

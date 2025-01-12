@@ -1,16 +1,18 @@
 package com.verdanttechs.jakarta.ee9;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import static org.mockito.Mockito.*;
 
 class HelloServletTest {
     private HelloServlet helloServlet;
@@ -33,7 +35,7 @@ class HelloServletTest {
     @Test
     void doGet_returnsTestMonitorCompleted() throws ServletException, IOException {
         helloServlet.doGet(request, response);
-        verify(outputStream).println("Test Monitor Completed.");
+        verify(outputStream).println("Test Monitor Completed!");
     }
 
 }
