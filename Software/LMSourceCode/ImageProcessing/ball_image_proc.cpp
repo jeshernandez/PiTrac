@@ -77,14 +77,14 @@ namespace golf_sim {
     double BallImageProc::kPlacedBallCurrentParam1 = 120.0;
     double BallImageProc::kPlacedBallParam2Increment = 4;
 
-    double BallImageProc::kPlacedMinHoughReturnCircles = 1;
-    double BallImageProc::kPlacedMaxHoughReturnCircles = 4;
+    int BallImageProc::kPlacedMinHoughReturnCircles = 1;
+    int BallImageProc::kPlacedMaxHoughReturnCircles = 4;
     double BallImageProc::kStrobedBallsCannyLower = 50;
     double BallImageProc::kStrobedBallsCannyUpper = 110;
 
 
-    double BallImageProc::kStrobedBallsMaxHoughReturnCircles = 12;
-    double BallImageProc::kStrobedBallsMinHoughReturnCircles = 1;
+    int BallImageProc::kStrobedBallsMaxHoughReturnCircles = 12;
+    int BallImageProc::kStrobedBallsMinHoughReturnCircles = 1;
 
     int BallImageProc::kStrobedBallsPreCannyBlurSize = 5;
     int BallImageProc::kStrobedBallsPreHoughBlurSize = 13;
@@ -113,8 +113,8 @@ namespace golf_sim {
     double BallImageProc::kPuttingBallMaxParam2 = 60;
     double BallImageProc::kPuttingBallCurrentParam1 = 120.0;
     double BallImageProc::kPuttingBallParam2Increment = 4;
-    double BallImageProc::kPuttingMaxHoughReturnCircles = 12;
-    double BallImageProc::kPuttingMinHoughReturnCircles = 1;
+    int BallImageProc::kPuttingMaxHoughReturnCircles = 12;
+    int BallImageProc::kPuttingMinHoughReturnCircles = 1;
     double BallImageProc::kPuttingHoughDpParam1 = 1.5;
 
     double BallImageProc::kExternallyStrobedEnvBallCurrentParam1 = 130.0;
@@ -124,15 +124,15 @@ namespace golf_sim {
     double BallImageProc::kExternallyStrobedEnvBallNarrowingParam2 = 0.6;
     double BallImageProc::kExternallyStrobedEnvBallNarrowingDpParam = 1.1;
     double BallImageProc::kExternallyStrobedEnvBallParam2Increment = 4;
-    double BallImageProc::kExternallyStrobedEnvMinHoughReturnCircles = 3;
-    double BallImageProc::kExternallyStrobedEnvMaxHoughReturnCircles = 20;
-    double BallImageProc::kExternallyStrobedEnvPreHoughBlurSize = 11;
-    double BallImageProc::kExternallyStrobedEnvPreCannyBlurSize = 3;
+    int BallImageProc::kExternallyStrobedEnvMinHoughReturnCircles = 3;
+    int BallImageProc::kExternallyStrobedEnvMaxHoughReturnCircles = 20;
+    int BallImageProc::kExternallyStrobedEnvPreHoughBlurSize = 11;
+    int BallImageProc::kExternallyStrobedEnvPreCannyBlurSize = 3;
     double BallImageProc::kExternallyStrobedEnvHoughDpParam1 = 1.0;
-    double BallImageProc::kExternallyStrobedEnvBallNarrowingPreCannyBlurSize = 3;
-    double BallImageProc::kExternallyStrobedEnvBallNarrowingPreHoughBlurSize = 9;
-    double BallImageProc::kExternallyStrobedEnvMinimumSearchRadius = 60;
-    double BallImageProc::kExternallyStrobedEnvMaximumSearchRadius = 80;
+    int BallImageProc::kExternallyStrobedEnvBallNarrowingPreCannyBlurSize = 3;
+    int BallImageProc::kExternallyStrobedEnvBallNarrowingPreHoughBlurSize = 9;
+    int BallImageProc::kExternallyStrobedEnvMinimumSearchRadius = 60;
+    int BallImageProc::kExternallyStrobedEnvMaximumSearchRadius = 80;
     
     bool BallImageProc::kUseDynamicRadiiAdjustment = true;
     int BallImageProc::kNumberRadiiToAverageForDynamicAdjustment = 3;
@@ -161,16 +161,16 @@ namespace golf_sim {
     
     double BallImageProc::kBestCircleCannyLower = 55;
     double BallImageProc::kBestCircleCannyUpper = 110;
-    double BallImageProc::kBestCirclePreCannyBlurSize = 5;
-    double BallImageProc::kBestCirclePreHoughBlurSize = 13;
+    int BallImageProc::kBestCirclePreCannyBlurSize = 5;
+    int BallImageProc::kBestCirclePreHoughBlurSize = 13;
     double BallImageProc::kBestCircleParam1 = 120.;
     double BallImageProc::kBestCircleParam2 = 35.;
     double BallImageProc::kBestCircleHoughDpParam1 = 1.5;
 
     double BallImageProc::kExternallyStrobedBestCircleCannyLower = 55;
     double BallImageProc::kExternallyStrobedBestCircleCannyUpper = 110;
-    double BallImageProc::kExternallyStrobedBestCirclePreCannyBlurSize = 5;
-    double BallImageProc::kExternallyStrobedBestCirclePreHoughBlurSize = 13;
+    int BallImageProc::kExternallyStrobedBestCirclePreCannyBlurSize = 5;
+    int BallImageProc::kExternallyStrobedBestCirclePreHoughBlurSize = 13;
     double BallImageProc::kExternallyStrobedBestCircleParam1 = 120.;
     double BallImageProc::kExternallyStrobedBestCircleParam2 = 35.;
     double BallImageProc::kExternallyStrobedBestCircleHoughDpParam1 = 1.5;
@@ -579,32 +579,32 @@ namespace golf_sim {
         // This is only small for when we are REALLY sure of where the ball is, like during calibration
         int max_circles_to_return_from_hough;
 
-        int minimumSearchRadius = 0;
+        int minimum_search_radius = 0;
 
         // Determine reasonable min / max radii if we don't know it
         if (min_ball_radius_ < 0.0) {
-            minimumSearchRadius = int(CvUtils::CvHeight(search_image) / 15);
+            minimum_search_radius = int(CvUtils::CvHeight(search_image) / 15);
         }
         else {
-            minimumSearchRadius = min_ball_radius_;
+            minimum_search_radius = min_ball_radius_;
         }
 
-        int maximumSearchRadius = 0;
+        int maximum_search_radius = 0;
 
         if (max_ball_radius_ < 0.0) {
-            maximumSearchRadius = int(CvUtils::CvHeight(search_image) / 6);
+            maximum_search_radius = int(CvUtils::CvHeight(search_image) / 6);
         }
         else {
-            maximumSearchRadius = max_ball_radius_;
+            maximum_search_radius = max_ball_radius_;
         }
 
         // If we are in strobed mode, allow for circles that are overlapping and of lower quality, etc.
 
-        int minDistance;
+        double minimum_distance;
 
-        float currentParam1;    // nominal is 200.  Touchy - higher values sometimes do not work - CURRENT = 100
+        double currentParam1;    // nominal is 200.  Touchy - higher values sometimes do not work - CURRENT = 100
         double param2_increment;
-        float currentDp;
+        double currentDp;
 
         // Otherwise,if highly-certain we will find just one ball, crank the requirements to prevent false positives, otherwise, relax them
         switch (search_mode) {
@@ -621,7 +621,7 @@ namespace golf_sim {
                 max_circles_to_return_from_hough = kPlacedMaxHoughReturnCircles;
 
                 // In the expected image, there should be only one candidate anywhere near the ball
-                minDistance = minimumSearchRadius * 0.5;
+                minimum_distance = (double)minimum_search_radius * 0.5;
 
                 currentDp = kPlacedBallHoughDpParam1;         // Must be between 0 and 2 (double).Nominal is 2, CURRENT = 1.2
                 break;
@@ -641,7 +641,7 @@ namespace golf_sim {
                 // Don't want to get too crazy loose too fast in order to find more balls
                 param2_increment = use_alt ? kStrobedBallsAltParam2Increment : kStrobedBallsParam2Increment;
 
-                minDistance = minimumSearchRadius * 0.18;  // TBD - Parameterize this!
+                minimum_distance = minimum_search_radius * 0.18;  // TBD - Parameterize this!
 
                 // We have to have at least two candidate balls to do spin analysis
                 // Try for more tp make sure we get all the overlapped balls.
@@ -671,10 +671,10 @@ namespace golf_sim {
 
                 currentDp = kExternallyStrobedEnvHoughDpParam1;
 
-                minimumSearchRadius = kExternallyStrobedEnvMinimumSearchRadius;
-                maximumSearchRadius = kExternallyStrobedEnvMaximumSearchRadius;
+                minimum_search_radius = kExternallyStrobedEnvMinimumSearchRadius;
+                maximum_search_radius = kExternallyStrobedEnvMaximumSearchRadius;
 
-                minDistance = (double)minimumSearchRadius * 0.4;
+                minimum_distance = (double)minimum_search_radius * 0.4;
 
                 break;
             }
@@ -692,7 +692,7 @@ namespace golf_sim {
                 // Don't want to get too crazy loose too fast in order to find more balls
                 param2_increment = kPuttingBallParam2Increment;
 
-                minDistance = minimumSearchRadius * 0.5;
+                minimum_distance = minimum_search_radius * 0.5;
 
                 // We have to have at least two candidate balls to do spin analysis
                 // Try for more tp make sure we get all the overlapped balls.
@@ -710,7 +710,7 @@ namespace golf_sim {
         }
 
 
-        float currentParam2 = (float)starting_param2;
+        double currentParam2 = starting_param2;
 
         int priorNumCircles = 0;
         int finalNumberOfFoundCircles = 0;
@@ -761,14 +761,14 @@ namespace golf_sim {
                 if (search_mode == kFindPlacedBall) {
                     min_ratio = kPlacedNarrowingRadiiMinRatio;
                     max_ratio = kPlacedNarrowingRadiiMaxRatio;
-                    minDistance = minimumSearchRadius * 0.7;
+                    minimum_distance = minimum_search_radius * 0.7;
                     narrowing_radii_param2 = kPlacedNarrowingStartingParam2;
                     narrowing_dp_param = kPlacedNarrowingRadiiDpParam;
                 }
                 else {
                     min_ratio = kStrobedNarrowingRadiiMinRatio;
                     max_ratio = kStrobedNarrowingRadiiMaxRatio;
-                    minDistance = minimumSearchRadius * 0.7;
+                    minimum_distance = minimum_search_radius * 0.7;
                     narrowing_radii_param2 = kStrobedNarrowingRadiiParam2;
                     narrowing_dp_param = kStrobedNarrowingRadiiDpParam;
                 }
@@ -779,30 +779,30 @@ namespace golf_sim {
                     narrowing_dp_param = kExternallyStrobedEnvBallNarrowingDpParam;
                 }
                     
-                // For some reason, odd maximumSearchRadius values were resulting in bad circle identification
+                // For some reason, odd maximum_search_radius values were resulting in bad circle identification
                 // These are the wider-ranging radii to make sure we find the ball, however near/far it may be
-                minimumSearchRadius = CvUtils::RoundAndMakeEven(minimumSearchRadius);
-                maximumSearchRadius = CvUtils::RoundAndMakeEven(maximumSearchRadius);
+                minimum_search_radius = CvUtils::RoundAndMakeEven(minimum_search_radius);
+                maximum_search_radius = CvUtils::RoundAndMakeEven(maximum_search_radius);
 
                 GS_LOG_TRACE_MSG(trace, "Executing INITIAL houghCircles (to determine narrowed ball diameters) with currentDP = " + std::to_string(narrowing_dp_param) +
-                    ", minDist = " + std::to_string(minDistance) + ", param1 = " + std::to_string(currentParam1) +
-                    ", param2 = " + std::to_string(narrowing_radii_param2) + ", minRadius = " + std::to_string(int(minimumSearchRadius)) +
-                    ", maxRadius = " + std::to_string(int(maximumSearchRadius)));
+                    ", minDist = " + std::to_string(minimum_distance) + ", param1 = " + std::to_string(currentParam1) +
+                    ", param2 = " + std::to_string(narrowing_radii_param2) + ", minRadius = " + std::to_string(int(minimum_search_radius)) +
+                    ", maxRadius = " + std::to_string(int(maximum_search_radius)));
 
                 // TBD - May want to adjust min / max radius
                 // NOTE - Param 1 may be sensitive as well - needs to be 100 for large pictures ?
                 // TBD - Need to set minDist to rows / 8, roughly ?
                 // The _ALT mode seems to work best for this purpose
-                std::vector<GsCircle> testCircles;
+                std::vector<GsCircle> test_circles;
                 cv::HoughCircles(final_search_image,
-                    testCircles,
+                    test_circles,
                     cv::HOUGH_GRADIENT_ALT,
                     narrowing_dp_param,
-                    minDistance, // Does this really matter if we are only looking for one circle ?
+                    minimum_distance, 
                     kPlacedNarrowingParam1,
                     narrowing_radii_param2,
-                    (int)minimumSearchRadius,
-                    (int)maximumSearchRadius );
+                    (int)minimum_search_radius,
+                    (int)maximum_search_radius );
                 
 
                 {
@@ -811,7 +811,7 @@ namespace golf_sim {
                     int i = 0;
                     cv::Mat test_hough_output = final_search_image.clone();
 
-                    if (testCircles.size() == 0) {
+                    if (test_circles.size() == 0) {
                         if (report_find_failures) {
                             GS_LOG_TRACE_MSG(warning, "Initial (narrowing) Hough Transform found 0 balls.");
                         }
@@ -822,11 +822,11 @@ namespace golf_sim {
                     // TBD - this shouldn't occur, but the HOUGH_ALT_GRADIENT mode does not seem to respect the minimum
                     // distance setting
 
-                    for (int i = 0; i < (int)(testCircles.size()) - 1; i++) {
-                        GsCircle& circle_current = testCircles[i];
+                    for (int i = 0; i < (int)(test_circles.size()) - 1; i++) {
+                        GsCircle& circle_current = test_circles[i];
 
-                        for (int j = (int)testCircles.size() - 1; j > i; j--) {
-                            GsCircle& circle_other = testCircles[j];
+                        for (int j = (int)test_circles.size() - 1; j > i; j--) {
+                            GsCircle& circle_other = test_circles[j];
 
                             if (CvUtils::CircleXY(circle_current) == CvUtils::CircleXY(circle_other)) {
                                 // The two circles are concentric.  Remove the smaller circle
@@ -834,10 +834,10 @@ namespace golf_sim {
                                 int radius_other = (int)std::round(circle_other[2]);
 
                                 if (radius_other <= radius_current) {
-                                    testCircles.erase(testCircles.begin() + j);
+                                    test_circles.erase(test_circles.begin() + j);
                                 }
                                 else {
-                                    testCircles.erase(testCircles.begin() + i);
+                                    test_circles.erase(test_circles.begin() + i);
                                     // Skip over the circle we just erased
                                     // NOTE - i could go negative for a moment before it's incremented
                                     // above.  That's why we are using an int
@@ -852,7 +852,7 @@ namespace golf_sim {
                         }
                     }
 
-                    for (auto& c : testCircles) {
+                    for (auto& c : test_circles) {
 
                         i += 1;
 
@@ -866,30 +866,30 @@ namespace golf_sim {
 
                     }
                     LoggingTools::DebugShowImage("Initial (for narrowing) Hough-identified Circles", test_hough_output);
-                    GS_LOG_TRACE_MSG(trace, "Narrowing Hough found the following circles: {     " + LoggingTools::FormatCircleList(testCircles));
+                    GS_LOG_TRACE_MSG(trace, "Narrowing Hough found the following circles: {     " + LoggingTools::FormatCircleList(test_circles));
                 }
 
-                const int number_balls_to_average = std::min(kNumberRadiiToAverageForDynamicAdjustment, (int)testCircles.size());
+                const int number_balls_to_average = std::min(kNumberRadiiToAverageForDynamicAdjustment, (int)test_circles.size());
                 double average = 0.0;
 
                 for (int i = 0; i < number_balls_to_average; i++) {
-                    average += testCircles[i][2] / number_balls_to_average;
+                    average += test_circles[i][2] / number_balls_to_average;
                 }
 
-                minimumSearchRadius = CvUtils::RoundAndMakeEven(average * min_ratio);
-                maximumSearchRadius = CvUtils::RoundAndMakeEven(average * max_ratio);
+                minimum_search_radius = CvUtils::RoundAndMakeEven(average * min_ratio);
+                maximum_search_radius = CvUtils::RoundAndMakeEven(average * max_ratio);
 
-                minDistance = minimumSearchRadius * 0.5;
+                minimum_distance = minimum_search_radius * 0.5;
 
                 /** TBD - REMOVE - Not necessary for GRADIENT_ALT now
                 if (kUseDynamicRadiiAdjustment && (search_mode == kFindPlacedBall)) {
                     // If we're using dynamic radii adjustment, we'd like to look at potentially several circles in a tight area
-                    minDistance = 1;
+                    minimum_distance = 1;
                 }
                 */
 
-                GS_LOG_TRACE_MSG(trace, "Dynamically narrowing search radii to { " + std::to_string(minimumSearchRadius) +
-                    ", " + std::to_string(maximumSearchRadius) + " } pixels.");
+                GS_LOG_TRACE_MSG(trace, "Dynamically narrowing search radii to { " + std::to_string(minimum_search_radius) +
+                    ", " + std::to_string(maximum_search_radius) + " } pixels.");
             }
 
         }
@@ -897,27 +897,27 @@ namespace golf_sim {
         // Adaptive algorithm to dynamically adjust the (very touchy) Hough circle parameters depending on how things are going
         while (!done) {
 
-            minimumSearchRadius = CvUtils::RoundAndMakeEven(minimumSearchRadius);
-            maximumSearchRadius = CvUtils::RoundAndMakeEven(maximumSearchRadius);
+            minimum_search_radius = CvUtils::RoundAndMakeEven(minimum_search_radius);
+            maximum_search_radius = CvUtils::RoundAndMakeEven(maximum_search_radius);
 
             GS_LOG_TRACE_MSG(trace, "Executing houghCircles with currentDP = " + std::to_string(currentDp) +
-                ", minDist = " + std::to_string(minDistance) + ", param1 = " + std::to_string(currentParam1) +
-                ", param2 = " + std::to_string(currentParam2) + ", minRadius = " + std::to_string(int(minimumSearchRadius)) +
-                ", maxRadius = " + std::to_string(int(maximumSearchRadius)));
+                ", minDist = " + std::to_string(minimum_distance) + ", param1 = " + std::to_string(currentParam1) +
+                ", param2 = " + std::to_string(currentParam2) + ", minRadius = " + std::to_string(int(minimum_search_radius)) +
+                ", maxRadius = " + std::to_string(int(maximum_search_radius)));
 
             // TBD - May want to adjust min / max radius
             // NOTE - Param 1 may be sensitive as well - needs to be 100 for large pictures ?
             // TBD - Need to set minDist to rows / 8, roughly ?
-            std::vector<GsCircle> testCircles;
+            std::vector<GsCircle> test_circles;
             cv::HoughCircles(final_search_image,
-                testCircles,
+                test_circles,
                 hough_mode,
                 currentDp,
-                /* minDist = */ minDistance, // Does this really matter if we are only looking for one circle ?
+                /* minDist = */ minimum_distance, // Does this really matter if we are only looking for one circle ?
                 /* param1 = */ currentParam1,
                 /* param2 = */ currentParam2,
-                /* minRadius = */ (int)minimumSearchRadius,
-                /* maxRadius = */ (int)maximumSearchRadius);
+                /* minRadius = */ (int)minimum_search_radius,
+                /* maxRadius = */ (int)maximum_search_radius);
 
             // Save the prior number of circles if we need it later
             if (!circles.empty()) {
@@ -929,8 +929,8 @@ namespace golf_sim {
 
             int numCircles = 0;
 
-            if (!testCircles.empty()) {
-                numCircles = (int)std::round(testCircles.size());
+            if (!test_circles.empty()) {
+                numCircles = (int)std::round(test_circles.size());
                 GS_LOG_TRACE_MSG(trace, "Hough FOUND " + std::to_string(numCircles) + " circles.");
             }
             else {
@@ -941,7 +941,7 @@ namespace golf_sim {
             // Might be able to post-process the number down further later.
             if (numCircles >= min_circles_to_return_from_hough && numCircles <= max_circles_to_return_from_hough) {
                 // We found what we consider to be a reasonable number of circles
-                circles.assign(testCircles.begin(), testCircles.end());
+                circles.assign(test_circles.begin(), test_circles.end());
                 finalNumberOfFoundCircles = numCircles;
                 done = true;
                 break;
@@ -961,7 +961,7 @@ namespace golf_sim {
                     // In this case, just return what we had
                     GS_LOG_TRACE_MSG(trace, "Could not narrow number of balls to just 1");
                     // Save what we have now - deep copy
-                    circles.assign(testCircles.begin(), testCircles.end());
+                    circles.assign(test_circles.begin(), test_circles.end());
 
                     finalNumberOfFoundCircles = numCircles;
                     done = true;
@@ -975,13 +975,13 @@ namespace golf_sim {
                     GS_LOG_TRACE_MSG(trace, "Could not narrow number of balls to just 1.  Produced " + std::to_string(numCircles) + " balls.");
 
                     // Save what we have now because maybe it's as good as things get
-                    circles.assign(testCircles.begin(), testCircles.end());
+                    circles.assign(test_circles.begin(), test_circles.end());
                     finalNumberOfFoundCircles = numCircles;
                     done = true;
                 }
                 else {
                     // Next time we might not get any circles, so save what we have now
-                    circles.assign(testCircles.begin(), testCircles.end());
+                    circles.assign(test_circles.begin(), test_circles.end());
                     currentParam2 += param2_increment;
                     currentlyLooseningSearch = false;
                     done = false;
@@ -1007,7 +1007,7 @@ namespace golf_sim {
                     else {
                         currentParam2 -= param2_increment;
                         currentlyLooseningSearch = true;
-                        circles.assign(testCircles.begin(), testCircles.end());
+                        circles.assign(test_circles.begin(), test_circles.end());
                         done = false;
                     }
                 }
@@ -1021,7 +1021,7 @@ namespace golf_sim {
                         // We've loosened things as much as we want to, but still haven't identified a single ball
                         GS_LOG_TRACE_MSG(trace, "Could not find as many balls as hoped");
                         // Save what we have now because it's as good as things are going to get
-                        circles.assign(testCircles.begin(), testCircles.end());
+                        circles.assign(test_circles.begin(), test_circles.end());
                         finalNumberOfFoundCircles = numCircles;
                         done = true;
                     }
@@ -1029,7 +1029,7 @@ namespace golf_sim {
                         currentParam2 -= param2_increment;
                         currentlyLooseningSearch = true;
                         // Save what we have now because maybe it's as good as things get
-                        circles.assign(testCircles.begin(), testCircles.end());
+                        circles.assign(test_circles.begin(), test_circles.end());
                         done = false;
                     }
                 }
@@ -1356,7 +1356,7 @@ namespace golf_sim {
         cv::Vec2i xy = CvUtils::CircleXY(reference_ball_circle);
         int circleX = xy[0]; 
         int circleY = xy[1];
-        int ballRadius = std::round(CvUtils::CircleRadius(reference_ball_circle));
+        int ballRadius = (int)std::round(CvUtils::CircleRadius(reference_ball_circle));
 
         GS_LOG_TRACE_MSG(trace, "DetermineBestCircle using reference_ball_circle with radius = " + std::to_string(ballRadius) + 
         ".  (X,Y) center = (" + std::to_string(circleX) + "," + std::to_string(circleY) + ")");
@@ -1565,7 +1565,7 @@ namespace golf_sim {
 
         int circleX = CvUtils::CircleX(reference_ball_circle);
         int circleY = CvUtils::CircleY(reference_ball_circle);
-        int ballRadius = std::round(CvUtils::CircleRadius(reference_ball_circle));
+        int ballRadius = (int)std::round(CvUtils::CircleRadius(reference_ball_circle));
 
         const double cannySubImageSizeMultiplier = 1.35;
         int expandedRadiusForCanny = (int)(cannySubImageSizeMultiplier * (double)ballRadius);
@@ -1669,7 +1669,7 @@ namespace golf_sim {
         // given the ball that we are looking for
         for (auto& es : ellipses) {
             Ellipse ellipseStruct = es;
-            RotatedRect e(Point(cvRound(es._xc), cvRound(es._yc)), Size(cvRound(2.0 * es._a), cvRound(2.0 * es._b)), es._rad * 180.0 / CV_PI);
+            RotatedRect e(Point(cvRound(es._xc), cvRound(es._yc)), Size(cvRound(2.0 * es._a), cvRound(2.0 * es._b)), (float)(es._rad * 180.0 / CV_PI));
 
             cv::Scalar color = cv::Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256));
 
@@ -1762,7 +1762,7 @@ namespace golf_sim {
 
         int circleX = CvUtils::CircleX(reference_ball_circle);
         int circleY = CvUtils::CircleY(reference_ball_circle);
-        int ballRadius = std::round(CvUtils::CircleRadius(reference_ball_circle));
+        int ballRadius = (int)std::round(CvUtils::CircleRadius(reference_ball_circle));
 
         // Canny is expensive - use it only in the region of interest
         const double cannySubImageSizeMultiplier = 1.35;
@@ -2632,8 +2632,8 @@ namespace golf_sim {
         // Find the differences between the offset angles, as they may be similar.
         // These will be the angles that the image will have to be rotated in order
         // to make it appear as it would if it were in the center of the image
-        cv::Vec3f angleOffset1 = cv::Vec3f(ball1.angles_camera_ortho_perspective_[0], ball1.angles_camera_ortho_perspective_[1], 0);
-        cv::Vec3f angleOffset2 = cv::Vec3f(ball2.angles_camera_ortho_perspective_[0], ball2.angles_camera_ortho_perspective_[1], 0);
+        cv::Vec3f angleOffset1 = cv::Vec3f((float)ball1.angles_camera_ortho_perspective_[0], (float)ball1.angles_camera_ortho_perspective_[1], 0);
+        cv::Vec3f angleOffset2 = cv::Vec3f((float)ball2.angles_camera_ortho_perspective_[0], (float)ball2.angles_camera_ortho_perspective_[1], 0);
 
 
         // We will split the difference in the angles so that the amount of de-rotation we need to do is spread evenly
@@ -2730,16 +2730,16 @@ namespace golf_sim {
         // Now iterate more cloesely in the area that looks best
         RotationSearchSpace finalSearchSpace;
 
-        int anglex_window_width = ceil(initialSearchSpace.anglex_rotation_degrees_increment / 2.);
-        int angley_window_width = ceil(initialSearchSpace.angley_rotation_degrees_increment / 2.);
-        int anglez_window_width = ceil(initialSearchSpace.anglez_rotation_degrees_increment / 2.);
+        int anglex_window_width = (int)std::round(ceil(initialSearchSpace.anglex_rotation_degrees_increment / 2.));
+        int angley_window_width = (int)std::round(ceil(initialSearchSpace.angley_rotation_degrees_increment / 2.));
+        int anglez_window_width = (int)std::round(ceil(initialSearchSpace.anglez_rotation_degrees_increment / 2.));
 
 
         finalSearchSpace.anglex_rotation_degrees_increment = 1;
         finalSearchSpace.anglex_rotation_degrees_start = c.x_rotation_degrees - anglex_window_width;
         finalSearchSpace.anglex_rotation_degrees_end = c.x_rotation_degrees + anglex_window_width;
         // Probably not worth it to be too fine-grained on the Y axis.
-        finalSearchSpace.angley_rotation_degrees_increment = std::round(kCoarseYRotationDegreesIncrement / 2.);
+        finalSearchSpace.angley_rotation_degrees_increment = (int) std::round(kCoarseYRotationDegreesIncrement / 2.);
         finalSearchSpace.angley_rotation_degrees_start = c.y_rotation_degrees - angley_window_width;
         finalSearchSpace.angley_rotation_degrees_end = c.y_rotation_degrees + angley_window_width;
         finalSearchSpace.anglez_rotation_degrees_increment = 1;
@@ -2805,9 +2805,9 @@ namespace golf_sim {
         double spin_offset_angle_radians_Y = CvUtils::DegreesToRadians(spin_offset_angle[1]);
         double spin_offset_angle_radians_Z = CvUtils::DegreesToRadians(spin_offset_angle[2]);
 
-        int normalizedRotX = round( (double)bestRotX * cos(spin_offset_angle_radians_Y) + (double)bestRotZ * sin(spin_offset_angle_radians_Y) );
-        int normalizedRotY = round( (double)bestRotY * cos(spin_offset_angle_radians_X) - (double)bestRotZ * sin(spin_offset_angle_radians_Y) );
-        int normalizedRotZ = round( (double)bestRotZ * cos(spin_offset_angle_radians_X) - (double)bestRotY * sin(spin_offset_angle_radians_X) );
+        int normalizedRotX = (int)round( (double)bestRotX * cos(spin_offset_angle_radians_Y) + (double)bestRotZ * sin(spin_offset_angle_radians_Y) );
+        int normalizedRotY = (int)round( (double)bestRotY * cos(spin_offset_angle_radians_X) - (double)bestRotZ * sin(spin_offset_angle_radians_Y) );
+        int normalizedRotZ = (int)round( (double)bestRotZ * cos(spin_offset_angle_radians_X) - (double)bestRotY * sin(spin_offset_angle_radians_X) );
 
         GS_LOG_TRACE_MSG(trace, "Normalized spin angles (X,Y,Z) = (" + std::to_string(normalizedRotX) + ", " + std::to_string(normalizedRotY) + ", " + std::to_string(normalizedRotZ) + ").");
 
@@ -3242,11 +3242,11 @@ namespace golf_sim {
         cv::Mat dimpleEdges = cv::Mat::zeros(accum.rows, accum.cols, accum.type());
 
         // Threshold the image to either 0 or 255
-        const int edgeThresholdLow = binary_threshold * 10.;
+        const int edgeThresholdLow = (int)std::round(binary_threshold * 10.);
         const int edgeThresholdHigh = 255;
         cv::threshold(accumGray, dimpleEdges, edgeThresholdLow, edgeThresholdHigh, cv::THRESH_BINARY);
 
-        white_percent = ((double)cv::countNonZero(dimpleEdges) * 100.) / ((double)dimpleEdges.rows * dimpleEdges.cols);
+        white_percent = (int)std::round(((double)cv::countNonZero(dimpleEdges) * 100.) / ((double)dimpleEdges.rows * dimpleEdges.cols));
 
         return dimpleEdges;
     }
@@ -3556,7 +3556,8 @@ namespace golf_sim {
 
 
                     // If the final, new pixel came from an invalid place, don't allow it to pollute the rotated image
-                    projectedImg_.at<cv::Vec2i>(roundedImageX, roundedImageY)[0] = ball3dZOfRotatedPoint;
+                    // Not rounding here helped increase performance
+                    projectedImg_.at<cv::Vec2i>(roundedImageX, roundedImageY)[0] = (int)(ball3dZOfRotatedPoint);
 
                     /** TBD - DEBUG ONLY 
                     if (currentBall_->PointIsInsideBall(roundedImageX, roundedImageY) && pixelValue == kPixelIgnoreValue) {

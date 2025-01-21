@@ -450,8 +450,9 @@ These instructions start with a Raspberry Pi with nothing on it, and are meant t
             [Service]  
             User=root  
             Type=forking  
+            Restart=on-failure
             ExecStart=/opt/apache-activemq/bin/activemq start  
-            ExecStop=/opt/apache-activemq/bin/activemq stop  
+            #ExecStop=/opt/apache-activemq/bin/activemq stop  
             KillSignal=SIGCONT  
             [Install]  
             WantedBy=multi-user.target
@@ -559,21 +560,23 @@ WantedBy=multi-user.target
     2. Install Remaining Prerequisites and Setup Environment:  
        1. Setup the `PITRAC_ROOT` and other environment variable.  For example set PITRAC_ROOT to point to the “Software/LMSourceCode” directory of the PiTrac build.  That is one directory “up” from the “ImageProcessing” directory that contains the main PiTrac meson.build file. The other environment variables listed below (with example values) should be set according to your network and environment. 
           1. E.g., include in your .zshrc or .bashrc or whatever shell you use:  
-	  ```
-export PITRAC_ROOT=/Dev/PiTrac/Software/LMSourceCode`  
-export PITRAC_BASE_IMAGE_LOGGING_DIR=~/LM_Shares/Images/
+```
+export PITRAC_ROOT=/Dev/PiTrac/Software/LMSourceCode  
+export PITRAC_BASE_IMAGE_LOGGING_DIR=\~/LM_Shares/Images/
 export PITRAC_WEBSERVER_SHARE_DIR=~/LM_Shares/WebShare/
 export PITRAC_MSG_BROKER_FULL_ADDRESS=tcp://10.0.0.41:61616
 # Only uncomment and set the following if connecting to the
 # respective golf sim (e.g., E6/TruGolf, GSPro, etc.)
 export PITRAC_E6_HOST_ADDRESS=10.0.0.29
 #export PITRAC_GSPRO_HOST_ADDRESS=10.0.0.29
-	  ```
-       2. `sudo apt-get -y install libraspberrypi-dev raspberrypi-kernel-headers`  
+```
+       2. sudo apt-get -y install libraspberrypi-dev raspberrypi-kernel-headers
        3. Add extended timeout to `rpi_apps.yaml` file so that even if an external trigger doesn’t fire for a really long time, the libcamera library won’t time-out:  
           1. (**NOTE** for Pi 5, use `/usr/share/libcamera/pipeline/rpi/pisp` instead of `/usr/share/libcamera/pipeline/rpi/vc4`, below)  
+```
           2. `cd  /usr/share/libcamera/pipeline/rpi/vc4`  
-          3. `sudo cp  rpi_apps.yaml  rpi_apps.yaml.ORIGINAL`  
+          3. `sudo cp  rpi_apps.yaml  rpi_apps.yaml.ORIGINAL`
+```
           4. In both `/usr/local/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml` and `usr/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml`, at the end of the pipeline section, add the following (including the last comma\!)  
              <font color=#ff0000>Warning:</font> If running `libcamera-vid -t 0` results in a blank screen. Something went wrong in this step, causing the camera to timeout.
              As a result, use `ps -aux | grep libcamera` to kill the pid `sudo kill -9 <pid_num>`. This will also cause other errors/issues while attemping to use `pitrac_lm`. 
@@ -609,49 +612,52 @@ export PITRAC_E6_HOST_ADDRESS=10.0.0.29
 26. First, make sure you’ve setup the required IP and directory values in the golf\_sim\_config.json file.  Instructions are [here](https://github.com/jamespilgrim/PiTrac/blob/main/Documentation/PiTrac%20configuration%20and%20the%20golf_sim_config.json%20file.md).  
     1. The value tells the web-based PiTrac GUI where to look for the .json configuration file, which the GUI in turn uses to know where to look for certain shared image files.  
 27. Setup the PiTrac-specific code package for the PiTrac GUI on the Tomee server  
-    1. Log into the Pi 2 computer where the Tomee instance is running  
+    1. Log into the Pi 2 computer where the Tomee instance is running and make sure that $PITRAC_ROOT and other PITRAC_xxxx environment variables are set correctly as described above (can run "env | grep PITRAC") 
     2. Make sure Tomee is running:  
        1. `sudo systemctl status tomee`   (hit ‘q’ to exit)  
     3. `cd ~/Dev`   (or whatever the root of your development environment is)  
     4. `mkdir WebAppDev`  
-    5. `cd WebAppDe`v  
-    6. `vi refresh_from_dev.sh`     (a new file) and put this in it:
+    5. `cd WebAppDev`
+    6. `cp $PITRAC_ROOT/ImageProcessing/golfsim_tomee_webapp/refresh_from_dev.sh .`  
+    7. If necessary, create the refresh file yourself by doing: `vi refresh_from_dev.sh`     (a new file) and put this in it:
       <font color=#FF0000>Note:</font> Update your Broker IP address located in `MonitorServlet.java` class before creating the file below. <i>Will be improved in the future.</i>
-       ``` bash
-       # After running this script, then do a "mvn package" to compile and then  
-       # /opt/tomee/bin/restart.sh  
-       mkdir -p src/main/{webapp/WEB-INF,java/com/verdanttechs/jakarta/ee9}  
-       cp $PITRAC_ROOT/ImageProcessing/golfsim_tomee_webapp/src/main/java/com/verdanttechs/jakarta/ee9/MonitorServlet.java ./src/main/java/com/verdanttechs/jakarta/ee9/  
-       cp $PITRAC_ROOT/ImageProcessing/golfsim_tomee_webapp/src/main/webapp/WEB-INF/*.jsp ./src/main/webapp/WEB-INF  
-       cp $PITRAC_ROOT/ImageProcessing/golfsim_tomee_webapp/src/main/webapp/*.html ./src/main/webapp  
-       cp $PITRAC_ROOT/ImageProcessing/golfsim_tomee_webapp/pom.xml .  
-       # Also pull over the current .json configuration file to make sure that the webapp is looking at the correct version.  
-       cp $PITRAC_ROOT/ImageProcessing/golf_sim_config.json ~/LM_Shares/WebShare/  
-       ```
-    2. Run the new script to bring over the java and other web-based GUI files:   
-       1. `./refresh_from_dev.sh`  
-       2. NOTE that the above script will also move a copy of the golf\_sim\_config.json file into the shared directory that the GUI can access in order to get information about its run-time environment.  
+```
+sed -i s/PITRAC_WEBSERVER_SHARE_DIR/$PITRAC_WEBSERVER_SHARE_DIR/g ./src/main/webapp/index.html
+
+<a href="monitor?config_filename=PITRAC_WEBSERVER_SHARE_DIR/golf_sim_config.json">Monitor</a>
+
+echo $PITRAC_WEBSERVER_SHARE_DIR > webserver_name.tmp.txt
+sed -i 's/\//%2F/g' webserver_name.tmp.txt
+
+sed -i 's@PITRAC_WEBSERVER_SHARE_DIR@'`cat webserver_name.tmp.txt`'@g' ./src/main/webapp/index.html
+
+rm webserver_name.tmp.txt
+```
+    2. Run the refresh script to bring over the java and other web-based GUI files:   
+       1. You can ignore and errors from the 'sed' program regarding file permissions.
+       2. `chmod 755 refresh_from_dev.sh;./refresh_from_dev.sh`  
+       3. NOTE that the above script will also move a copy of the golf\_sim\_config.json file into the shared directory that the GUI can access in order to get information about its run-time environment.  The PiTrac GUI in particular needs the "kWebServerTomcatShareDirectory" value in order to know where to find diagnostic images.  
     3. Tell the MonitorServlet where to find its configuration file  
        1. `vi ./src/main/webapp/index.html`  
-       2. Change the `FPITRAC_USERNAME` to be whatever the PiTrac user’s name is on the system.  That line in the index.html file tells the java servlet where to find the json configuration file.  
+       2. Ensure that the line that begins with "<a href="monitor?config_filename" points to the correct webserver share direcory (typically ~/LM_Share/WebShare)
           1. Alternatively, you can just create a browser bookmark to point to the servlet with the correct filename 
       ![](snapshots/index_replace_name.png)
     2. Create the “.war” package for Tomee  
        1. `mvn package`  
        2. NOTE:  The first time this is performed, it will take a few minutes to gather up all the required packages from the internet  
-       3. This process will create a “golfsim.war” file in the “target” directory.  That file will then have to be “deployed” into tomee by using the manager console at `http://<Name-or-IP-address-of-Pi-with-Tomee>:8080/manager/html`  
-       4. Your browser should have a window titled “Tomcat Web Application Manager”.  You may have to use the default login of tomcat/tomcat  
-       5. Copy the .war file to a place that is visible on the computer from where your browser is logged into the tomee console.  
-       6. Select “Choose File” in the section in the Tomee manager console labeled “WAR file to deploy”.  Select the .war file and then wait a moment until it’s name is displayed.  Then push the “Deploy” button.  
-       7. In a moment, the “golfsim” app should show up on the list.  Click it.  
-       8. If you get a “HTTP Status 404 – Not Found” error, try:  
+       3. This process will create a “golfsim.war” file in the “target” directory.  That file will then have to be “deployed” into tomee.
+       4. Usually, you can just manually move the .war file into place and Tomee should pick it up.  Wait 30 seconds or so after doing this to give Tomee a moment to see the new war file and deploy it. For example,  
+          1. `cd /opt/tomee/webapps`  
+          2. `sudo cp ~/Dev/WebAppDev/target/golfsim.war .`  
+       5. Alternatively, you can use the Tomee management app to deploy.  To do so, open the manager console at `http://<Name-or-IP-address-of-Pi-with-Tomee>:8080/manager/html`  Your browser should have a window titled “Tomcat Web Application Manager”.  You may have to use the default login of tomcat/tomcat  
+       6. Copy the .war file to a place that is visible on the computer from where your browser is logged into the tomee console.  
+       7. Select “Choose File” in the section in the Tomee manager console labeled “WAR file to deploy”.  Select the .war file and then wait a moment until it’s name is displayed.  Then push the “Deploy” button.  
+       8. In a moment, the “golfsim” app should show up on the list.  Click it.  
+       9. If you get a “HTTP Status 404 – Not Found” error, try:  
           1. `cd /opt/tomee/webapps`  
           2. `sudo chmod -R 777 golfsim`  
           3. `sudo systemctl restart tomee`  (the first error will ‘stick’ otherwise)  
-       9. Alternatively, you can just manually move the .war file into place and Tomee should pick it up.  Wait 30 seconds or so after doing this to give Tomee a moment to see the new war file and deploy it.  
-          1. `cd /opt/tomee/webapps`  
-          2. `sudo cp ~/Dev/WebAppDev/target/golfsim.war .`  
-       10. Confirm you can see the PiTrac GUI by entering the following into your browser:  
+       10. However you deploy the app, confirm you can see the PiTrac GUI by entering the following into your browser:  
            1. `http://<The-Pi-2-name-or-IP>:8080/golfsim/monitor?config_filename=%2Fhome%2Fmleary%2FLM_Shares%2FWebShare%2Fgolf_sim_config.json`  
        11. You should see the PiTrac GUI
 
