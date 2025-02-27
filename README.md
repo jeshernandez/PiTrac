@@ -20,6 +20,7 @@ PiTrac is not a commercial product for sale–the full design is being released 
 We are hoping that we can inspire a community of developers to help test and continue PiTrac’s development.  This is a really immature project right now.  The basic features usually work reliably, but the current release is a bit dodgy.  We’re looking for folks to try building their own PiTracs and help us improve the documentation and design to make it easier for other people to do the same.
 
 ## PiTrac Page
+
 Please visit our [project page](https://hackaday.io/project/195042-pitrac-the-diy-golf-launch-monitor) and also our YouTube channel [here](https://www.youtube.com/@PiTrac) for more details and videos.  The [GitHub repository](https://github.com/jamespilgrim/PiTrac) is in the works and already has the 3D printed part designs, the hardware design and initial software documentation.  If you’re interested in more of the details and some of PiTrac’s development history, please look through the [project logs](https://hackaday.io/project/195042-pitrac-the-diy-golf-launch-monitor#menu-logs).  
 
 Finally, any help at our [support page](https://ko-fi.com/Pitrac) would be appreciated to continue this work and complete the release process.
