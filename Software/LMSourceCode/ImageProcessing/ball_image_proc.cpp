@@ -1,7 +1,15 @@
+/*****************************************************************//**
+ * \file   ball_image_proc.cpp
+ * \brief  Handles most of the image processing related to ball-identification 
+ * 
+ * \author PiTrac
+ * \date   February 2025
+ *********************************************************************/
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (C) 2022-2025, Verdant Consultants, LLC.
  */
+
 
 #include <ranges>
 #include <algorithm>
@@ -61,7 +69,7 @@ namespace golf_sim {
 
     int BallImageProc::kCoarseXRotationDegreesIncrement = 6;
     int BallImageProc::kCoarseXRotationDegreesStart = -42;
-    int BallImageProc::kCoarseXRrotationDegreesEnd = 42;
+    int BallImageProc::kCoarseXRotationDegreesEnd = 42;
     int BallImageProc::kCoarseYRotationDegreesIncrement = 5;
     int BallImageProc::kCoarseYRotationDegreesStart = -30;
     int BallImageProc::kCoarseYRotationDegreesEnd = 30;
@@ -107,6 +115,9 @@ namespace golf_sim {
     double BallImageProc::kStrobedBallsAltHoughDpParam1 = 1.5;
     double BallImageProc::kStrobedBallsAltParam2Increment = 0.05;
 
+    bool BallImageProc::kUseCLAHEProcessing;
+    int BallImageProc::kCLAHEClipLimit;
+    int BallImageProc::kCLAHETilesGridSize;
 
     double BallImageProc::kPuttingBallStartingParam2 = 40;
     double BallImageProc::kPuttingBallMinParam2 = 30;
@@ -117,23 +128,26 @@ namespace golf_sim {
     int BallImageProc::kPuttingMinHoughReturnCircles = 1;
     double BallImageProc::kPuttingHoughDpParam1 = 1.5;
 
-    double BallImageProc::kExternallyStrobedEnvBallCurrentParam1 = 130.0;
-    double BallImageProc::kExternallyStrobedEnvBallMinParam2 = 28;
-    double BallImageProc::kExternallyStrobedEnvBallMaxParam2 = 100;
-    double BallImageProc::kExternallyStrobedEnvBallStartingParam2 = 65;
-    double BallImageProc::kExternallyStrobedEnvBallNarrowingParam2 = 0.6;
-    double BallImageProc::kExternallyStrobedEnvBallNarrowingDpParam = 1.1;
-    double BallImageProc::kExternallyStrobedEnvBallParam2Increment = 4;
+    double BallImageProc::kExternallyStrobedEnvCannyLower = 35;
+    double BallImageProc::kExternallyStrobedEnvCannyUpper = 80;
+
+    double BallImageProc::kExternallyStrobedEnvCurrentParam1 = 130.0;
+    double BallImageProc::kExternallyStrobedEnvMinParam2 = 28;
+    double BallImageProc::kExternallyStrobedEnvMaxParam2 = 100;
+    double BallImageProc::kExternallyStrobedEnvStartingParam2 = 65;
+    double BallImageProc::kExternallyStrobedEnvNarrowingParam2 = 0.6;
+    double BallImageProc::kExternallyStrobedEnvNarrowingDpParam = 1.1;
+    double BallImageProc::kExternallyStrobedEnvParam2Increment = 4;
     int BallImageProc::kExternallyStrobedEnvMinHoughReturnCircles = 3;
     int BallImageProc::kExternallyStrobedEnvMaxHoughReturnCircles = 20;
     int BallImageProc::kExternallyStrobedEnvPreHoughBlurSize = 11;
     int BallImageProc::kExternallyStrobedEnvPreCannyBlurSize = 3;
     double BallImageProc::kExternallyStrobedEnvHoughDpParam1 = 1.0;
-    int BallImageProc::kExternallyStrobedEnvBallNarrowingPreCannyBlurSize = 3;
-    int BallImageProc::kExternallyStrobedEnvBallNarrowingPreHoughBlurSize = 9;
+    int BallImageProc::kExternallyStrobedEnvNarrowingPreCannyBlurSize = 3;
+    int BallImageProc::kExternallyStrobedEnvNarrowingPreHoughBlurSize = 9;
     int BallImageProc::kExternallyStrobedEnvMinimumSearchRadius = 60;
     int BallImageProc::kExternallyStrobedEnvMaximumSearchRadius = 80;
-    
+
     bool BallImageProc::kUseDynamicRadiiAdjustment = true;
     int BallImageProc::kNumberRadiiToAverageForDynamicAdjustment = 3;
     double BallImageProc::kStrobedNarrowingRadiiMinRatio = 0.8;
@@ -158,7 +172,7 @@ namespace golf_sim {
 
     bool BallImageProc::kUseBestCircleRefinement = false;
     bool BallImageProc::kUseBestCircleLargestCircle = false;
-    
+
     double BallImageProc::kBestCircleCannyLower = 55;
     double BallImageProc::kBestCircleCannyUpper = 110;
     int BallImageProc::kBestCirclePreCannyBlurSize = 5;
@@ -175,6 +189,10 @@ namespace golf_sim {
     double BallImageProc::kExternallyStrobedBestCircleParam2 = 35.;
     double BallImageProc::kExternallyStrobedBestCircleHoughDpParam1 = 1.5;
 
+    bool BallImageProc::kExternallyStrobedUseCLAHEProcessing = true;
+    int BallImageProc::kExternallyStrobedCLAHEClipLimit = 6;
+    int BallImageProc::kExternallyStrobedCLAHETilesGridSize = 6;
+
     double BallImageProc::kBestCircleIdentificationMinRadiusRatio = 0.85;
     double BallImageProc::kBestCircleIdentificationMaxRadiusRatio = 1.10;
 
@@ -188,7 +206,7 @@ namespace golf_sim {
         // The following constants are only used internal to the GolfSimCamera class, and so can be initialized in the constructor
         GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kCoarseXRotationDegreesIncrement", kCoarseXRotationDegreesIncrement);
         GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kCoarseXRotationDegreesStart", kCoarseXRotationDegreesStart);
-        GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kCoarseXRrotationDegreesEnd", kCoarseXRrotationDegreesEnd);
+        GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kCoarseXRotationDegreesEnd", kCoarseXRotationDegreesEnd);
         GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kCoarseYRotationDegreesIncrement", kCoarseYRotationDegreesIncrement);
         GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kCoarseYRotationDegreesStart", kCoarseYRotationDegreesStart);
         GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kCoarseYRotationDegreesEnd", kCoarseYRotationDegreesEnd);
@@ -208,12 +226,12 @@ namespace golf_sim {
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedBallParam2Increment", kPlacedBallParam2Increment);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedMinHoughReturnCircles", kPlacedMinHoughReturnCircles);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedMaxHoughReturnCircles", kPlacedMaxHoughReturnCircles);
-        
+
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsCannyLower", kStrobedBallsCannyLower);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsCannyUpper", kStrobedBallsCannyUpper);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsPreCannyBlurSize", kStrobedBallsPreCannyBlurSize);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsPreHoughBlurSize", kStrobedBallsPreHoughBlurSize);
-        
+
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsStartingParam2", kStrobedBallsStartingParam2);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsMinParam2", kStrobedBallsMinParam2);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsMaxParam2", kStrobedBallsMaxParam2);
@@ -236,6 +254,10 @@ namespace golf_sim {
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsAltHoughDpParam1", kStrobedBallsAltHoughDpParam1);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsAltParam2Increment", kStrobedBallsAltParam2Increment);
 
+        GolfSimConfiguration::SetConstant("gs_config.ball_identification.kUseCLAHEProcessing", kUseCLAHEProcessing);
+        GolfSimConfiguration::SetConstant("gs_config.ball_identification.kCLAHEClipLimit", kCLAHEClipLimit);
+        GolfSimConfiguration::SetConstant("gs_config.ball_identification.kCLAHETilesGridSize", kCLAHETilesGridSize);
+
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPuttingBallStartingParam2", kPuttingBallStartingParam2);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPuttingBallMinParam2", kPuttingBallMinParam2);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPuttingBallMaxParam2", kPuttingBallMaxParam2);
@@ -245,15 +267,15 @@ namespace golf_sim {
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPuttingMaxHoughReturnCircles", kPuttingMaxHoughReturnCircles);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPuttingHoughDpParam1", kPuttingHoughDpParam1);
 
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallCurrentParam1", kExternallyStrobedEnvBallCurrentParam1);
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallMaxParam2", kExternallyStrobedEnvBallMaxParam2);
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallStartingParam2", kExternallyStrobedEnvBallStartingParam2);
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallNarrowingParam2", kExternallyStrobedEnvBallNarrowingParam2);
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallNarrowingDpParam", kExternallyStrobedEnvBallNarrowingDpParam);
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallNarrowingPreCannyBlurSize", kExternallyStrobedEnvBallNarrowingPreCannyBlurSize);
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallNarrowingPreHoughBlurSize", kExternallyStrobedEnvBallNarrowingPreHoughBlurSize);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvCurrentParam1", kExternallyStrobedEnvCurrentParam1);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvMaxParam2", kExternallyStrobedEnvMaxParam2);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvStartingParam2", kExternallyStrobedEnvStartingParam2);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvNarrowingParam2", kExternallyStrobedEnvNarrowingParam2);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvNarrowingDpParam", kExternallyStrobedEnvNarrowingDpParam);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvNarrowingPreCannyBlurSize", kExternallyStrobedEnvNarrowingPreCannyBlurSize);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvNarrowingPreHoughBlurSize", kExternallyStrobedEnvNarrowingPreHoughBlurSize);
 
-        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvBallParam2Increment", kExternallyStrobedEnvBallParam2Increment);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvParam2Increment", kExternallyStrobedEnvParam2Increment);
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvMinHoughReturnCircles", kExternallyStrobedEnvMinHoughReturnCircles);
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvMaxHoughReturnCircles", kExternallyStrobedEnvMaxHoughReturnCircles);
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvPreHoughBlurSize", kExternallyStrobedEnvPreHoughBlurSize);
@@ -267,13 +289,17 @@ namespace golf_sim {
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedBestCircleParam2", kExternallyStrobedBestCircleParam2);
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedBestCircleHoughDpParam1", kExternallyStrobedBestCircleHoughDpParam1);
 
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedUseCLAHEProcessing", kExternallyStrobedUseCLAHEProcessing);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedCLAHEClipLimit", kExternallyStrobedCLAHEClipLimit);
+        GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedCLAHETilesGridSize", kExternallyStrobedCLAHETilesGridSize);
+
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvHoughDpParam1", kExternallyStrobedEnvHoughDpParam1);
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvMaximumSearchRadius", kExternallyStrobedEnvMaximumSearchRadius);
         GolfSimConfiguration::SetConstant("gs_config.testing.kExternallyStrobedEnvMinimumSearchRadius", kExternallyStrobedEnvMinimumSearchRadius);
 
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedPreHoughBlurSize", kPlacedPreHoughBlurSize);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedPreCannyBlurSize", kPlacedPreCannyBlurSize);
-        
+
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kStrobedBallsPreHoughBlurSize", kStrobedBallsPreHoughBlurSize);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPuttingPreHoughBlurSize", kPuttingPreHoughBlurSize);
 
@@ -306,13 +332,161 @@ namespace golf_sim {
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedNarrowingRadiiMaxRatio", kPlacedNarrowingRadiiMaxRatio);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedNarrowingStartingParam2", kPlacedNarrowingStartingParam2);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedNarrowingRadiiDpParam", kPlacedNarrowingRadiiDpParam);
-        
+
 
         GolfSimConfiguration::SetConstant("gs_config.logging.kLogIntermediateSpinImagesToFile", kLogIntermediateSpinImagesToFile);
     }
 
     BallImageProc::~BallImageProc() {
 
+    }
+
+    /**
+     * Given a gray-scale image and a ball search mode (e.g., kStrobed), this function applies
+     * CLAHE processing to improve the contrast and edge definition of the balls.  It then
+     * applies a Guassian blur and edge detection to the image.
+     * 
+     * \param search_image  The image to be processed.
+     * \param search_mode  Currently can be only kStrobed or kExternallyStrobed
+     * \return True on success.
+     */
+    bool BallImageProc::PreProcessStrobedImage( cv::Mat& search_image, 
+                                                BallSearchMode search_mode) {
+
+        GS_LOG_TRACE_MSG(trace, "PreProcessStrobedImage");
+
+        if (search_image.empty()) {
+            GS_LOG_MSG(error, "PreProcessStrobedImage called with no image to work with (search_image)");
+            return false;
+        }
+
+        // setup CLAHE processing dependent on PiTrac-only strobing or externally-strobed
+        
+        bool use_clahe_processing = true;
+        int clahe_tiles_grid_size = -1;
+        int clahe_clip_limit = -1;
+
+        if (search_mode == kStrobed) {
+            use_clahe_processing = kUseCLAHEProcessing;
+            clahe_tiles_grid_size = kCLAHETilesGridSize;
+            clahe_clip_limit = kCLAHEClipLimit;
+        }
+        else if (search_mode == kExternallyStrobed) {
+            use_clahe_processing = kExternallyStrobedUseCLAHEProcessing;
+            clahe_tiles_grid_size = kExternallyStrobedCLAHETilesGridSize;
+            clahe_clip_limit = kExternallyStrobedCLAHEClipLimit;
+        }
+        else {
+            GS_LOG_MSG(error, "PreProcessStrobedImage called with invalid search_mode)");
+            return false;
+        }
+
+        // Create a CLAHE object
+
+        if (use_clahe_processing) {
+            cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
+
+            // Set CLAHE parameters
+
+            if (clahe_tiles_grid_size < 1) {
+                clahe_tiles_grid_size = 1;
+                GS_LOG_MSG(warning, "clahe_tiles_grid_size was < 1 - Resetting to 1.");
+            }
+            if (clahe_clip_limit < 1) {
+                clahe_clip_limit = 1;
+                GS_LOG_MSG(warning, "kCLAHEClipLimit was < 1 - Resetting to 1.");
+            }
+
+            GS_LOG_TRACE_MSG(trace, "Using CLAHE Pre-processing with GridSize = " + std::to_string(clahe_tiles_grid_size) +
+                ", ClipLimit = " + std::to_string(clahe_clip_limit));
+
+            clahe->setClipLimit(clahe_clip_limit);
+            clahe->setTilesGridSize(cv::Size(clahe_tiles_grid_size, clahe_tiles_grid_size));
+
+            // Apply CLAHE
+            cv::Mat equalizedImage;
+            clahe->apply(search_image, search_image);
+
+            LoggingTools::DebugShowImage(image_name_ + "  Strobed Ball Image - After CLAHE equalization", search_image);
+        }
+
+        double canny_lower = 0.0;
+        double canny_upper = 0.0;
+        int pre_canny_blur_size = 0;
+        int pre_hough_blur_size = 0;
+
+        if (search_mode == kStrobed) {
+            if (kStrobedBallsUseAltHoughAlgorithm) {
+                canny_lower = kStrobedBallsAltCannyLower;
+                canny_upper = kStrobedBallsAltCannyUpper;
+                pre_canny_blur_size = kStrobedBallsAltPreCannyBlurSize;
+                pre_hough_blur_size = kStrobedBallsAltPreHoughBlurSize;
+            }
+            else {
+                canny_lower = kStrobedBallsCannyLower;
+                canny_upper = kStrobedBallsCannyUpper;
+                pre_canny_blur_size = kStrobedBallsPreCannyBlurSize;
+                pre_hough_blur_size = kStrobedBallsPreHoughBlurSize;
+            }
+        }
+        else if (search_mode == kExternallyStrobed) {
+            canny_lower = kExternallyStrobedEnvCannyLower;
+            canny_upper = kExternallyStrobedEnvCannyUpper;
+            pre_canny_blur_size = kExternallyStrobedEnvPreCannyBlurSize;
+            pre_hough_blur_size = kExternallyStrobedEnvPreHoughBlurSize;
+        }
+
+        // The size for the blur must be odd - force it up in value by 1 if necessary
+        if (pre_canny_blur_size > 0) {
+            if (pre_canny_blur_size % 2 != 1) {
+                pre_canny_blur_size++;
+            }
+        }
+
+        if (pre_hough_blur_size > 0) {
+            if (pre_hough_blur_size % 2 != 1) {
+                pre_hough_blur_size++;
+            }
+        }
+
+
+        GS_LOG_MSG(trace, "Main HoughCircle Image Prep - Performing Pre-Hough Blur and Canny for kStrobed mode.");
+        GS_LOG_MSG(trace, "  Blur Parameters are: pre_canny_blur_size = " + std::to_string(pre_canny_blur_size) +
+            ", pre_hough_blur_size " + std::to_string(pre_hough_blur_size));
+        GS_LOG_MSG(trace, "  Canny Parameters are: canny_lower = " + std::to_string(canny_lower) +
+            ", canny_upper " + std::to_string(canny_upper));
+
+
+        if (pre_canny_blur_size > 0) {
+            cv::GaussianBlur(search_image, search_image, cv::Size(pre_canny_blur_size, pre_canny_blur_size), 0);
+        }
+        else {
+            GS_LOG_TRACE_MSG(trace, "Skipping pre-Canny Blur");
+        }
+
+        // TBD - REMOVED THIS FOR NOW
+        for (int i = 0; i < 0; i++) {
+            cv::erode(search_image, search_image, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 3);
+            cv::dilate(search_image, search_image, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 3);
+        }
+
+        LoggingTools::DebugShowImage(image_name_ + "  Strobed Ball Image - Ready for Edge Detection", search_image);
+
+        cv::Mat cannyOutput_for_balls;
+        if (search_mode == kExternallyStrobed && pre_canny_blur_size == 0) {
+            // Don't do the Canny at all if the blur size is zero and we're in comparison mode
+            cannyOutput_for_balls = search_image.clone();
+        }
+        else {
+            cv::Canny(search_image, cannyOutput_for_balls, canny_lower, canny_upper);
+        }
+
+        LoggingTools::DebugShowImage(image_name_ + "  cannyOutput_for_balls", cannyOutput_for_balls);
+
+        // Blur the lines-only image back to the search_image that the code below uses
+        cv::GaussianBlur(cannyOutput_for_balls, search_image, cv::Size(pre_hough_blur_size, pre_hough_blur_size), 0);   // Nominal is 7x7
+
+        return true;
     }
 
     // Given a picture, see if we can find the golf ball somewhere in that picture.
@@ -440,70 +614,19 @@ namespace golf_sim {
 
             case kStrobed: {
 
-                double canny_lower = 0.0;
-                double canny_upper = 0.0;
-                int pre_canny_blur_size = 0;
-                int pre_hough_blur_size = 0;
-
-                if (kStrobedBallsUseAltHoughAlgorithm) {
-                    canny_lower = kStrobedBallsAltCannyLower;
-                    canny_upper = kStrobedBallsAltCannyUpper;
-                    pre_canny_blur_size = kStrobedBallsAltPreCannyBlurSize;
-                    pre_hough_blur_size = kStrobedBallsAltPreHoughBlurSize;
+                if (!PreProcessStrobedImage(search_image, kStrobed)) {
+                    GS_LOG_MSG(error, "Failed to PreProcessStrobedImage");
+                    return false;
                 }
-                else {
-                    canny_lower = kStrobedBallsCannyLower;
-                    canny_upper = kStrobedBallsCannyUpper;
-                    pre_canny_blur_size = kStrobedBallsPreCannyBlurSize;
-                    pre_hough_blur_size = kStrobedBallsPreHoughBlurSize;
-                }
-
-                // The size for the blur must be odd - force it up in value by 1 if necessary
-                if (pre_canny_blur_size > 0) {
-                    if (pre_canny_blur_size % 2 != 1) {
-                        pre_canny_blur_size++;
-                    }
-                }
-
-                if (pre_hough_blur_size > 0) {
-                    if (pre_hough_blur_size % 2 != 1) {
-                        pre_hough_blur_size++;
-                    }
-                }
-
-
-                GS_LOG_MSG(info, "Main HoughCircle Image Prep - Performing Pre-Hough Bur and Canny for kStrobed mode.");
-                GS_LOG_MSG(info, "  Blur Parameters are: pre_canny_blur_size = " + std::to_string(pre_canny_blur_size) +
-                        ", pre_hough_blur_size " + std::to_string(pre_hough_blur_size));
-                GS_LOG_MSG(info, "  Canny Parameters are: canny_lower = " + std::to_string(canny_lower) +
-                    ", canny_upper " + std::to_string(canny_upper));
-
-
-                cv::GaussianBlur(search_image, search_image, cv::Size(pre_canny_blur_size, pre_canny_blur_size), 0);
-
-                // TBD - REMOVED THIS FOR NOW
-                for (int i = 0; i < 0; i++) {
-                    cv::erode(search_image, search_image, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 3);
-                    cv::dilate(search_image, search_image, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)), cv::Point(-1, -1), 3);
-                }
-
-                LoggingTools::DebugShowImage(image_name_ + "  Strobed Ball Image - Ready for Edge Detection", search_image);
-
-                cv::Mat cannyOutput_for_balls;
-                cv::Canny(search_image, cannyOutput_for_balls, canny_lower, canny_upper);
-
-                LoggingTools::DebugShowImage(image_name_ + "  cannyOutput_for_balls", cannyOutput_for_balls);
-
-                // Blur the lines-only image back to the search_image that the code below uses
-                cv::GaussianBlur(cannyOutput_for_balls, search_image, cv::Size(pre_hough_blur_size, pre_hough_blur_size), 0);   // Nominal is 7x7
 
                 break;
             }
 
 
-            case kExternalStrobe: {
+            case kExternallyStrobed: {
 
-                // The lines of the golf-shaft in a strobed environment
+                // Attempt to remove the lines of the golf-shaft in an externally-strobed environment.  
+                // Sadly, this is better accomplished by simply putting IR-black felt over the shaft.
                 std::vector<cv::Vec4i> lines;
 
                 if (GolfSimCamera::kExternallyStrobedEnvFilterImage) {
@@ -512,6 +635,11 @@ namespace golf_sim {
                     }
 
                     LoggingTools::DebugShowImage(image_name_ + "After CleanExternalStrobeArtifacts", search_image);
+                }
+
+                if (!PreProcessStrobedImage(search_image, kExternallyStrobed)) {
+                    GS_LOG_MSG(error, "Failed to PreProcessStrobedImage");
+                    return false;
                 }
 
                 break;
@@ -651,18 +779,18 @@ namespace golf_sim {
                 currentDp = use_alt ? kStrobedBallsAltHoughDpParam1 : kStrobedBallsHoughDpParam1;         // Must be between 0 and 2 (double).Nominal is 2, CURRENT = 1.2
                 break;
             }
-            case kExternalStrobe:
+            case kExternallyStrobed:
             {
-                starting_param2 = kExternallyStrobedEnvBallStartingParam2;
-                min_param2 = kExternallyStrobedEnvBallMinParam2;
-                max_param2 = kExternallyStrobedEnvBallMaxParam2;
+                starting_param2 = kExternallyStrobedEnvStartingParam2;
+                min_param2 = kExternallyStrobedEnvMinParam2;
+                max_param2 = kExternallyStrobedEnvMaxParam2;
                 // In the strobed image, there may be overlapping balls. so the search distance should be small
 
                 // The lower the value, the sloppier the found circles can be.  But crank it up too far and 
                 // we don't pick up overlapped circles.
-                currentParam1 = kExternallyStrobedEnvBallCurrentParam1;
+                currentParam1 = kExternallyStrobedEnvCurrentParam1;
                 // Don't want to get too crazy loose too fast in order to find more balls
-                param2_increment = kExternallyStrobedEnvBallParam2Increment;
+                param2_increment = kExternallyStrobedEnvParam2Increment;
 
                 // We have to have at least two candidate balls to do spin analysis
                 // Try for more tp make sure we get all the overlapped balls.
@@ -749,7 +877,7 @@ namespace golf_sim {
             }
         }
 
-        if (search_mode == kStrobed || search_mode == kExternalStrobe || search_mode == kFindPlacedBall) {
+        if (search_mode == kStrobed || search_mode == kExternallyStrobed || search_mode == kFindPlacedBall) {
 
             if (kUseDynamicRadiiAdjustment) {
 
@@ -774,9 +902,9 @@ namespace golf_sim {
                 }
 
                 // Externally-strobed environments need a looser Param2
-                if (search_mode == kExternalStrobe) {
-                    narrowing_radii_param2 = kExternallyStrobedEnvBallNarrowingParam2;
-                    narrowing_dp_param = kExternallyStrobedEnvBallNarrowingDpParam;
+                if (search_mode == kExternallyStrobed) {
+                    narrowing_radii_param2 = kExternallyStrobedEnvNarrowingParam2;
+                    narrowing_dp_param = kExternallyStrobedEnvNarrowingDpParam;
                 }
                     
                 // For some reason, odd maximum_search_radius values were resulting in bad circle identification
@@ -881,7 +1009,7 @@ namespace golf_sim {
 
                 minimum_distance = minimum_search_radius * 0.5;
 
-                /** TBD - REMOVE - Not necessary for GRADIENT_ALT now
+                /* TBD - REMOVE - Not necessary for GRADIENT_ALT now
                 if (kUseDynamicRadiiAdjustment && (search_mode == kFindPlacedBall)) {
                     // If we're using dynamic radii adjustment, we'd like to look at potentially several circles in a tight area
                     minimum_distance = 1;
@@ -1439,16 +1567,17 @@ namespace golf_sim {
             cv::GaussianBlur(cannyOutput_for_balls, finalChoiceSubImg, cv::Size(kBestCirclePreHoughBlurSize, kBestCirclePreHoughBlurSize), 0);   // Nominal is 7x7
         }
         else {
-            cv::GaussianBlur(finalChoiceSubImg, finalChoiceSubImg, cv::Size(kExternallyStrobedBestCirclePreCannyBlurSize, kExternallyStrobedBestCirclePreCannyBlurSize), 0);
+            // cv::GaussianBlur(finalChoiceSubImg, finalChoiceSubImg, cv::Size(kExternallyStrobedBestCirclePreCannyBlurSize, kExternallyStrobedBestCirclePreCannyBlurSize), 0);
 
-            cv::Canny(finalChoiceSubImg, cannyOutput_for_balls, kExternallyStrobedBestCircleCannyLower, kExternallyStrobedBestCircleCannyUpper);
+            // cv::Canny(finalChoiceSubImg, cannyOutput_for_balls, kExternallyStrobedBestCircleCannyLower, kExternallyStrobedBestCircleCannyUpper);
+            cannyOutput_for_balls = finalChoiceSubImg.clone();
 
             LoggingTools::DebugShowImage("Best Circle (externally-strobed)" + std::to_string(expandedRadiusForHough) + "  cannyOutput for best ball", cannyOutput_for_balls);
 
             // Blur the lines-only image back to the search_image that the code below uses
             cv::GaussianBlur(cannyOutput_for_balls, finalChoiceSubImg, cv::Size(kExternallyStrobedBestCirclePreHoughBlurSize, kExternallyStrobedBestCirclePreHoughBlurSize), 0);   // Nominal is 7x7
         }
-        /*****
+        /***** THIS WAS PERFORMING POORLY - TBD - Probably remove
         cv::GaussianBlur(finalChoiceSubImg, finalChoiceSubImg, cv::Size(7, 7), 0);   // Nominal is 7x7
 
 
@@ -1462,6 +1591,7 @@ namespace golf_sim {
         double currentParam1 = is_externally_strobed ? kExternallyStrobedBestCircleParam1 : kBestCircleParam1;
         double currentParam2 = is_externally_strobed ? kExternallyStrobedBestCircleParam2 : kBestCircleParam2;  // TBD - was 25
         double currentDp = is_externally_strobed ? kExternallyStrobedBestCircleHoughDpParam1 : kBestCircleHoughDpParam1;  // TBD - was 1.3?
+
         // TBD - Increase?  We want to be able to find several circles really close to one another
         int minimum_inter_ball_distance = 20; // has to be at least 1  .  Larger than 1 effectively turns off multiple balls
 
@@ -1478,7 +1608,7 @@ namespace golf_sim {
         cv::HoughCircles(
             finalChoiceSubImg,
             finalTargetedCircles,
-            cv::HOUGH_GRADIENT,  // cv::HOUGH_GRADIENT_ALT,
+            cv::HOUGH_GRADIENT_ALT,  // cv::HOUGH_GRADIENT,
             currentDp,
             /*minDist = */ minimum_inter_ball_distance, 
             /*param1 = */ currentParam1,
@@ -2638,7 +2768,11 @@ namespace golf_sim {
 
         // We will split the difference in the angles so that the amount of de-rotation we need to do is spread evenly
         // across the two images
+
+        // angleOffsetDeltas1 (and the floating-point version) are the angles that ball 1 must be rotated in
+        // order to take it halfway to where ball 2 is
         cv::Vec3f angleOffsetDeltas1Float = (angleOffset2 - angleOffset1) / 2.0;
+        angleOffsetDeltas1Float[1] *= -1.0;  // Account for how our rotations are signed
         cv::Vec3i angleOffsetDeltas1 = CvUtils::Round(angleOffsetDeltas1Float);
 
 
@@ -2646,18 +2780,19 @@ namespace golf_sim {
         GetRotatedImage(unrotatedBallImg1DimpleEdges, local_ball1, angleOffsetDeltas1, ball_image1DimpleEdges);
 
         GS_LOG_TRACE_MSG(trace, "Adjusting rotation for camera view of ball 1 to offset (x,y,z)=" + std::to_string(angleOffsetDeltas1[0]) + "," + std::to_string(angleOffsetDeltas1[1]) + "," + std::to_string(angleOffsetDeltas1[2]));
-        LoggingTools::DebugShowImage("Final perspective-de-rotated filtered ball_image1DimpleEdges: ", ball_image1DimpleEdges);
+        LoggingTools::DebugShowImage("Final perspective-de-rotated filtered ball_image1DimpleEdges: ", ball_image1DimpleEdges, center1);
         
-        // The second rotation deltas will be the remainder of (approximately) the other half of the necessary degrees to get everyting to be the same perspective
+        // The second rotation deltas will be the remainder of (approximately) the other half of the necessary degrees to get everything to be the same perspective
         cv::Vec3i angleOffsetDeltas2 = CvUtils::Round(  -(( angleOffset2 - angleOffset1) - angleOffsetDeltas1Float) );
+        angleOffsetDeltas2[1] = -angleOffsetDeltas2[1];
 
 
         cv::Mat unrotatedBallImg2DimpleEdges = ball_image2DimpleEdges.clone();
         GetRotatedImage(unrotatedBallImg2DimpleEdges, local_ball2, angleOffsetDeltas2, ball_image2DimpleEdges);
         GS_LOG_TRACE_MSG(trace, "Adjusting rotation for camera view of ball 2 to offset (x,y,z)=" + std::to_string(angleOffsetDeltas2[0]) + "," + std::to_string(angleOffsetDeltas2[1]) + "," + std::to_string(angleOffsetDeltas2[2]));
-        LoggingTools::DebugShowImage("Final perspective-de-rotated filtered ball_image2DimpleEdges: ", ball_image2DimpleEdges);
+        LoggingTools::DebugShowImage("Final perspective-de-rotated filtered ball_image2DimpleEdges: ", ball_image2DimpleEdges, center1);
 
-        // Although unnecessary for the algorithm, the following DEBUG code shows the original image as it would appear rotated in the same way as the gabor-filtered balls
+        // Although unnecessary for the algorithm, the following DEBUG code shows the original image as it would appear rotated in the same way as the Gabor-filtered balls
         
         cv::Mat normalizedOriginalBallImg1 = originalBallImg1.clone();
         GetRotatedImage(originalBallImg1, local_ball1, angleOffsetDeltas1, normalizedOriginalBallImg1);
@@ -2667,6 +2802,8 @@ namespace golf_sim {
         LoggingTools::DebugShowImage("Final rotated originalBall2: ", normalizedOriginalBallImg2, center2);
         
 #ifdef __unix__ 
+        // Save the normalized ball images to the webserver shared directory so that the user
+        // can compare them to the final rotated image.
         GsUISystem::SaveWebserverImage(GsUISystem::kWebServerResultSpinBall1Image, normalizedOriginalBallImg1);
         GsUISystem::SaveWebserverImage(GsUISystem::kWebServerResultSpinBall2Image, normalizedOriginalBallImg2);
 #endif
@@ -2679,7 +2816,7 @@ namespace golf_sim {
         // Initial angle search will be fairly coarse
         initialSearchSpace.anglex_rotation_degrees_increment = kCoarseXRotationDegreesIncrement;
         initialSearchSpace.anglex_rotation_degrees_start = kCoarseXRotationDegreesStart;
-        initialSearchSpace.anglex_rotation_degrees_end = kCoarseXRrotationDegreesEnd;
+        initialSearchSpace.anglex_rotation_degrees_end = kCoarseXRotationDegreesEnd;
         initialSearchSpace.angley_rotation_degrees_increment = kCoarseYRotationDegreesIncrement;
         initialSearchSpace.angley_rotation_degrees_start = kCoarseYRotationDegreesStart;
         initialSearchSpace.angley_rotation_degrees_end = kCoarseYRotationDegreesEnd;
@@ -2695,16 +2832,16 @@ namespace golf_sim {
 
         // Compare the second (presumably rotated) ball image to different candidate rotations of the first ball image to determine the angular change
         std::vector<std::string> comparison_csv_data;
-        int maxIndex = CompareCandidateAngleImages(&ball_image2DimpleEdges, &outputCandidateElementsMat, &output_candidate_elements_mat_size, &candidates, comparison_csv_data);
+        int best_candidate_index = CompareCandidateAngleImages(&ball_image2DimpleEdges, &outputCandidateElementsMat, &output_candidate_elements_mat_size, &candidates, comparison_csv_data);
         
         cv::Vec3f rotationResult;
 
-        if (maxIndex < 0) {
+        if (best_candidate_index < 0) {
             LoggingTools::Warning("No best candidate found.");
             return rotationResult;
         }
 
-        bool write_spin_analysis_CSV_files = false;
+        bool write_spin_analysis_CSV_files = true;
 
         GolfSimConfiguration::SetConstant("gs_config.spin_analysis.kWriteSpinAnalysisCsvFiles", write_spin_analysis_CSV_files);
         
@@ -2722,12 +2859,12 @@ namespace golf_sim {
         }
 
         // See which angle looked best and then iterate more closely near those angles
-        RotationCandidate c = candidates[maxIndex];
+        RotationCandidate c = candidates[best_candidate_index];
 
-        std::string s = "Best Coarse Initial Rotation Candidate was #" + std::to_string(maxIndex) + " - Rot: (" + std::to_string(c.x_rotation_degrees) + ", " + std::to_string(c.y_rotation_degrees) + ", " + std::to_string(c.z_rotation_degrees) + ") ";
+        std::string s = "Best Coarse Initial Rotation Candidate was #" + std::to_string(best_candidate_index) + " - Rot: (" + std::to_string(c.x_rotation_degrees) + ", " + std::to_string(c.y_rotation_degrees) + ", " + std::to_string(c.z_rotation_degrees) + ") ";
         GS_LOG_MSG(debug, s);
 
-        // Now iterate more cloesely in the area that looks best
+        // Now iterate more closely in the area that looks best
         RotationSearchSpace finalSearchSpace;
 
         int anglex_window_width = (int)std::round(ceil(initialSearchSpace.anglex_rotation_degrees_increment / 2.));
@@ -2755,8 +2892,9 @@ namespace golf_sim {
         ComputeCandidateAngleImages(ball_image1DimpleEdges, finalSearchSpace, finalOutputCandidateElementsMat, finalOutputCandidateElementsMatSize, finalCandidates, local_ball1);
 
         // TBD - change CompareCandidateAngleImages to work directly with the "3D" images
-        maxIndex = CompareCandidateAngleImages(&ball_image2DimpleEdges, &finalOutputCandidateElementsMat, &finalOutputCandidateElementsMatSize, &finalCandidates, comparison_csv_data);
+        best_candidate_index = CompareCandidateAngleImages(&ball_image2DimpleEdges, &finalOutputCandidateElementsMat, &finalOutputCandidateElementsMatSize, &finalCandidates, comparison_csv_data);
 
+        // Save all the candidate scores to a CSV file if requested
         if (write_spin_analysis_CSV_files) {
 
             std::string csv_fname_fine = "spin_analysis_fine.csv";
@@ -2770,33 +2908,46 @@ namespace golf_sim {
             csv_file_fine.close();
         }
 
-        // Analyze the results
-        int bestRotX = 0;
-        int bestRotY = 0;
-        int bestRotZ = 0;
+        // Analyze the fine-grained results
+        int best_rot_x = 0;
+        int best_rot_y = 0;
+        int best_rot_z = 0;
 
-        if (maxIndex >= 0) {
-            RotationCandidate finalC = finalCandidates[maxIndex];
-            bestRotX = finalC.x_rotation_degrees;
-            bestRotY = finalC.y_rotation_degrees;
-            bestRotZ = finalC.z_rotation_degrees;
-            std::string s = "Best Raw Fine (and final) Rotation Candidate was #" + std::to_string(maxIndex) + " - Rot: (" + std::to_string(bestRotX) + ", " + std::to_string(bestRotY) + ", " + std::to_string(bestRotZ) + ") ";
+        if (best_candidate_index >= 0) {
+            RotationCandidate finalC = finalCandidates[best_candidate_index];
+            best_rot_x = finalC.x_rotation_degrees;
+            best_rot_y = finalC.y_rotation_degrees;
+            best_rot_z = finalC.z_rotation_degrees;
+
+            // TBD - Experiment - are Y and X reversed?  Try it here...
+            // best_rot_x = finalC.y_rotation_degrees;
+            // best_rot_y = finalC.x_rotation_degrees;
+
+            std::string s = "Best Raw Fine (and final) Rotation Candidate was #" + std::to_string(best_candidate_index) + " - Rot: (" + std::to_string(best_rot_x) + ", " + std::to_string(best_rot_y) + ", " + std::to_string(best_rot_z) + ") ";
             GS_LOG_MSG(debug, s);
 
-            /*** DEBUG ***/
-                cv::Mat bestImg3D = finalCandidates[maxIndex].img;
-                cv::Mat bestImg2D = cv::Mat::zeros(ball_image1DimpleEdges.rows, ball_image1DimpleEdges.cols, ball_image1DimpleEdges.type());
-                Unproject3dBallTo2dImage(bestImg3D, bestImg2D, ball2);
-                LoggingTools::DebugShowImage("Best Final Rotation Candidate Image", bestImg2D);
+            /*** FOR DEBUG ***/
+            cv::Mat bestImg3D = finalCandidates[best_candidate_index].img;
+            cv::Mat bestImg2D = cv::Mat::zeros(ball_image1DimpleEdges.rows, ball_image1DimpleEdges.cols, ball_image1DimpleEdges.type());
+            Unproject3dBallTo2dImage(bestImg3D, bestImg2D, ball2);
+            LoggingTools::DebugShowImage("Best Final Rotation Candidate Image", bestImg2D);
         } 
         else {
             LoggingTools::Warning("No best final candidate found.  Returning 0,0,0 spin results.");
             rotationResult = cv::Vec3d(0, 0, 0);
         }
 
-        // Now translate the spin angles so that the axes are the same as the ball plane.  
+        // The above angular deltas were calculated relative to a coordinate system that is at an angle
+        // from the camera to the balls. So...
+        // Now translate the spin angles so that the axes are the same as the PiTrac's and Sim's axes, where, 
+        // for example, the Z and Y axes are parallel to the ground plane on which PiTrac sits, and the X axis
+        // is orthogonal to that plane
 
-        cv::Vec3f spin_offset_angle = ( angleOffset1 + angleOffsetDeltas1Float );
+        // We negated the Y offset delta before to account for the Sim's rotational scheme, so will undo here.
+        // The idea is to determine the angle to the point in space that was between the two balls.
+        cv::Vec3f spin_offset_angle;
+        spin_offset_angle[0] = angleOffset1[0] + angleOffsetDeltas1Float[0];
+        spin_offset_angle[1] = angleOffset1[1] - angleOffsetDeltas1Float[1];
 
         GS_LOG_TRACE_MSG(trace, "Now normalizing for spin_offset_angle = (" + std::to_string(spin_offset_angle[0]) + ", " + 
                                     std::to_string(spin_offset_angle[1]) + ", " + std::to_string(spin_offset_angle[2]) + ").");
@@ -2805,33 +2956,38 @@ namespace golf_sim {
         double spin_offset_angle_radians_Y = CvUtils::DegreesToRadians(spin_offset_angle[1]);
         double spin_offset_angle_radians_Z = CvUtils::DegreesToRadians(spin_offset_angle[2]);
 
-        int normalizedRotX = (int)round( (double)bestRotX * cos(spin_offset_angle_radians_Y) + (double)bestRotZ * sin(spin_offset_angle_radians_Y) );
-        int normalizedRotY = (int)round( (double)bestRotY * cos(spin_offset_angle_radians_X) - (double)bestRotZ * sin(spin_offset_angle_radians_Y) );
-        int normalizedRotZ = (int)round( (double)bestRotZ * cos(spin_offset_angle_radians_X) - (double)bestRotY * sin(spin_offset_angle_radians_X) );
+        // Peform the normalization to the real-world axes
+        int normalized_rot_x = (int)round( (double)best_rot_x * cos(spin_offset_angle_radians_Y) + (double)best_rot_z * sin(spin_offset_angle_radians_Y) );
+        int normalized_rot_y = (int)round( (double)best_rot_y * cos(spin_offset_angle_radians_X) - (double)best_rot_z * sin(spin_offset_angle_radians_X) );
 
-        GS_LOG_TRACE_MSG(trace, "Normalized spin angles (X,Y,Z) = (" + std::to_string(normalizedRotX) + ", " + std::to_string(normalizedRotY) + ", " + std::to_string(normalizedRotZ) + ").");
+        int normalized_rot_z = (int)round((double)best_rot_z * cos(spin_offset_angle_radians_X) * cos(spin_offset_angle_radians_Y));
+        normalized_rot_z -= (int)round((double)best_rot_y * sin(spin_offset_angle_radians_X));
+        normalized_rot_z -= (int)round((double)best_rot_x * sin(spin_offset_angle_radians_Y));
 
-        rotationResult = cv::Vec3d(normalizedRotX, normalizedRotY, normalizedRotZ);
+        rotationResult = cv::Vec3d(normalized_rot_x, normalized_rot_y, normalized_rot_z);
 
+        GS_LOG_TRACE_MSG(trace, "Normalized spin angles (X,Y,Z) = (" + std::to_string(normalized_rot_x) + ", " + std::to_string(normalized_rot_y) + ", " + std::to_string(normalized_rot_z) + ").");
+        
+        
         // TBD _ DEBUG
         // See how the original image would look if rotated as the GetBallRotation function calculated
         // We will NOT use the normalized rotations, as the UN-normalized rotations will look most correct
         // in the context of the manner they are imaged by the camera.
 
         cv::Mat resultBball2DImage;
-        GetRotatedImage(ball_image1DimpleEdges, local_ball1, cv::Vec3i(bestRotX, bestRotY, bestRotZ), resultBball2DImage);
+
+        GetRotatedImage(ball_image1DimpleEdges, local_ball1, cv::Vec3i(best_rot_x, best_rot_y, best_rot_z), resultBball2DImage);
 
 
-        // LoggingTools::DebugShowImage("Ball 1 rotated", resultBball2DImage);
         if (GolfSimOptions::GetCommandLineOptions().artifact_save_level_ != ArtifactSaveLevel::kNoArtifacts && kLogIntermediateSpinImagesToFile) {
             LoggingTools::LogImage("", resultBball2DImage, std::vector < cv::Point >{}, true, "Filtered Ball1_Rotated_By_Best_Angles.png");
         }
 
-        // We wnat to show apples to apples, so show the normalized images
+        // We want to show apples to apples, so show the normalized images
         cv::Mat test_ball1_image = normalizedOriginalBallImg1.clone();
-        GetRotatedImage(normalizedOriginalBallImg1, local_ball1, cv::Vec3i(bestRotX, bestRotY, bestRotZ), test_ball1_image);
+        GetRotatedImage(normalizedOriginalBallImg1, local_ball1, cv::Vec3i(best_rot_x, best_rot_y, best_rot_z), test_ball1_image);
 
-        // We'll write a circle on the final image here, but we're not going to re-use that image, so it's ok
+        // We'll draw a center-dot on the final image here, but we're not going to re-use that image, so it's ok
         cv::Scalar color{ 0, 0, 0 };
         const GsCircle& circle = local_ball1.ball_circle_;
         cv::circle(test_ball1_image, cv::Point((int)local_ball1.x(), (int)local_ball1.y()), (int)circle[2], color, 2 /*thickness*/);
@@ -2839,12 +2995,14 @@ namespace golf_sim {
 
 
 #ifdef __unix__ 
+        // Save the final, rotated, normalized ball result image to the webserver shared directory so that the user
+        // can compare them to the original normalized images.
         GsUISystem::SaveWebserverImage(GsUISystem::kWebServerResultBallRotatedByBestAngles, test_ball1_image);
 #endif
 
-        // TBD - Looks like golf folks consider the X (side) spin to be positive if the surface is
+        // Looks like golf folks consider the X (side) spin to be positive if the surface is
         // going from right to left.  So we negate it here.
-        rotationResult[0] *= -1;
+        rotationResult[0] = -rotationResult[0];
 
         // Note that we return angles, not angular velocities.  The velocities will
         // be determined later based on the derived ball speed.

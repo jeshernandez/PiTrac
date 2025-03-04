@@ -2016,7 +2016,7 @@ namespace golf_sim {
             BallImageProc::BallSearchMode processing_mode = BallImageProc::BallSearchMode::kStrobed;
 
             if (GolfSimOptions::GetCommandLineOptions().lm_comparison_mode_) {
-                processing_mode = BallImageProc::BallSearchMode::kExternalStrobe;
+                processing_mode = BallImageProc::BallSearchMode::kExternallyStrobed;
             }
 
             // If we're putting, the ball should only be in the lower one-half to one-third of the image
@@ -2527,6 +2527,11 @@ namespace golf_sim {
             // Distance ratios will be adjusted to account for ball slow down 
             if (!GetBallDistancesAndRatios(input_balls, distances, distance_ratios)) {
                 LoggingTools::Warning("GetBallDistancesAndRatios failed.");
+                return false;
+            }
+
+            if (distances.empty()) {
+                LoggingTools::Warning("GetBallDistancesAndRatios returned no data.  Has the strobe vector been established?");
                 return false;
             }
 
@@ -3194,7 +3199,7 @@ namespace golf_sim {
             // Now use the two 'best' balls to determine the position deltas for the balls so that we 
             // can, for example, compute velocity
             if (!camera.ComputeBallDeltas(spin_ball1, spin_ball2, camera, camera)) {
-                GS_LOG_MSG(error, "ProcessReceivedCam2Image - failed to ComputeBallDeltas for spin ball.");
+                GS_LOG_MSG(error, "ProcessSpin - failed to ComputeBallDeltas for spin ball.");
                 return false;
             }
 
@@ -3204,7 +3209,7 @@ namespace golf_sim {
 
             LoggingTools::Trace("Two closest balls (for spin analysis) are:\n" + spin_ball1.Format() + "\nand\n" + spin_ball2.Format());
 
-            ShowAndLogBalls("ProcessReceivedCam2Image - Final Spin Balls", strobed_balls_gray_image, finalSpinBalls, kLogIntermediateExposureImagesToFile);
+            ShowAndLogBalls("ProcessSpin - Final Spin Balls", strobed_balls_gray_image, finalSpinBalls, kLogIntermediateExposureImagesToFile);
 
 
             // The best spin analysis will likely be between the two closest balls that are non-overlapping
@@ -3350,7 +3355,7 @@ namespace golf_sim {
 
                     GolfBall ball2 = balls_and_timing[j].ball;
 
-                    GS_LOG_MSG(error, "ComputeAveragedStrobedBallData comparing the following two balls (indexes are within the vector): Balls (" + std::to_string(i) + ", " + std::to_string(j) + ").");
+                    GS_LOG_MSG(trace, "ComputeAveragedStrobedBallData comparing the following two balls (indexes are within the vector): Balls (" + std::to_string(i) + ", " + std::to_string(j) + ").");
 
                     // Ball2 will have the averaged information
                     if (!ComputeBallDeltas(ball1, ball2, camera, camera /* all_balls_camera2 */)) {
@@ -3480,7 +3485,7 @@ namespace golf_sim {
 
                     // The 13.6 and 8 just allows the too-big-of-a-radius-change limit to be relative to the
                     // number of pixels we have to work with.  Should be about 08.
-                    radius_similarity_score = std::max(0.0, (img.rows / 13.6) - pow(5.0 * (ball1.measured_radius_pixels_ - ball2.measured_radius_pixels_), 2.0)) / 8.;
+                    radius_similarity_score = std::max(0.0, (img.rows / 13.6) - 3.0 * pow((ball1.measured_radius_pixels_ - ball2.measured_radius_pixels_), 2.0)) / 8.;
 
                     // Not implemented yet - TBD
                     if (GolfSimOptions::GetCommandLineOptions().golfer_orientation_ == GolferOrientation::kRightHanded) {
@@ -3533,10 +3538,6 @@ namespace golf_sim {
 
                 GS_LOG_TRACE_MSG(trace, "Potential Spin Ball Combination of balls ( " + std::to_string(ball_pair_element.ball1_index) + ", " + std::to_string(ball_pair_element.ball2_index) + ") scored: " + spin_ball_score_text);
             }
-
-            // TBD - REMOVE?  Still necessary?
-            GolfBall averaged_ball;
-            GolfBall::AverageBalls(balls, averaged_ball);
 
             // Find the balls with the two highest scores
 

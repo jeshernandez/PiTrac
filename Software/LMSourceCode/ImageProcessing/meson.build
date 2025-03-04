@@ -58,7 +58,7 @@ opencv_dep = dependency('opencv4', required : true, version : '>=4.9.0', include
 lgpio_dep = dependency('lgpio', required : true)
 fmt_dep = dependency('fmt', required : true)
 
-boost_dep = dependency('boost', method: 'pkg-config', version : '>=1.74.0', modules : ['timer', 'log', 'thread'])
+boost_dep = dependency('boost', method: 'pkg-config', version : '>=1.74.0', modules : ['timer', 'log', 'thread', 'filesystem', 'regex'])
 
 msgpack_dep = dependency('msgpack-cxx', required : true)
 
@@ -97,13 +97,13 @@ pitrac_lm_sources = []
 
 if enable_recompile_closed_source 
     message('Recompiling closed source code')
-    run_command('cp', '../../ClosedSourceCode/gs_e6_response.cpp.EMPTY', 'gs_e6_response.cpp', check:true)
+    run_command('cp', '/home/USERNAME/Dev/ClosedSourceCode/gs_e6_response.cpp.FULL', 'gs_e6_response.cpp', check:true)
     pitrac_lm_sources += ([ 'gs_e6_response.cpp' ])
 endif
 
 if enable_recompile_closed_source 
     message('Recompiling closed source code')
-    run_command('cp', '../../ClosedSourceCode/obfuscate.h', 'obfuscate.h', check:true)
+    run_command('cp', '/home/USERNAME/Dev/ClosedSourceCode/obfuscate.h', 'obfuscate.h', check:true)
     pitrac_lm_sources += ([ 'gs_e6_response.cpp' ])
 endif
 
@@ -149,6 +149,7 @@ pitrac_lm_sources += ([
 			'EllipseDetectorCommon.cpp',
 			'EllipseDetectorYaed.cpp',
 			'golf_ball.cpp',
+			'gs_automated_testing.cpp',
 			'gs_camera.cpp',
 			'gs_clubs.cpp',
 			'gs_club_data.cpp',
