@@ -23,5 +23,12 @@ Messaging Pi (aka Raspberry Pi 2, Bottom Pi) // Desc: Where ActiveMQ and Tomee w
 - Flight Pi - used for messaging running ActiveMQ and Apache Tomee. Installed on the bottom floor of the enclosure.
     - Connected to the Flight camera (the modified camera).
 
+### PiTrac 
+<a href="https://1drv.ms/i/c/35c1f51c7fbc7aba/IQSr4Eu550wjRoRfLHclEgkAARA1St3Qvlx-dvPuE9Aupqc?width=1024">
+<img src="https://1drv.ms/i/c/35c1f51c7fbc7aba/IQSr4Eu550wjRoRfLHclEgkAARA1St3Qvlx-dvPuE9Aupqc?width=1024" alt="PiTrac">
+</a>
 
-![](../assets/images/diagram.png)
+### Diagram
+<a href="https://1drv.ms/i/c/35c1f51c7fbc7aba/IQRJJ03UsL98QbZK4ppRKmdsAQ_Gr50rl9IbFNyvEkk1Wyg?width=1030&height=894">
+<img src="https://1drv.ms/i/c/35c1f51c7fbc7aba/IQRJJ03UsL98QbZK4ppRKmdsAQ_Gr50rl9IbFNyvEkk1Wyg?width=1030&height=894" alt="PiTrac Diagram">
+</a>
