@@ -8,9 +8,17 @@
   },
   "1": {
     "doc": "Camera",
-    "title": "Home",
+    "title": "Calibration",
     "content": "Tee camera distances and angles (also referenced by and relevant for Flight camera process)   ",
     "url": "/camera",
+    
+    "relUrl": "/"
+  },
+  "2": {
+    "doc": "3DPrint",
+    "title": "3D Print",
+    "content": "3D Print Stuff",
+    "url": "/3dprint",
     
     "relUrl": "/"
   }
