@@ -38,7 +38,7 @@
     <jakarta-servlet-api.version>6.1.0-M1</jakarta-servlet-api.version>
 
     <!-- Apache ActiveMQ -->
-    <activemq-client.version>6.0.1</activemq-client.version>
+    <activemq-client.version>6.1.6</activemq-client.version>
     <!-- activemq-camel, vulnerability found, upgrade on future PR -->
     <activemq-camel.version>5.16.7</activemq-camel.version>
     <activemq-pool.version>6.0.1</activemq-pool.version>
