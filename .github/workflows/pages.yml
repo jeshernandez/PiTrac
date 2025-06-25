@@ -52,7 +52,7 @@ jobs:
 
       - name: Build with Jekyll
         working-directory: '${{ github.workspace }}/docs'
-        run: bundle exec jekyll build
+        run: bundle exec jekyll build 
         env:
           JEKYLL_ENV: production
 
