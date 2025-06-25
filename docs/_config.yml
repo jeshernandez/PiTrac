@@ -1,13 +1,15 @@
 title: PiTrac 
 description: Documentation for PiTrac
 theme: just-the-docs
+just_the_docs:
+  search_enabled: true
 
-url: https://just-the-docs.github.io
+baseurl: ""
+
+# url: https://just-the-docs.github.io
 
 aux_links:
   Edit Me: https://github.com/jamespilgrim/PiTrac/tree/main/docs
-
-search_enabled: true
 
 nav_enabled: true
 
@@ -27,8 +29,8 @@ back_to_top_text: "Back to top"
 last_edit_timestamp: true # show or hide edit time - page must have `last_modified_date` defined in the frontmatter
 last_edit_time_format: "%b %e %Y at %I:%M %p" # uses ruby's time format: https://ruby-doc.org/stdlib-2.7.0/libdoc/time/rdoc/Time.html
 
-plugins:
-  - jekyll-seo-tag
+# plugins:
+#   - jekyll-seo-tag
 
 search:
   # Split pages into sections that can be searched individually
