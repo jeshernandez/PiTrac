@@ -5,8 +5,8 @@
 /Software/LMSourceCode/ImageProcessing/build
 
 # Ignoring Jekyl Site files. 
-**/_site/
-docs/_site/
+# **/_site/
+# docs/_site/
 _site/
 .sass-cache/
 .jekyll-cache/
