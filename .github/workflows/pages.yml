@@ -45,12 +45,17 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        working-directory: '${{ github.workspace }}/docs'
+        run: bundle install
+
       - name: Build with Jekyll
         working-directory: '${{ github.workspace }}/docs'
-        # Outputs to the './_site' directory by default
         run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
+
       - name: Upload artifact
         # Automatically uploads an artifact from the './_site' directory by default
         uses: actions/upload-pages-artifact@v3
