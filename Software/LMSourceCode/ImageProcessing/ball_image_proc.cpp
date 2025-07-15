@@ -879,7 +879,7 @@ namespace golf_sim {
 
         if (search_mode == kStrobed || search_mode == kExternallyStrobed || search_mode == kFindPlacedBall) {
 
-            if (kUseDynamicRadiiAdjustment) {
+            if (kUseDynamicRadiiAdjustment && search_mode != kFindPlacedBall) {
 
                 double min_ratio;
                 double max_ratio;
@@ -3317,7 +3317,7 @@ namespace golf_sim {
         int pos_gamma = 4;   // Nominal: 4, might try 3
         int pos_th = 60;   // Nominal: 
         int pos_psi = 9;  // Seems to have to be 9 or 27.  Will be multiplied by 3 degrees - CRITICAL - other values do not work at all
-        float binary_threshold = 7.;   // *10.  Nominal: 3, might try 4-7
+        float binary_threshold = 11.;   // *10.  Nominal: 3, might try 4-7
 #else
         const int kernel_size = 21; //21;
         int pos_sigma = 2;   // Nominal: 2  (at 30 degree rotation increments)

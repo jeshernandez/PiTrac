@@ -26,7 +26,7 @@ namespace golf_sim {
 
     struct GsBallAndTimingElement {
         GolfBall ball;
-        double time_interval_before_ball_ms = 0;
+        double time_interval_before_ball_us = 0;
     };
 
     using GsBallsAndTimingVector = std::vector<GsBallAndTimingElement>;
@@ -359,19 +359,31 @@ namespace golf_sim {
         static void GetBallColorInformation(const cv::Mat& color_image, GolfBall& b);
 
         // Because the strobe timing between different images of the ball can differ from ball-pair to pair,
-        // this method helps figure ouw what those intervals are.
-        bool DetermineStrobeIntervals(int number_overlapping_balls_removed,
-                                      std::vector<GolfBall>& input_balls,
+        // this method helps figure what those intervals are.
+        bool DetermineStrobeIntervals(std::vector<GolfBall>& input_balls,
                                       int most_centered_ball_index,
                                       int second_ball_index,
                                       long& time_between_ball_images_ms,
                                       GsBallsAndTimingVector& return_balls_and_timing);
 
+        void PrintPulseVector(const std::vector<bool>& combinations_vector);
+
+        int CountSetBits(int n);
+
+        void SetPulseVector(int bit_value, std::vector<bool>& combinations_vector);
+
         int FindClosestRatioPatternMatchOffset(const std::vector<double> distance_ratios,
                                                const std::vector<double> pulse_ratios,
-                                               double& delta_to_closest_ratio);
+                                               double& delta_to_closest_ratio,
+                                               bool try_different_offsets = true);
 
-        bool GetPulseIntervalsAndRatios(std::vector<float>& pulse_pause_intervals, 
+        bool GetPulseIntervalsAndRatiosFromIntervalVector(  const std::vector<bool>& intervals_to_collapse_vector,
+                                                            const std::vector<float>& initial_pulse_intervals_ms,
+                                                            std::vector<float>& pulse_intervals,
+                                                            std::vector<double>& pulse_ratios);
+
+        bool GetPulseIntervalsAndRatios(const std::vector<float>& initial_pulse_intervals_ms, 
+                                        std::vector<float>& pulse_pause_intervals,
                                         std::vector<double>& pulse_pause_ratios,                                        
                                         const int number_pulses_to_collapse = -1,
                                         const int collapse_offset = -1);
