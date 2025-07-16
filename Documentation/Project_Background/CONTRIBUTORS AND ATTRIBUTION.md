@@ -41,6 +41,7 @@ We are also thankful for individual contributors who—even if we haven’t used
 13. Mark Harman (@Speci on Discord)  
 14. @[broschb](https://github.com/jamespilgrim/PiTrac/commits?author=broschb) and others on GitHub  
 15. Merrygrin, Scuzzy On Discord
+16. Ron Heywood
 
 We would not have been able to create the golf simulator interfaces without the help of the following folks:
 
