@@ -2682,7 +2682,7 @@ namespace golf_sim {
         void GolfSimCamera::PrintPulseVector(const std::vector<bool> &combinations_vector) {
             std::string v;
 
-            for (auto i = 0; i < combinations_vector.size(); ++i) {
+            for (int i = 0; i < (int)combinations_vector.size(); ++i) {
                 v += (combinations_vector[i] ? "1" : "0");
             }
 
@@ -2800,7 +2800,7 @@ namespace golf_sim {
                 // Because we're unlikely to have more than 8 or so possible strobes, we will just use a 
                 // brute-force method to figure out all combinations of exposures in the strobe vector.  
                 // This code iterates though all possible numbers of an n-bit number and whenever the number
-                // has the correct number of bits, we use that pattern as a possible candiadate for how the
+                // has the correct number of bits, we use that pattern as a possible candidate for how the
                 // exposures correllate to the strobes.
 
                 int number_missed_exposures = number_of_strobes - number_ball_exposures;
@@ -2811,7 +2811,7 @@ namespace golf_sim {
                         SetPulseVector(i, combinations_vector);
 
                         candidate_intervals_to_collapse_patterns_vector.push_back(combinations_vector);
-                        PrintPulseVector(combinations_vector);
+                        // Too detailed to keep in production system - PrintPulseVector(combinations_vector);
                     }
                 }
 
@@ -2825,15 +2825,17 @@ namespace golf_sim {
                     PrintPulseVector(intervals_to_collapse_vector);
 
                     // Just a breakpoint trigger for debugging
+                    /*
                     if (intervals_to_collapse_vector[0] == true &&
                         intervals_to_collapse_vector[1] == true &&
-                        intervals_to_collapse_vector[2] == true &&
-                        intervals_to_collapse_vector[3] == false &&
+                        intervals_to_collapse_vector[2] == false &&
+                        intervals_to_collapse_vector[3] == true &&
                         intervals_to_collapse_vector[4] == false &&
                         intervals_to_collapse_vector[5] == false &&
-                        intervals_to_collapse_vector[6] == false ) {
+                        intervals_to_collapse_vector[6] == false) {
                         GS_LOG_TRACE_MSG(trace, "----------> - Reached the vector of interest.");
                     }
+                    */
 
                     // Formulate a new set of pulses that correspond to the exposures that we found
                     // with the pulses corresponding to the 'missing' exposures collapsed/removed.
@@ -2849,13 +2851,13 @@ namespace golf_sim {
                     }
 
 
-                    LoggingTools::Trace("The (potentially collapsed) pulse_intervals were (ignore last '0' interval): ", pulse_intervals);
-                    LoggingTools::Trace("The (potentially collapsed) pulse_ratios were : ", pulse_ratios);
+                    // Too chatty- LoggingTools::Trace("The (potentially collapsed) pulse_intervals were (ignore last '0' interval): ", pulse_intervals);
+                    // LoggingTools::Trace("The (potentially collapsed) pulse_ratios were : ", pulse_ratios);
 
 
                     double delta_to_closest_ratio;
 
-                    int best_local_offset_of_distance_ratios = FindClosestRatioPatternMatchOffset(distance_ratios, pulse_ratios, delta_to_closest_ratio, false /* Try only the 0 offset */);
+                    int best_local_offset_of_distance_ratios = FindClosestRatioPatternMatchOffset(distance_ratios, pulse_ratios, delta_to_closest_ratio, true /* Try any offset */);
 
                     // If this is the closest match seen so far, save the information
                     if (best_local_offset_of_distance_ratios >= 0 && delta_to_closest_ratio <= best_ratio_distance) {
@@ -2882,7 +2884,6 @@ namespace golf_sim {
 
                 // We will retrieve the actual pulse interval (in uS) from the list of such intervals.
                 // Just need to figure out WHICH interval corresponds to the two balls of interest.
-                // TBD - CHANGE TO REFLECT NEW VECTOR USE
                 if (!GetPulseIntervalsAndRatiosFromIntervalVector(candidate_intervals_to_collapse_patterns_vector[best_intervals_pattern_index],
                                                                     PulseStrobe::GetPulseIntervals(), 
                                                                     pulse_intervals, 
@@ -2896,7 +2897,8 @@ namespace golf_sim {
 
                 // Transfer the pulse intervals to the array of balls and associated timing
                 // The first ball doesn't get a prior interval
-
+                // Input_balls area assumed to be sorted based on the handedness of the shot,
+                // so, right-to-left by X position for left-handed shots
                 for (size_t i = 0; i < input_balls.size(); i++) {
                     GolfBall& b = input_balls[i];
                     GsBallAndTimingElement be;
@@ -2907,13 +2909,15 @@ namespace golf_sim {
                     return_balls_and_timing.push_back(be);
                 }
                 // Sort the ball and timing vector by ball.x position, left to right
+                // Note that we do this same sort for both left and right-handed shots
                 std::sort(return_balls_and_timing.begin(), return_balls_and_timing.end(), [](const GsBallAndTimingElement& a, const GsBallAndTimingElement& b)
                     { return (a.ball.x() < b.ball.x()); });
 
 
                 if (second_ball_index > most_centered_ball_index) {
                     // The correct interval is the right one, as ball2 is to the right
-                    // of the middle ball.
+                    // of the middle ball.  Because of the sort we just did, this will also
+                    // be correct for left-handed playing, where the  
                     time_between_ball_images_uS = (long)std::round(1000 * pulse_intervals[most_centered_ball_index + best_final_offset_of_distance_ratios]);
                 }
                 else {
@@ -2987,7 +2991,7 @@ namespace golf_sim {
                         std::vector<float>pulse_intervals;
 
                         // We will retrieve the actual pulse interval (in uS) from the list of such intervals.
-                        // Just need to figure out WHICH interval coresponds to the two balls of interest.
+                        // Just need to figure out WHICH interval corresponds to the two balls of interest.
                         if (!GetPulseIntervalsAndRatios(PulseStrobe::GetPulseIntervals(), pulse_intervals, pulse_ratios)) {
                             GS_LOG_MSG(error, "GetPulseIntervalsAndRatios failed.");
                             return false;
@@ -3050,18 +3054,6 @@ namespace golf_sim {
                     // more intervals
                     current_pulse_intervals_ms = pulse_intervals;
                 }
-            }
-
-            // Do not create any collapsed intervals before we at least have a first 
-            // ball.  Until that point, there should be nothing in the vector 
-            // Note - this may occassionally result in multiple solutions that differ
-            // only in the first set of collapsed intervals, but have the same intervals
-            // after the first non-collapsed interval.
-            if (intervals_to_collapse_vector[0]) {
-                // There was at least one 'leading' collapsed interval, so the first
-                // such interval should be removed.
-                pulse_intervals.erase(pulse_intervals.begin());
-                pulse_ratios.erase(pulse_ratios.begin());
             }
 
             return true;
