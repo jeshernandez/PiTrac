@@ -564,8 +564,15 @@ namespace golf_sim {
 		long kPauseBeforeCamera2PrimingPulsesMs = 0;
 		GolfSimConfiguration::SetConstant("gs_config.cameras.kPauseBeforeCamera2PrimingPulsesMs", kPauseBeforeCamera2PrimingPulsesMs);
 
-		GS_LOG_TRACE_MSG(trace, "Waiting " + std::to_string(kPauseBeforeCamera2PrimingPulsesMs) + " milliseconds for the Camera2 system to prepare its camera.");
-		usleep(kPauseBeforeCamera2PrimingPulsesMs * 1000);
+		long wait_time_in_us = kPauseBeforeCamera2PrimingPulsesMs * 1000;
+
+		// Should need almost no time if we are all running on the same pi
+		if (GolfSimOptions::GetCommandLineOptions().run_single_pi_) {
+			wait_time_in_us /= 3;
+		}
+
+		GS_LOG_TRACE_MSG(trace, "Waiting " + std::to_string(wait_time_in_us) + " microseconds for the Camera2 system to prepare its camera.");
+		usleep(wait_time_in_us);
 		GS_LOG_TRACE_MSG(trace, "Sending PRIMING pulses.");
 		// SendCameraSpiPrimingPulses();
 
@@ -577,8 +584,8 @@ namespace golf_sim {
 
 		const int kOnTimeWidth = (int)((1.0 / kFrameRate) * 1000000. - kShutterSpeed);
 
-		GS_LOG_TRACE_MSG(trace, "Pulse kOffTimeWidth = " + std::to_string(kShutterSpeed));
-		GS_LOG_TRACE_MSG(trace, "Pulse kOnTimeWidth =  " + std::to_string(kOnTimeWidth));
+		GS_LOG_TRACE_MSG(trace, "Priming Pulse kOffTimeWidth = " + std::to_string(kShutterSpeed));
+		GS_LOG_TRACE_MSG(trace, "Priming Pulse kOnTimeWidth =  " + std::to_string(kOnTimeWidth));
 
 		int kPauseBeforeSendingLastPrimingPulse = 0;
 		GolfSimConfiguration::SetConstant("gs_config.cameras.kPauseBeforeSendingLastPrimingPulse", kPauseBeforeSendingLastPrimingPulse);
