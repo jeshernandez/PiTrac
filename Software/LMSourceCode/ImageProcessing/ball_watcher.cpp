@@ -90,22 +90,6 @@ bool ball_watcher_event_loop(RPiCamEncoder &app, bool & motion_detected)
 		else if (msg.type != RPiCamEncoder::MsgType::RequestComplete)
 			throw std::runtime_error("unrecognised message!");
 
-		/*
-		auto now = std::chrono::high_resolution_clock::now();
-		bool timeout = !options->frames && options->timeout &&
-					   (now - start_time > std::chrono::milliseconds(options->timeout));
-		bool frameout = options->frames && count >= options->frames;
-
-		if (timeout || frameout)
-		{
-			if (timeout)
-				LOG(1, "Halting: reached timeout of " << options->timeout << " milliseconds.");
-			app.StopCamera(); // stop complains if encoder very slow to close
-			app.StopEncoder();
-			return motion_detected;
-		}
-		*/
-
 		CompletedRequestPtr &completed_request = std::get<CompletedRequestPtr>(msg.payload);
                 if (!app.EncodeBuffer(completed_request, app.VideoStream()))
                 {
