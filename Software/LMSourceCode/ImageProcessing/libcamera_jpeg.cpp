@@ -91,7 +91,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 
 	auto start_time = std::chrono::high_resolution_clock::now();
 
-	const long kQuiesceTimeMs = 1000; 
+	const long kQuiesceTimeMs = 1500; 
 
 	// Set the starting time to now, even though we will override it when the first trigger is received
 	std::chrono::steady_clock::time_point timeOfFirstTrigger = std::chrono::steady_clock::now();
