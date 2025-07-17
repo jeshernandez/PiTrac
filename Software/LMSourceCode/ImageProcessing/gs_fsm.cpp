@@ -131,7 +131,7 @@ namespace golf_sim {
             GolfSimEventElement beginWaitingForBallPlacedEvent{ new GolfSimEvent::BeginWaitingForBallPlaced{ } };
             GolfSimEventQueue::QueueEvent(beginWaitingForBallPlacedEvent);
 
-            return state::WaitingForBall{ std::chrono::steady_clock::now() };
+            return state::WaitingForBall{ std::chrono::steady_clock::now(), false /* have not sent the waiting-for-ball IPC message yet */ };
         }
 
         GolfSimEventElement beginWaitingForSimulatorArmedEvent{ new GolfSimEvent::BeginWaitingForSimulatorArmed{ } };
@@ -154,7 +154,7 @@ namespace golf_sim {
         // So just ignore.
         // TBD - a little sloppy - why not just get rid of the late-breaking event?
 
-        return state::WaitingForBall{ std::chrono::steady_clock::now() };
+        return state::WaitingForBall{ std::chrono::steady_clock::now(), false /* have not sent the waiting-for-ball IPC message yet */ };
     }
 
     GolfSimState onEvent(const state::WaitingForBall& waitingForBallState,
@@ -163,7 +163,9 @@ namespace golf_sim {
 
         // Let the monitor interface know what's happening
         // TBD - see if we need to move this back to the initializating state
-        GsUISystem::SendIPCStatusMessage(GsIPCResultType::kWaitingForBallToAppear);
+        if (!waitingForBallState.already_sent_waiting_ipc_message) {
+            GsUISystem::SendIPCStatusMessage(GsIPCResultType::kWaitingForBallToAppear);
+        }
 
         // This check will be called repeatedly by re-queuing events.
         // That way, we can process other, asynchronous, events like button presses and such as we
@@ -221,17 +223,15 @@ namespace golf_sim {
             cv::circle(img, cv::Point(ball.search_area_center_[0], ball.search_area_center_[1]), ball.search_area_radius_, c1, 2);
         }
 
-        // TBD -Make a low-res JPEG out of this so it doesn't take up so much space to store
+        // Update what it is the LM 'sees' when looking for th teed ball to allow users to see
+        // if they need to reposition that ball.
         GsUISystem::SaveWebserverImage(GsUISystem::kWebServerBallSearchAreaImage, img, true);
 
         // Queue up another event to get back here (after processing any other waiting events)
         GolfSimEventElement newBeginWaitingForBallPlacedEvent{ new GolfSimEvent::BeginWaitingForBallPlaced{ } };
         GolfSimEventQueue::QueueEvent(newBeginWaitingForBallPlacedEvent);
 
-        // Let the monitor interface know what's happening
-        GsUISystem::SendIPCStatusMessage(GsIPCResultType::kWaitingForBallToAppear);
-
-        return state::WaitingForBall{ std::chrono::steady_clock::now() };
+        return state::WaitingForBall{ std::chrono::steady_clock::now(), true /* already_sent_waiting_ipc_message */};
     }
 
 
@@ -276,7 +276,7 @@ namespace golf_sim {
             GolfSimEventElement beginWaitingForBallPlaced{ new GolfSimEvent::BeginWaitingForBallPlaced{ } };
             GolfSimEventQueue::QueueEvent(beginWaitingForBallPlaced);
 
-            return state::WaitingForBall{ std::chrono::steady_clock::now() };
+            return state::WaitingForBall{ std::chrono::steady_clock::now(), false /* send the ball-waiting message again*/};
         }
 
         // The ball has stabilized.  Now we just have to wait for the ball to be hit
@@ -369,7 +369,7 @@ namespace golf_sim {
             GolfSimEventElement beginWaitingForBallPlacedEvent{ new GolfSimEvent::BeginWaitingForBallPlaced{ } };
             GolfSimEventQueue::QueueEvent(beginWaitingForBallPlacedEvent);
 
-            return state::WaitingForBall{ std::chrono::steady_clock::now() };
+            return state::WaitingForBall{ std::chrono::steady_clock::now(), false /* have not sent the waiting-for-ball IPC message yet */};
         }
 
         // Otherwise, keep in waiting state
@@ -392,7 +392,7 @@ namespace golf_sim {
         GolfSimEventElement beginWaitingForSimulatorArmed{ new GolfSimEvent::BeginWaitingForSimulatorArmed{ } };
         GolfSimEventQueue::QueueEvent(beginWaitingForSimulatorArmed);
 
-        return state::WaitingForBall{ std::chrono::steady_clock::now() };
+        return state::WaitingForBall{ std::chrono::steady_clock::now(), false /* have not sent the waiting-for-ball IPC message yet */ };
     }
 
 
@@ -519,7 +519,7 @@ namespace golf_sim {
         GolfSimEventQueue::QueueEvent(beginWaitingForBallPlacedEvent);
 
 
-        return state::WaitingForBall{ std::chrono::steady_clock::now() };
+        return state::WaitingForBall{ std::chrono::steady_clock::now(), false /* have not sent the waiting-for-ball IPC message yet */ };
     }
 
     GolfSimState onEvent(const state::BallHitNowWaitingForCam2Image& BallHitNowWaitingForCam2Image,

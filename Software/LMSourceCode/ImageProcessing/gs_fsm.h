@@ -34,6 +34,7 @@ namespace golf_sim {
 
         struct WaitingForBall {
             std::chrono::steady_clock::time_point startTime_;
+            bool already_sent_waiting_ipc_message = false;
         };
 
         struct WaitingForSimulatorArmed {
