@@ -82,7 +82,7 @@ void MotionDetectStage::Read(boost::property_tree::ptree const &params)
 		config_.showroi = params.get<int>("show_roi", 0);
 	}
 
-	GS_LOG_MSG(trace, "MotionDetectStage::Configure set the following values:");
+	GS_LOG_MSG(trace, "MotionDetectStage::Read set the following values:");
 	GS_LOG_MSG(trace, "    config_.roi_x: " + std::to_string(config_.roi_x));
 	GS_LOG_MSG(trace, "    config_.roi_y: " + std::to_string(config_.roi_y));
 	GS_LOG_MSG(trace, "    config_.roi_width: " + std::to_string(config_.roi_width));
