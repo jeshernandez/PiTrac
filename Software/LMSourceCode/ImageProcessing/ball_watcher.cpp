@@ -19,6 +19,8 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
+#include "motion_detect.h"
+
 #include "logging_tools.h"
 #include "gs_globals.h"
 
@@ -53,8 +55,8 @@ bool ball_watcher_event_loop(RPiCamEncoder &app, bool & motion_detected)
 
 	VideoOptions const *options = app.GetOptions();
 	std::unique_ptr<Output> output = std::unique_ptr<Output>(Output::Create(options));
-	app.SetEncodeOutputReadyCallback(std::bind(&Output::OutputReady, output.get(), _1, _2, _3, _4));
-	app.SetMetadataReadyCallback(std::bind(&Output::MetadataReady, output.get(), _1));
+	app.SetEncodeOutputReadyCallback(std::bind(&Output::OutputReady, output.get(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	app.SetMetadataReadyCallback(std::bind(&Output::MetadataReady, output.get(), std::placeholders::_1));
 
 	app.OpenCamera();
 
@@ -62,6 +64,19 @@ bool ball_watcher_event_loop(RPiCamEncoder &app, bool & motion_detected)
 	GS_LOG_TRACE_MSG(trace, "ball_watcher_event_loop - starting encoder.");
 	app.StartEncoder();
 	app.StartCamera();
+
+	// Instead of using the dynamical link4ed-library approach used by lrpiocam apps, 
+	// we will just manually create a mottion_detect object
+
+	MotionDetectStage motion_detect_stage(&app);
+
+	// Setup the same elements of the stage that rpicam apps would otherwise do dynamically.
+
+	boost::property_tree::ptree empty_params;
+	motion_detect_stage.Read(empty_params);
+	motion_detect_stage.Configure();
+
+
 	auto start_time = std::chrono::high_resolution_clock::now();
 
 	pollfd p[1] = { { STDIN_FILENO, POLLIN, 0 } };
@@ -85,20 +100,25 @@ bool ball_watcher_event_loop(RPiCamEncoder &app, bool & motion_detected)
 			app.StartCamera();
 			continue;
 		}
+
 		if (msg.type == RPiCamEncoder::MsgType::Quit)
 			return motion_detected;
 		else if (msg.type != RPiCamEncoder::MsgType::RequestComplete)
 			throw std::runtime_error("unrecognised message!");
 
+		// We have a completed request for an image
 		CompletedRequestPtr &completed_request = std::get<CompletedRequestPtr>(msg.payload);
-                if (!app.EncodeBuffer(completed_request, app.VideoStream()))
-                {
-                        // Keep advancing our "start time" if we're still waiting to start recording (e.g.
-                        // waiting for synchronisation with another camera).
-                        start_time = std::chrono::high_resolution_clock::now();
-                        count = 0; // reset the "frames encoded" counter too
-                }
+        if (!app.EncodeBuffer(completed_request, app.VideoStream()))
+        {
+                // Keep advancing our "start time" if we're still waiting to start recording (e.g.
+                // waiting for synchronisation with another camera).
+                start_time = std::chrono::high_resolution_clock::now();
+                count = 0; // reset the "frames encoded" counter too
+        }
  
+		// Immediately have the motion detection stage determine if there was movement.
+
+		bool result = motion_detect_stage.Process(completed_request);
 
 		bool mdResult = false;
 		int getStatus = completed_request->post_process_metadata.Get("motion_detect.result", mdResult);

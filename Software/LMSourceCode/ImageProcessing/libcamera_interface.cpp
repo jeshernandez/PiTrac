@@ -823,7 +823,10 @@ bool ConfigureLibCameraOptions(RPiCamEncoder& app, const cv::Vec2i& cropping_win
     setenv("LIBCAMERA_RPI_TUNING_FILE", options->tuning_file.c_str(), 1);
     GS_LOG_TRACE_MSG(trace, "LIBCAMERA_RPI_TUNING_FILE set to: " + options->tuning_file);
 
-    options->post_process_file = LibCameraInterface::kCameraMotionDetectSettings;
+    // TBD - We are switching away from having the post_process_file trigger the
+    // dynamic loading of the motion_detection module.  Instead, hop[efully for speed,
+    // we will use a statically-bound motion_detection module.  See ball_watcher.cpp
+    // options->post_process_file = LibCameraInterface::kCameraMotionDetectSettings;
 
     if (!GolfSimClubData::kGatherClubData) {
     	GS_LOG_TRACE_MSG(trace, "ball_watcher_event_loop will use post-process file (unless overridden in golf_sim_config.json): " + options->post_process_file);

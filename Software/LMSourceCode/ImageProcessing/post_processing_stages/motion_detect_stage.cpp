@@ -177,23 +177,27 @@ void MotionDetectStage::Configure()
 	}
 }
 
-bool MotionDetectStage::Process(CompletedRequestPtr &completed_request)
+bool MotionDetectStage::Process(CompletedRequestPtr& completed_request)
 {
-	if (!stream_)
+	if (!stream_) {
+		GS_LOG_MSG(error, "MotionDetectStage::Process - No stream_");
 		return false;
+	}
 
 	completed_request->post_process_metadata.Set("motion_detect.result", false);
 
 	if (detectionPaused_ && postMotionFramesToCapture_ <= 0) {
-		// std::cout << "Process skipping." << std::endl;
+		GS_LOG_MSG(error, "detectionPaused_ and postMotionFramesToCapture_ <= 0");
 		return false;
 	}
 
-	if (config_.frame_period && completed_request->sequence % config_.frame_period)
+	// We are not looking at every frame, don't do anything on the off-frames
+	if (config_.frame_period && completed_request->sequence % config_.frame_period) {
+		GS_LOG_MSG(trace, "config_.frame_period && completed_request->sequence % config_.frame_period. config_.frame_period= " + std::to_string(config_.frame_period));
 		return false;
+	}
 
-
-    libcamera::FrameBuffer *buffer = completed_request->buffers[stream_];
+	libcamera::FrameBuffer *buffer = completed_request->buffers[stream_];
 
     BufferReadSync r(app_, buffer);
 
@@ -282,7 +286,7 @@ bool MotionDetectStage::Process(CompletedRequestPtr &completed_request)
 		// as possible, because otherwise the ball will fly past the camera 2 FoV
 		if (gs::GolfSimOptions::GetCommandLineOptions().system_mode_ != gs::kCamera1TestStandalone) {
 			gs::PulseStrobe::SendExternalTrigger();
-			// GS_LOG_MSG(trace, "---> SendExternalTrigger");
+			GS_LOG_MSG(trace, "---> SendExternalTrigger");
 		}
 		else {
 			// simulate the other system sending an image back
