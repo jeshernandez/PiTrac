@@ -66,6 +66,10 @@ namespace golf_sim {
     long LibCameraInterface::kCamera1StillShutterTimeuS = 15000;
     long LibCameraInterface::kCamera2StillShutterTimeuS = 15000;
 
+    // Default values are based on empirical measurements using a 6mm lens
+    int kCroppedImagePixelOffsetLeft = -5;
+    int kCroppedImagePixelOffsetUp = -13;
+
     // The system will start in a full-screen watching mode, but ensure 
     // we set it up once just in case
     LibCameraInterface::CropConfiguration LibCameraInterface::camera_crop_configuration_ = kCropUnknown;
@@ -271,7 +275,7 @@ namespace golf_sim {
         // One issue here is that the current GS camera will not crop any smaller than 98x88.  So, if the ball is smaller
         // than that, we still have to go with the 98x88 and deal with the smaller ball later within the ROI processing
 
-        // We will later want to Ensure the ball is not so small that the inscribed watching area ( for high FPS )
+        // We will later want to ensure the ball is not so small that the inscribed watching area ( for high FPS )
         // is larger than the ball and could pick up unrelated movement outside of the ball.
         // We will deal with this when determining the ROI
         uint largest_inscribed_square_side_length_of_ball = (double)(CvUtils::CircleRadius(ball.ball_circle_)) * sqrt(2);
@@ -335,8 +339,13 @@ namespace golf_sim {
         const float crop_offset_scale_adjustment_x = 1.0; // 0.99;
         const float crop_offset_scale_adjustment_y = 1.0; //0.99;
 
-        const float crop_offset_adjustment_x = -5; // pixels
-        const float crop_offset_adjustment_y = -13; // pixels
+        GolfSimConfiguration::SetConstant("gs_config.motion_detect_stage.kCroppedImagePixelOffsetLeft", kCroppedImagePixelOffsetLeft);
+        GolfSimConfiguration::SetConstant("gs_config.motion_detect_stage.kCroppedImagePixelOffsetUp", kCroppedImagePixelOffsetUp);
+
+        const float crop_offset_adjustment_x = kCroppedImagePixelOffsetLeft; // pixels
+        const float crop_offset_adjustment_y = kCroppedImagePixelOffsetUp; // pixels
+
+        GS_LOG_TRACE_MSG(trace, "crop_offset_adjustment (x,y) is: (" + std::to_string(crop_offset_adjustment_x) + ",/" + std::to_string(crop_offset_adjustment_y) + ").");
 
         // The video resolution is a little different than the still-photo resolution.
         // So scale the center of the ball accordingly.
@@ -733,6 +742,9 @@ bool ConfigurePostProcessing(const cv::Vec2i& roi_size, const cv::Vec2i& roi_off
     GolfSimConfiguration::SetConstant("gs_config.motion_detect_stage.kFramePeriod", kFramePeriod);
     GolfSimConfiguration::SetConstant("gs_config.motion_detect_stage.kHSkip", kHSkip);
     GolfSimConfiguration::SetConstant("gs_config.motion_detect_stage.kVSkip", kVSkip);
+
+    GolfSimConfiguration::SetConstant("gs_config.motion_detect_stage.kCroppedImagePixelOffsetLeft", kCroppedImagePixelOffsetLeft);
+    GolfSimConfiguration::SetConstant("gs_config.motion_detect_stage.kCroppedImagePixelOffsetUp", kCroppedImagePixelOffsetUp);
 
     // These values will be used within the motion-detect post-processing
 

@@ -342,8 +342,6 @@ bool MotionDetectStage::Process(CompletedRequestPtr& completed_request)
 
 		cv::Mat mat = cv::Mat(info.height, info.width, CV_8U, image, info.stride);
 
-		// TBD - Move all motion processing parameters and constant to the main .json file instead of
-		// using some parameters from the rpicam_apps configuration file
 		if (config_.showroi) {
 			cv::Scalar c_black{ 0, 0, 0 }; // black
 			cv::Scalar c_green{ 170, 255, 0 }; // bright green
@@ -383,7 +381,7 @@ bool MotionDetectStage::Process(CompletedRequestPtr& completed_request)
 		}
 
 		if (need_to_log_first_image_) {
-			gs::LoggingTools::LogImage("", mat, std::vector < cv::Point >{}, true, "log_first_cropped_image_of_teed_ball.png");
+			gs::LoggingTools::LogImage("", mat, std::vector < cv::Point >{}, true, "gs_log_first_cropped_image_of_teed_ball.png");
 			need_to_log_first_image_ = false;  // Don't save again
 		}
 

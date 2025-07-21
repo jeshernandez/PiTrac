@@ -66,6 +66,12 @@ namespace golf_sim {
 		static long kCamera1StillShutterTimeuS;
 		static long kCamera2StillShutterTimeuS;
 
+		// Once the cropped rectange is determined (usually around the center of the ball)
+		// These offsets can further move that cropping area
+		static int kCroppedImagePixelOffsetLeft;
+		static int kCroppedImagePixelOffsetUp;
+
+
 		static CropConfiguration camera_crop_configuration_;
 		static cv::Vec2i current_watch_resolution_;
 		static cv::Vec2i current_watch_offset_;
