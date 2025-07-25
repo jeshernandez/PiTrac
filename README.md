@@ -26,7 +26,7 @@ Finally, any help at our [support page](https://ko-fi.com/Pitrac) would be appre
 
 (\*) Raspberry Pi is a trademark of Raspberry Pi Ltd.  The PiTrac project is not endorsed, sponsored by or associated with Raspberry Pi or Raspberry Pi products or services.
 
-## [Getting Started](/Documentation/PiTrac%20–%20START%20HERE.md)
+## [Getting Started](/Documentation/.START_HERE/PiTrac%20–%20START%20HERE.md)
 The process of building your own PiTrac DIY Launch Monitor is described here at a high level. There are several more-detailed instruction documents elsewhere in the PiTrac repository that are referred to below for various sub-assemblies and tasks like compiling the code and preparing the build environment.
 
 ## [Setup and Configuration](/Documentation/Raspberry%20Pi%20Setup%20and%20Configuration.md)
