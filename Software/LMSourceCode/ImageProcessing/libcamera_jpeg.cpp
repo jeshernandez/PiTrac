@@ -28,7 +28,6 @@
 #include <poll.h>
 
 
-#include "camera_hardware.h"
 #include "gs_globals.h"
 #include "gs_config.h"
 #include "gs_camera.h"
@@ -83,8 +82,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 
 	// The RGB flag still works for grayscale mono images
 	uint flags = RPiCamApp::FLAG_STILL_RGB;
-	// Original:	app.ConfigureViewfinder(flags);
-	app.ConfigureStill(flags);
+	app.ConfigureViewfinder(flags);
 
 	app.StartCamera();
 
@@ -102,33 +100,11 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 	// processed.
 	FlightCameraState state = kWaitingForFirstPrimingPulseGroup;
 
-
-	const gs::CameraHardware::CameraModel  camera_model = gs::GolfSimCamera::kSystemSlot2CameraType;
-	if (false && camera_model == gs::CameraHardware::CameraModel::InnoMakerIMX296GS3_6mmM12Lens) {
-		GS_LOG_TRACE_MSG(trace, "Using InnoMaker camera, so not waiting for any priming pulses.");
-		state = kWaitingForFinalImageTrigger;
-	}
-	else {
-		GS_LOG_TRACE_MSG(trace, "Not using InnoMaker camera, so waiting for priming pulses.");
-	}
-
 	// Check here, once, to see if we are going to expect to produce a pre-image for later subtraction
 	golf_sim::GolfSimConfiguration::SetConstant("gs_config.ball_exposure_selection.kUsePreImageSubtraction", 
 												golf_sim::GolfSimCamera::kUsePreImageSubtraction);
 
 	bool return_status = true;
-
-	if (camera_model == gs::CameraHardware::CameraModel::InnoMakerIMX296GS3_6mmM12Lens) {
-		std::string trigger_mode_command = "$PITRAC_ROOT/ImageProcessing/CameraTools/imx296_trigger 4 1";
-
-		GS_LOG_TRACE_MSG(trace, "Ball Watcher - Camera 2 trigger_mode_command = " + trigger_mode_command);
-		int command_result = system(trigger_mode_command.c_str());
-
-		if (command_result != 0) {
-			GS_LOG_TRACE_MSG(trace, "system(trigger_mode_command) failed.");
-			return false;
-		}
-	}
 
 	for (;state != kFinalImageReceived;)
 	{
@@ -156,7 +132,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 		else if (msg.type != RPiCamApp::MsgType::RequestComplete)
 			throw std::runtime_error("Unrecognised message!");
 		else {
-			GS_LOG_TRACE_MSG(trace, "RECEIVED libcamera-app message type (0 is RequestComplete) -------" + std::to_string((int)msg.type));
+			// GS_LOG_TRACE_MSG(trace, "RECEIVED libcamera-app message-------");
 		}
 
 
@@ -224,7 +200,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 
 			// THE FOLLOWING CREATES A SEGMENTATION FAULT: returnImg = cv::Mat(info.height, info.width, CV_8UC3, image, info.stride);
 			// So, that's why the frame is being cloned.
-			GS_LOG_TRACE_MSG(trace, "Returning (Final, Strobed) captured image");
+			GS_LOG_TRACE_MSG(trace, "Returning (Final, Strobed) Viewfinder captured image");
 			// golf_sim::LoggingTools::LogImage("", returnImg, std::vector < cv::Point >{}, true, "Cam2_Strobed_Image.png");
 
 			return_status = true;
