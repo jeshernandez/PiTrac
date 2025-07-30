@@ -232,13 +232,13 @@ namespace golf_sim {
         GS_LOG_TRACE_MSG(trace, "DetermineHandedness called with " + std::to_string(input_balls.size()) + " balls.");
         LoggingTools::Trace("Input Balls: ", input_balls);
 
-        if (input_balls.size() < 2) {
+        // The best balls are all we want to look at, so only get a handful
+        int balls_to_examine = 3;
+
+        if (input_balls.size() < balls_to_examine) {
             GS_LOG_TRACE_MSG(warning, "DetermineHandedness - balls vector was empty.Exiting function.");
             return false;
         }
-
-        // The best balls are all we want to look at, so only get a handful
-        int balls_to_examine = 3;
 
         // Get a copy of the input balls so that we can sort it ourselves.
         std::vector<GolfBall> balls;
@@ -2211,6 +2211,10 @@ namespace golf_sim {
             RemoveUnlikelyAngleLowerQualityBalls(initial_balls);
             ShowAndLogBalls("AnalyzeStrobedBall_After_RemoveUnlikelyAngleLowerQualityBalls", strobed_balls_color_image, initial_balls, kLogIntermediateExposureImagesToFile);
 
+            if (initial_balls.size() < 2) {
+                GS_LOG_MSG(warning, "Found less than 2 balls.");
+                return false;
+            }
             // Unlikely that the best balls would have been removed.  However, it is possible.
             // Reset as necessary
             best_ball = initial_balls[0];

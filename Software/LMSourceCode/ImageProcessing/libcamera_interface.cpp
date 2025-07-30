@@ -1,3 +1,4 @@
+
 /*****************************************************************//**
  * \file   libcamera_interface.cpp
  * \brief  Main interface to both PiTrac cameras (using the libcamera library)
@@ -1495,7 +1496,7 @@ bool PerformCameraSystemStartup() {
             if (!GolfSimOptions::GetCommandLineOptions().run_single_pi_) {
                 std::string trigger_mode_command = "sudo $PITRAC_ROOT/ImageProcessing/CameraTools/setCameraTriggerInternal.sh";
 
-                GS_LOG_TRACE_MSG(trace, "trigger_mode_command = " + trigger_mode_command);
+                GS_LOG_TRACE_MSG(trace, "Camera 1 trigger_mode_command = " + trigger_mode_command);
                 int command_result = system(trigger_mode_command.c_str());
 
                 if (command_result != 0) {
@@ -1504,7 +1505,24 @@ bool PerformCameraSystemStartup() {
                 }
             }
             else {
-                GS_LOG_TRACE_MSG(trace, "Running in single-pi mode, so not setting camera triggering (internal or external) programmatically.  Instead, please see the following discussion on how to setup the boot/firmware.config.txt dtoverlays for triggering:  https://forums.raspberrypi.com/viewtopic.php?p=2315464#p2315464.");
+                /****
+                const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot1CameraType;
+                if (camera_model == CameraHardware::CameraModel::InnoMakerIMX296GS3_6mmM12Lens) {
+                    std::string trigger_mode_command = "$PITRAC_ROOT/ImageProcessing/CameraTools/imx296_trigger 6 0";
+
+                    GS_LOG_TRACE_MSG(trace, "Camera 1 trigger_mode_command = " + trigger_mode_command);
+                    int command_result = system(trigger_mode_command.c_str());
+
+                    if (command_result != 0) {
+                        GS_LOG_TRACE_MSG(trace, "system(trigger_mode_command) failed.");
+                        return false;
+                    }
+                }
+                else {
+                    GS_LOG_TRACE_MSG(trace, "Running in single-pi mode, so not setting camera triggering (internal or external) programmatically.  Instead, please see the following discussion on how to setup the boot/firmware.config.txt dtoverlays for triggering:  https://forums.raspberrypi.com/viewtopic.php?p=2315464#p2315464.");
+                }
+                    ****/
+                GS_LOG_TRACE_MSG(trace, "Running in single-pi mode, so not setting camera 1 triggering (internal or external) programmatically.  Instead, please see the following discussion on how to setup the boot/firmware.config.txt dtoverlays for triggering:  https://forums.raspberrypi.com/viewtopic.php?p=2315464#p2315464.");
             }
         }
         break;
@@ -1515,7 +1533,7 @@ bool PerformCameraSystemStartup() {
             if (!GolfSimOptions::GetCommandLineOptions().run_single_pi_) {
                 std::string trigger_mode_command = "sudo $PITRAC_ROOT/ImageProcessing/CameraTools/setCameraTriggerExternal.sh";
 
-                GS_LOG_TRACE_MSG(trace, "trigger_mode_command = " + trigger_mode_command);
+                GS_LOG_TRACE_MSG(trace, "Camera 2 trigger_mode_command = " + trigger_mode_command);
                 int command_result = system(trigger_mode_command.c_str());
 
                 if (command_result != 0) {
@@ -1524,7 +1542,22 @@ bool PerformCameraSystemStartup() {
                 }
             }
             else {
-                GS_LOG_TRACE_MSG(trace, "Running in single-pi mode, so not setting camera triggering (internal or external) programmatically.  Instead, please see the following discussion on how to setup the boot/firmware.config.txt dtoverlays for triggering:  https://forums.raspberrypi.com/viewtopic.php?p=2315464#p2315464.");
+                const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot2CameraType;
+
+                if (camera_model == CameraHardware::CameraModel::InnoMakerIMX296GS3_6mmM12Lens) {
+                    std::string trigger_mode_command = "$PITRAC_ROOT/ImageProcessing/CameraTools/imx296_trigger 4 1";
+
+                    GS_LOG_TRACE_MSG(trace, "Camera 2 trigger_mode_command = " + trigger_mode_command);
+                    int command_result = system(trigger_mode_command.c_str());
+
+                    if (command_result != 0) {
+                        GS_LOG_TRACE_MSG(trace, "system(trigger_mode_command) failed.");
+                        return false;
+                    }
+                }
+                else {
+                    GS_LOG_TRACE_MSG(trace, "Running in single-pi mode, so not setting camera 2 triggering (internal or external) programmatically.  Instead, please see the following discussion on how to setup the boot/firmware.config.txt dtoverlays for triggering:  https://forums.raspberrypi.com/viewtopic.php?p=2315464#p2315464.");
+                }
             }
 
             // Create a camera just for purposes of setting the tuning file variable

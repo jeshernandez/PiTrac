@@ -799,10 +799,12 @@ namespace golf_sim {
 
                 currentDp = kExternallyStrobedEnvHoughDpParam1;
 
+                /** TBD - REMOVE?  Any reason to have this mode's own radius parameters?
                 minimum_search_radius = kExternallyStrobedEnvMinimumSearchRadius;
                 maximum_search_radius = kExternallyStrobedEnvMaximumSearchRadius;
+                ***/
 
-                minimum_distance = (double)minimum_search_radius * 0.4;
+                minimum_distance = (double)minimum_search_radius * 0.2;
 
                 break;
             }

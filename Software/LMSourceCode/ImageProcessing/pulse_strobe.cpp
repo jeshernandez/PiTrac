@@ -568,7 +568,7 @@ namespace golf_sim {
 
 		// Should need almost no time if we are all running on the same pi
 		if (GolfSimOptions::GetCommandLineOptions().run_single_pi_) {
-			wait_time_in_us /= 3;
+			wait_time_in_us /= 2;
 		}
 
 		GS_LOG_TRACE_MSG(trace, "Waiting " + std::to_string(wait_time_in_us) + " microseconds for the Camera2 system to prepare its camera.");
@@ -593,8 +593,14 @@ namespace golf_sim {
 		int kNumInitialCamera2PrimingPulses = 0;
 		GolfSimConfiguration::SetConstant("gs_config.cameras.kNumInitialCamera2PrimingPulses", kNumInitialCamera2PrimingPulses);
 
+		// TBD - We are still working on getting the InnoMaker camera to work
+		const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot2CameraType;
+		if (false && camera_model == CameraHardware::CameraModel::InnoMakerIMX296GS3_6mmM12Lens) {
+			kNumInitialCamera2PrimingPulses = 1;
+		}
 
 		for (int i = 0; i < kNumInitialCamera2PrimingPulses; i++) {
+			GS_LOG_TRACE_MSG(trace, "Sent priming pulse");
 			SendOnOffPulse(kShutterSpeed - kShutterOffset);
 			usleep(kOnTimeWidth);
 		}
@@ -604,7 +610,11 @@ namespace golf_sim {
 		usleep(kPauseBeforeSendingLastPrimingPulse * 1000);
 
 		// This next pulse gets the camera2 state machine ready to take an actual image
-		SendOnOffPulse(kShutterSpeed - kShutterOffset);
+
+		if (true || camera_model != CameraHardware::CameraModel::InnoMakerIMX296GS3_6mmM12Lens) {
+			GS_LOG_TRACE_MSG(trace, "Not using InnoMaker camera, so sending final priming pulse.");
+			SendOnOffPulse(kShutterSpeed - kShutterOffset);
+		}
 
 		GolfSimConfiguration::SetConstant("gs_config.ball_exposure_selection.kUsePreImageSubtraction", 
 												GolfSimCamera::kUsePreImageSubtraction);
@@ -678,7 +688,7 @@ namespace golf_sim {
 		// GS_LOG_TRACE_MSG(trace, "Sent final camera trigger(s) and strobe pulses.");
 		SendCameraStrobeTriggerAndShutter(lggpio_chip_handle_);
 
-			if (!golf_sim::GolfSimCamera::kCameraRequiresFlushPulse) {
+			if (golf_sim::GolfSimCamera::kCameraRequiresFlushPulse) {
 
 			GS_LOG_TRACE_MSG(trace, "Waiting a moment to send flush trigger.");
 
