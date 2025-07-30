@@ -235,7 +235,7 @@ namespace golf_sim {
         // The best balls are all we want to look at, so only get a handful
         int balls_to_examine = 3;
 
-        if (input_balls.size() < balls_to_examine) {
+        if ((int)input_balls.size() < balls_to_examine) {
             GS_LOG_TRACE_MSG(warning, "DetermineHandedness - balls vector was empty.Exiting function.");
             return false;
         }
