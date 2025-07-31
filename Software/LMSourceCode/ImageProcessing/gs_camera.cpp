@@ -2211,6 +2211,15 @@ namespace golf_sim {
             RemoveUnlikelyAngleLowerQualityBalls(initial_balls);
             ShowAndLogBalls("AnalyzeStrobedBall_After_RemoveUnlikelyAngleLowerQualityBalls", strobed_balls_color_image, initial_balls, kLogIntermediateExposureImagesToFile);
 
+
+            // TBD - REMOVE - Hack to test the strobe interval function
+            /** 
+            initial_balls.erase(initial_balls.begin() + 2);
+            initial_balls.erase(initial_balls.begin() + 2);
+            ShowAndLogBalls("initial_balls after hack for testing", strobed_balls_color_image, initial_balls, kLogIntermediateExposureImagesToFile);
+            ***/
+
+
             if (initial_balls.size() < 2) {
                 GS_LOG_MSG(warning, "Found less than 2 balls.");
                 return false;
@@ -2391,7 +2400,7 @@ namespace golf_sim {
             /**** TBD - No longer doing the ball improvement, because the new edge detector does a 
             // pretty good job in the first instance?
             ***/
-            // Now that we're pretty sure we've go the best set of circle estiamtes, 
+            // Now that we're pretty sure we've go the best set of circle estimates, 
             // compute the best possible circle for each ball.
             // For now, do NOT do any refinement if we are putting and the balls are close
             // to the bottom of the image - the circles are probably as good as they are
@@ -2829,17 +2838,16 @@ namespace golf_sim {
                     PrintPulseVector(intervals_to_collapse_vector);
 
                     // Just a breakpoint trigger for debugging
-                    /*
+                    /** /
                     if (intervals_to_collapse_vector[0] == true &&
                         intervals_to_collapse_vector[1] == true &&
-                        intervals_to_collapse_vector[2] == false &&
-                        intervals_to_collapse_vector[3] == true &&
+                        intervals_to_collapse_vector[2] == true &&
+                        intervals_to_collapse_vector[3] == false &&
                         intervals_to_collapse_vector[4] == false &&
-                        intervals_to_collapse_vector[5] == false &&
-                        intervals_to_collapse_vector[6] == false) {
+                        intervals_to_collapse_vector[5] == false) {
                         GS_LOG_TRACE_MSG(trace, "----------> - Reached the vector of interest.");
                     }
-                    */
+                    **/
 
                     // Formulate a new set of pulses that correspond to the exposures that we found
                     // with the pulses corresponding to the 'missing' exposures collapsed/removed.
@@ -2872,7 +2880,8 @@ namespace golf_sim {
 
                         GS_LOG_TRACE_MSG(trace, "------------> Found best (so far) pulse ratio pattern match.  best_ratio_distance= " + std::to_string(best_ratio_distance)
                             + " best_final_offset_of_distance_ratios= " + std::to_string(best_ratio_distance)
-                            + " best_intervals_pattern_index= " + std::to_string(best_intervals_pattern_index) );
+                            + " best_intervals_pattern_index= " + std::to_string(best_intervals_pattern_index) + ".  Vector was : ");
+                        PrintPulseVector(candidate_intervals_to_collapse_patterns_vector[best_intervals_pattern_index]);
                     }
                 }
 
@@ -4404,6 +4413,7 @@ namespace golf_sim {
             std::string config_file_name = "golf_sim_config.json";
 
             if (!GolfSimOptions::GetCommandLineOptions().config_file_.empty()) {
+
                 config_file_name = GolfSimOptions::GetCommandLineOptions().config_file_;
             }
 

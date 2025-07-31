@@ -185,11 +185,11 @@
             "kStrobePulseVectorDriver": [
                 "0.7",
                 "1.8",
+                "3.0",
                 "2.2",
-                "2.2",
-                "3.6",
+                "3.0",
                 "7.1",
-                "5.5",
+                "4.0",
                 "0"
             ],
             "kPuttingStrobeDelayMs": "50",
@@ -492,7 +492,7 @@
       "testing": {
         "kBaseTestImageDir": "M:\/GolfSim\/TestImages\/Elks_Enclosure_2_Images\/",
         "kTwoImageTestTeedBallImage": "gs_log_img__log_ball_final_found_ball_img_Shot_1_2025-Jul-28_11.26.53.png",
-        "kTwoImageTestStrobedImage": "gs_log_img__log_cam2_last_strobed_img_Shot_3_2025-Jul-28_10.29.28.png",
+        "kTwoImageTestStrobedImage": "gs_log_img__log_cam2_last_strobed_img_Shot_1_2025-Jul-30_12.04.19.png",
         "OLD_kTwoImageTestTeedBallImage": "gs_log_img__log_ball_final_found_ball_img_Shot_2_2025-Jun-24_13.45.32-60cm-out-20-back.png",
         "OLD_kTwoImageTestStrobedImage": "gs_log_img__log_cam2_last_strobed_img_Shot_2_2025-Jun-24_13.45.43.png",
         "kAutomatedTestSuiteDirectory": "\/home\/<PiTrac-Username>\/Dev\/PiTrac\/Software\/LMSourceCode\/Testing\/TestSuite_2025_02_07\/",
@@ -525,7 +525,7 @@
         "kExternallyStrobedEnvMinParam2": "40",
         "kExternallyStrobedEnvMaxParam2": "120",
         "kExternallyStrobedEnvStartingParam2": "0.70",
-        "kExternallyStrobedEnvParam2Increment": "5",
+        "kExternallyStrobedEnvParam2Increment": "0.05",
         "kExternallyStrobedEnvMinHoughReturnCircles": "3",
         "kExternallyStrobedEnvMaxHoughReturnCircles": "15",
         "kExternallyStrobedEnvPreCannyBlurSize": "7",
