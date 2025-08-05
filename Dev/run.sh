@@ -94,7 +94,7 @@ INSTALL_OPTIONS=(
   1 "Active MQ Broker"
   2 "Active MQ C++ CMS"
   3 "MSGPack"
-  4 "OpenCV (WIP)"
+  4 "OpenCV 4-11-0"
   5 "Boost (WIP)"
   6 "LGPIO (WIP)"
   7 "Libcamera (WIP)"
@@ -172,10 +172,11 @@ show_install_menu() {
           ;;
         3)
           echo "Installing MSGPack..."
-          # Add actual install script when available
+          bash ./scripts/install_msgpack.sh 
           ;;
 	4) 
-	  echo "Installing OpenCV...(WIP)"
+	  echo "Installing OpenCV 4-11-0..."
+	  bash ./scripts/install_opencv.sh
 	  ;;
 	5)
 	  echo "Installing Boost... (WIP)"
