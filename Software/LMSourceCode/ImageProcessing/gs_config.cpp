@@ -213,6 +213,7 @@ bool GolfSimConfiguration::ReadValues() {
     }
 
     std::string slot2_env = safe_getenv("PITRAC_SLOT2_CAMERA_TYPE");
+    GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT2_CAMERA_TYPE environment variable was: " + slot2_env );
     if (slot2_env.empty()) {
         if (GolfSimOptions::GetCommandLineOptions().run_single_pi_) {
             // We somewhat arbitrarily require the slot2 camera type to be set if we're running in single-pi mode.
@@ -229,6 +230,38 @@ bool GolfSimConfiguration::ReadValues() {
         GolfSimCamera::kSystemSlot2CameraType = CameraHardware::string_to_camera_model(slot2_env);
     }
 
+	std::string slot1_lens_env = safe_getenv("PITRAC_SLOT1_LENS_TYPE");
+	GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT1_LENS_TYPE environment variable was: " + slot1_lens_env);
+	if (slot1_lens_env.empty()) {
+		GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT1_LENS_TYPE environment variable was not set.  Assuming default of: " + std::to_string(GolfSimCamera::kSystemSlot1LensType));
+	}
+	else {
+#ifndef __unix__  // Ignore in Windows environment
+		// Ensure we don't have any trailing spaces.  Visual Studio seems to add them?
+		slot1_lens_env = slot1_lens_env.substr(0, 1);
+#endif
+		GolfSimCamera::kSystemSlot1LensType = CameraHardware::string_to_lens_type(slot1_lens_env);
+	}
+
+	std::string slot2_lens_env = safe_getenv("PITRAC_SLOT2_LENS_TYPE");
+	GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT2_LENS_TYPE environment variable was: " + slot2_lens_env);
+	if (slot2_lens_env.empty()) {
+		if (GolfSimOptions::GetCommandLineOptions().run_single_pi_) {
+			// We somewhat arbitrarily require the slot2 camera type to be set if we're running in single-pi mode.
+			GS_LOG_TRACE_MSG(error, "GolfSimConfiguration - PITRAC_SLOT2_LENS_TYPE environment variable must be set when running in single-pi mode, but was not.  Exiting.");
+			return false;
+		}
+		else {
+#ifndef __unix__  // Ignore in Windows environment
+			// Ensure we don't have any trailing spaces
+			slot2_lens_env = slot2_lens_env.substr(0, 1);
+#endif
+			GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT2_LENS_TYPE environment variable was not set.  Assuming default of: " + std::to_string(GolfSimCamera::kSystemSlot2LensType));
+		}
+	}
+	else {
+		GolfSimCamera::kSystemSlot2LensType = CameraHardware::string_to_lens_type(slot2_lens_env);
+	}
 
 
 	return true;
