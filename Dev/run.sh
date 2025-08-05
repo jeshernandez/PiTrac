@@ -97,7 +97,7 @@ INSTALL_OPTIONS=(
   4 "OpenCV 4-11-0"
   5 "Boost (WIP)"
   6 "LGPIO (WIP)"
-  7 "Libcamera (WIP)"
+  7 "Libcamera 0.5.1 & Rpicam Apps 1.5.3"
   8 "Java 17 OpenJDK"
   9 "Maven"
   10 "Tomee (WIP)"
@@ -174,35 +174,36 @@ show_install_menu() {
           echo "Installing MSGPack..."
           bash ./scripts/install_msgpack.sh 
           ;;
-	4) 
-	  echo "Installing OpenCV 4-11-0..."
-	  bash ./scripts/install_opencv.sh
-	  ;;
-	5)
-	  echo "Installing Boost... (WIP)"
-	  ;;
-  	6) 
-	  echo "Installing LGPIO... (WIP)"
-	  ;;
-  	7)
-	  echo "Installing Libcamera (WIP)"
-	  ;;
-  	8) 
-	  echo "Installing Java JDK.."
-	  verify_java_installed
-	  ;;
-  	9) 
-	  echo "Install Maven.."
-	  verify_maven_installed
-	  ;;
-  	10)
-	  echo "Install Tomee.. (WIP)"
-	  ;;
-  	11)
-	  echo "Install PiTrac Dependencies..."
-	  verify_pitrac_dependencies
-	  ;;
-	  *)
+        4) 
+          echo "Installing OpenCV 4-11-0..."
+          bash ./scripts/install_opencv.sh
+          ;;
+        5)
+          echo "Installing Boost... (WIP)"
+          ;;
+          6) 
+          echo "Installing LGPIO... (WIP)"
+          ;;
+          7)
+          echo "Installing Libcamera & Rpicam Apps..."
+          bash ./scripts/install_libcamera.sh
+          ;;
+          8) 
+          echo "Installing Java JDK.."
+          verify_java_installed
+          ;;
+          9) 
+          echo "Install Maven.."
+          verify_maven_installed
+          ;;
+          10)
+          echo "Install Tomee.. (WIP)"
+          ;;
+          11)
+          echo "Install PiTrac Dependencies..."
+          verify_pitrac_dependencies
+          ;;
+          *)
           echo "Invalid selection."
           ;;
       esac

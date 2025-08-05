@@ -17,10 +17,10 @@ Move this entire folder to your user home folder.
 Example: `/home/pitracuser/`
 
 Get installation script ready:  
-1. From this project root folder `cp -R Dev /home/pitracuser/`
-2. `cd /home/pitracuser/Dev`
-3. `chmod +x run.sh`
-3. `./run.sh`
+1. From this project root folder. From outside Dev folder: `mv Dev ~/`
+3. `work_dir` is used to keep things clean. 
+4. `cd` into the Dev folder `chmod +x run.sh`
+5. Run the installation script: `./run.sh`
 
 You should be able to see the menu screen. 
 ![alt text](img/menu.png)
