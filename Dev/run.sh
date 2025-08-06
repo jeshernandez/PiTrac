@@ -66,7 +66,20 @@ done
 }
 
 
+verify_boost_install() {
 
+BOOST_MIN_VERSION="1.74"
+BOOST_VERSION_RAW=$(grep "BOOST_LIB_VERSION" /usr/include/boost/version.hpp | cut -d '"' -f2)
+BOOST_VERSION=$(echo "$BOOST_VERSION_RAW" | sed 's/_/./g')
+
+
+if [ "$(printf "%s\n" "$BOOST_MIN_VERSION" "$BOOST_VERSION" | sort -V | head -n1)" = "$BOOST_MIN_VERSION" ]; then
+    echo "Boost is installed!"
+else
+    echo "Error: Requires Boost version $BOOST_MIN_VERSION or greater."
+fi
+
+}
 
 
 
@@ -94,10 +107,10 @@ INSTALL_OPTIONS=(
   1 "Active MQ Broker"
   2 "Active MQ C++ CMS"
   3 "MSGPack"
-  4 "OpenCV 4-11-0"
-  5 "Boost (WIP)"
-  6 "LGPIO (WIP)"
-  7 "Libcamera 0.5.1 & Rpicam Apps 1.5.3"
+  4 "OpenCV 4-10-0"
+  5 "Boost 1.74"
+  6 "LGPIO"
+  7 "Libcamera 0.5.1 and RpiCam Apps 1.5.3"
   8 "Java 17 OpenJDK"
   9 "Maven"
   10 "Tomee (WIP)"
@@ -174,36 +187,38 @@ show_install_menu() {
           echo "Installing MSGPack..."
           bash ./scripts/install_msgpack.sh 
           ;;
-        4) 
-          echo "Installing OpenCV 4-11-0..."
-          bash ./scripts/install_opencv.sh
-          ;;
-        5)
-          echo "Installing Boost... (WIP)"
-          ;;
-          6) 
-          echo "Installing LGPIO... (WIP)"
-          ;;
-          7)
-          echo "Installing Libcamera & Rpicam Apps..."
-          bash ./scripts/install_libcamera.sh
-          ;;
-          8) 
-          echo "Installing Java JDK.."
-          verify_java_installed
-          ;;
-          9) 
-          echo "Install Maven.."
-          verify_maven_installed
-          ;;
-          10)
-          echo "Install Tomee.. (WIP)"
-          ;;
-          11)
-          echo "Install PiTrac Dependencies..."
-          verify_pitrac_dependencies
-          ;;
-          *)
+	4) 
+	  echo "Installing OpenCV 4-11-0..."
+	  bash ./scripts/install_opencv.sh
+	  ;;
+	5)
+	  echo "Installing Boost..."
+	  verify_boost_install
+	  ;;
+  	6) 
+	  echo "Installing LGPIO... (WIP)"
+	  bash ./scripts/install_lgpio.sh
+	  ;;
+  	7)
+	  echo "Installing Libcamera & RpiCam Apps"
+	  bash ./scripts/install_libcamera.sh
+	  ;;
+  	8) 
+	  echo "Installing Java JDK.."
+	  verify_java_installed
+	  ;;
+  	9) 
+	  echo "Install Maven.."
+	  verify_maven_installed
+	  ;;
+  	10)
+	  echo "Install Tomee.. (WIP)"
+	  ;;
+  	11)
+	  echo "Install PiTrac Dependencies..."
+	  verify_pitrac_dependencies
+	  ;;
+	  *)
           echo "Invalid selection."
           ;;
       esac
