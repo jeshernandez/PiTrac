@@ -109,7 +109,7 @@ INSTALL_OPTIONS=(
   1 "Active MQ Broker"
   2 "Active MQ C++ CMS"
   3 "MSGPack"
-  4 "OpenCV 4-10-0"
+  4 "OpenCV 4-11-0"
   5 "Boost 1.74"
   6 "LGPIO"
   7 "Libcamera 0.5.1 and RpiCam Apps 1.5.3"
