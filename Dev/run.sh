@@ -68,6 +68,8 @@ done
 
 verify_boost_install() {
 
+sudo apt-get install libboost1.74-all
+
 BOOST_MIN_VERSION="1.74"
 BOOST_VERSION_RAW=$(grep "BOOST_LIB_VERSION" /usr/include/boost/version.hpp | cut -d '"' -f2)
 BOOST_VERSION=$(echo "$BOOST_VERSION_RAW" | sed 's/_/./g')
@@ -196,7 +198,7 @@ show_install_menu() {
 	  verify_boost_install
 	  ;;
   	6) 
-	  echo "Installing LGPIO... (WIP)"
+	  echo "Installing LGPIO..."
 	  bash ./scripts/install_lgpio.sh
 	  ;;
   	7)
