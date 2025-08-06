@@ -106,16 +106,16 @@ MAIN_OPTIONS=(
 )
 
 INSTALL_OPTIONS=(
-  1 "Active MQ Broker"
+  1 "Active MQ Broker 6.1.7"
   2 "Active MQ C++ CMS"
   3 "MSGPack"
-  4 "OpenCV 4-10-0"
+  4 "OpenCV 4-11-0"
   5 "Boost 1.74"
   6 "LGPIO"
   7 "Libcamera 0.5.1 and RpiCam Apps 1.5.3"
   8 "Java 17 OpenJDK"
   9 "Maven"
-  10 "Tomee (WIP)"
+  10 "Tomee 10.1.0 Plume"
   11 "PiTrac Dependencies (manual reboot required)"
   12 "Go Back to Main Menu"
 )
@@ -189,38 +189,39 @@ show_install_menu() {
           echo "Installing MSGPack..."
           bash ./scripts/install_msgpack.sh 
           ;;
-	4) 
-	  echo "Installing OpenCV 4-11-0..."
-	  bash ./scripts/install_opencv.sh
-	  ;;
-	5)
-	  echo "Installing Boost..."
-	  verify_boost_install
-	  ;;
-  	6) 
-	  echo "Installing LGPIO..."
-	  bash ./scripts/install_lgpio.sh
-	  ;;
-  	7)
-	  echo "Installing Libcamera & RpiCam Apps"
-	  bash ./scripts/install_libcamera.sh
-	  ;;
-  	8) 
-	  echo "Installing Java JDK.."
-	  verify_java_installed
-	  ;;
-  	9) 
-	  echo "Install Maven.."
-	  verify_maven_installed
-	  ;;
-  	10)
-	  echo "Install Tomee.. (WIP)"
-	  ;;
-  	11)
-	  echo "Install PiTrac Dependencies..."
-	  verify_pitrac_dependencies
-	  ;;
-	  *)
+        4) 
+          echo "Installing OpenCV 4-11-0..."
+          bash ./scripts/install_opencv.sh
+          ;;
+        5)
+          echo "Installing Boost..."
+          verify_boost_install
+          ;;
+          6) 
+          echo "Installing LGPIO..."
+          bash ./scripts/install_lgpio.sh
+          ;;
+          7)
+          echo "Installing Libcamera & RpiCam Apps"
+          bash ./scripts/install_libcamera.sh
+          ;;
+          8) 
+          echo "Installing Java JDK.."
+          verify_java_installed
+          ;;
+          9) 
+          echo "Install Maven.."
+          verify_maven_installed
+          ;;
+          10)
+          echo "Install Tomee.. "
+          bash ./scripts/install_tomee.sh
+          ;;
+          11)
+          echo "Install PiTrac Dependencies..."
+          verify_pitrac_dependencies
+          ;;
+          *)
           echo "Invalid selection."
           ;;
       esac
