@@ -122,20 +122,6 @@ GolfSimConfiguration::PiModel GolfSimConfiguration::GetPiModel() {
             break;
         }
 
-        // Optionally check revision code if 'Model' is not found
-        if (line.find("Revision") != std::string::npos) {
-            std::string rev = line.substr(line.find(":") + 1);
-            rev.erase(std::remove_if(rev.begin(), rev.end(), ::isspace), rev.end());
-
-            // Use revision codes if needed (optional and extensible)
-            if (rev == "a020d3" || rev == "a03111") {
-                pi_model = kRPi3;
-            } else if (rev == "b03111" || rev == "c03111") {
-                pi_model = kRPi4;
-            } else if (rev == "10050000" || rev == "10050001") {
-                pi_model = kRPi5;
-            }
-        }
     }
 
     return pi_model;
