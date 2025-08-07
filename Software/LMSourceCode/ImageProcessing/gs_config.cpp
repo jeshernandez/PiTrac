@@ -106,30 +106,37 @@ namespace golf_sim {
 	// TBD - Will need to be improved to adapt to having two cameras on the same
 	// Pi.
 GolfSimConfiguration::PiModel GolfSimConfiguration::GetPiModel() {
-    GolfSimConfiguration::PiModel pi_model = kRPi5;
+     GolfSimConfiguration::PiModel pi_model = kRPi5; // default fallback
 
-#ifdef __unix__
     std::ifstream cpuinfo("/proc/cpuinfo");
     std::string line;
-    std::string hardware;
 
     while (std::getline(cpuinfo, line)) {
-        if (line.find("Hardware") != std::string::npos || line.find("Model") != std::string::npos) {
-            hardware = line;
+        // Check for 'Model' field
+        if (line.find("Model") != std::string::npos) {
+            if (line.find("Raspberry Pi 4") != std::string::npos) {
+                pi_model = kRPi4;
+            } else if (line.find("Raspberry Pi 5") != std::string::npos) {
+                pi_model = kRPi5;
+            }
             break;
         }
-    }
 
-    GS_LOG_TRACE_MSG(trace, "GolfSimConfiguration - CPU Info line: " + hardware);
+        // Optionally check revision code if 'Model' is not found
+        if (line.find("Revision") != std::string::npos) {
+            std::string rev = line.substr(line.find(":") + 1);
+            rev.erase(std::remove_if(rev.begin(), rev.end(), ::isspace), rev.end());
 
-    if (hardware.find("BCM2711") != std::string::npos || hardware.find("Raspberry Pi 4") != std::string::npos) {
-        pi_model = kRPi4;
-    } else if (hardware.find("BCM2837") != std::string::npos || hardware.find("Raspberry Pi 3") != std::string::npos) {
-        pi_model = kRPi5; // or kRPi3 if you support that specifically
-    } else if (hardware.find("BCM2712") != std::string::npos || hardware.find("Raspberry Pi 5") != std::string::npos) {
-        pi_model = kRPi5;
+            // Use revision codes if needed (optional and extensible)
+            if (rev == "a020d3" || rev == "a03111") {
+                pi_model = kRPi3;
+            } else if (rev == "b03111" || rev == "c03111") {
+                pi_model = kRPi4;
+            } else if (rev == "10050000" || rev == "10050001") {
+                pi_model = kRPi5;
+            }
+        }
     }
-#endif
 
     return pi_model;
 }
