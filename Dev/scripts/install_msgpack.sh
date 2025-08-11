@@ -1,4 +1,11 @@
 #!/bin/bash
+
+
+# Install required libraries
+sudo apt -y install cmake
+
+
+
 echo "Cloning msgpack..."
 wget https://github.com/msgpack/msgpack-c/archive/refs/heads/cpp_master.zip
 unzip cpp_master.zip -d work_dir
