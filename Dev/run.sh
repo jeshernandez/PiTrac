@@ -6,6 +6,20 @@ if [ -z "$BASH_VERSION" ]; then
   exit 1
 fi
 
+
+install_vim() {
+# Check if vim is installed
+ if ! command -v vim >/dev/null 2>&1; then
+    echo "Vim not found. Installing..."
+    sudo apt-get update && sudo apt-get install -y vim
+
+    echo "Move vimrc config file to user path"
+    cp assets/vimrc ~/.vimrc
+ fi
+}
+
+
+
 # Install 'dialog' if not already installed (apt-get only)
 install_dialog_if_missing() {
   if ! command -v dialog >/dev/null 2>&1; then
@@ -27,6 +41,7 @@ check_internet_connectivity() {
 
 check_internet_connectivity
 install_dialog_if_missing
+install_vim
 
 
 
@@ -68,7 +83,9 @@ done
 
 verify_boost_install() {
 
-sudo apt-get install libboost1.74-all
+sudo apt-get update
+
+sudo apt -y install libboost1.74-all-dev
 
 BOOST_MIN_VERSION="1.74"
 BOOST_VERSION_RAW=$(grep "BOOST_LIB_VERSION" /usr/include/boost/version.hpp | cut -d '"' -f2)
@@ -108,9 +125,9 @@ MAIN_OPTIONS=(
 INSTALL_OPTIONS=(
   1 "Active MQ Broker 6.1.7"
   2 "Active MQ C++ CMS"
-  3 "MSGPack"
+  3 "Boost 1.74"
   4 "OpenCV 4-11-0"
-  5 "Boost 1.74"
+  5 "MSGPack"
   6 "LGPIO"
   7 "Libcamera 0.5.1 and RpiCam Apps 1.5.3"
   8 "Java 17 OpenJDK"
@@ -186,16 +203,16 @@ show_install_menu() {
           bash ./scripts/install_activemq_cpp_cms.sh
           ;;
         3)
-          echo "Installing MSGPack..."
-          bash ./scripts/install_msgpack.sh 
+          echo "Installing Boost..."
+          verify_boost_install
           ;;
         4) 
           echo "Installing OpenCV 4-11-0..."
           bash ./scripts/install_opencv.sh
           ;;
         5)
-          echo "Installing Boost..."
-          verify_boost_install
+          echo "Installing MSGPack..."
+          bash ./scripts/install_msgpack.sh
           ;;
           6) 
           echo "Installing LGPIO..."
