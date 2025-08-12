@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   activemq:
     image: apache/activemq-classic:6.1.4

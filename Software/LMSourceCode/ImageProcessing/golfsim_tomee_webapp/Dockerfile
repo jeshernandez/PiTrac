@@ -18,10 +18,10 @@ RUN apt-get update && apt-get install -y \
 
 # Download and install TomEE
 RUN cd /tmp && \
-    wget https://repo1.maven.org/maven2/org/apache/tomee/apache-tomee/10.0.0/apache-tomee-10.0.0-plume.zip && \
-    unzip apache-tomee-10.0.0-plume.zip && \
-    mv apache-tomee-plume-10.0.0 /usr/local/tomee && \
-    rm -rf apache-tomee-10.0.0-plume.zip
+    wget https://repo1.maven.org/maven2/org/apache/tomee/apache-tomee/10.1.0/apache-tomee-10.1.0-plume.zip && \
+    unzip apache-tomee-10.1.0-plume.zip && \
+    mv apache-tomee-plume-10.1.0 /usr/local/tomee && \
+    rm -rf apache-tomee-10.1.0-plume.zip
 
 # Set CATALINA_HOME to point to TomEE
 ENV CATALINA_HOME=/usr/local/tomee
