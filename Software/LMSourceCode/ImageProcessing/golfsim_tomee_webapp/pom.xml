@@ -6,7 +6,7 @@
 
   <groupId>com.verdanttechs.jakarta.ee9</groupId>
   <artifactId>golfsim</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
   <packaging>war</packaging>
 
   <name>golfsim</name>
@@ -19,7 +19,7 @@
 
     <!-- tommee -->
     <tommee-maven-plugin.version>8.0.9</tommee-maven-plugin.version>
-    <tommee.version>10.0.0</tommee.version>
+    <tommee.version>10.1.0</tommee.version>
 
     <!-- maven -->
     <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
@@ -60,6 +60,11 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.38</version>
+    </dependency>
     <dependency>
       <groupId>jakarta.platform</groupId>
       <artifactId>jakarta.jakartaee-web-api</artifactId>
