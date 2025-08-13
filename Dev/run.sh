@@ -218,14 +218,23 @@ declare -A PACKAGES=(
     ["pitrac-deps"]="PiTrac Dependencies"
 )
 
+declare -A CONFIG_PACKAGES=(
+    ["system-config"]="Pi System Configuration"
+    ["camera-config"]="Camera Configuration"
+    ["pitrac-environment"]="PiTrac Environment Setup"
+    ["network-services"]="Network Services (NAS/Samba/SSH)"
+    ["dev-environment"]="Development Environment"
+)
+
 show_main_menu() {
     while true; do
         local main_options=(
             1 "Install Software"
-            2 "Verify Installations"
-            3 "System Maintenance"
-            4 "View Logs"
-            5 "Exit"
+            2 "System Configuration"
+            3 "Verify Installations"
+            4 "System Maintenance"
+            5 "View Logs"
+            6 "Exit"
         )
         
         local main_choice
@@ -247,10 +256,11 @@ show_main_menu() {
         
         case "$main_choice" in
             1) show_install_menu ;;
-            2) show_verify_menu ;;
-            3) show_maintenance_menu ;;
-            4) show_logs_menu ;;
-            5) clear; exit 0 ;;
+            2) show_config_menu ;;
+            3) show_verify_menu ;;
+            4) show_maintenance_menu ;;
+            5) show_logs_menu ;;
+            6) clear; exit 0 ;;
             *) log_error "Invalid selection: $main_choice" ;;
         esac
     done
@@ -310,6 +320,93 @@ show_install_menu() {
     done
 }
 
+show_config_menu() {
+    while true; do
+        local config_options=()
+        config_options+=(1 "Configure ALL System Components")
+        
+        local i=2
+        for package in "${!CONFIG_PACKAGES[@]}"; do
+            local status
+            status=$(show_installation_status "$package")
+            config_options+=($i "${CONFIG_PACKAGES[$package]} $status")
+            ((i++))
+        done
+        config_options+=($i "Go Back to Main Menu")
+        
+        local config_choice
+        config_choice=$(dialog --clear \
+            --title "System Configuration Menu" \
+            --menu "Select configuration to apply:" \
+            $HEIGHT $WIDTH $MENU_HEIGHT \
+            "${config_options[@]}" \
+            2>&1 >/dev/tty)
+            
+        local exit_code=$?
+        if [ $exit_code -ne 0 ] || [ "$config_choice" -eq $i ]; then
+            break
+        fi
+        
+        clear
+        
+        if [ "$config_choice" -eq 1 ]; then
+            dialog --yesno "This will configure ALL system components. This may require user input. Continue?" 8 60
+            if [ $? -eq 0 ]; then
+                configure_all_system
+            fi
+        else
+            local package_index=$((config_choice - 2))
+            local packages_array=(${!CONFIG_PACKAGES[@]})
+            local selected_package="${packages_array[$package_index]}"
+            
+            if [ -n "$selected_package" ]; then
+                dialog --yesno "Configure ${CONFIG_PACKAGES[$selected_package]}?" 7 50
+                if [ $? -eq 0 ]; then
+                    configure_single_component "$selected_package"
+                fi
+            fi
+        fi
+        
+        echo
+        read -rp "Press Enter to continue..."
+    done
+}
+
+configure_all_system() {
+    log_info "Configuring all system components..."
+    
+    local all_configs=(
+        "system-config" "camera-config" "pitrac-environment" 
+        "network-services" "dev-environment"
+    )
+    
+    for config in "${all_configs[@]}"; do
+        log_info "Configuring $config..."
+        if ! "$DEP_RESOLVER" install "$config"; then
+            log_error "Failed to configure $config"
+            dialog --msgbox "Configuration failed at component: $config\\nCheck logs for details." 8 50
+            return 1
+        fi
+    done
+    
+    log_success "All system components configured successfully!"
+    dialog --msgbox "All system components have been configured successfully!" 8 50
+}
+
+configure_single_component() {
+    local component="$1"
+    
+    log_info "Configuring $component..."
+    
+    if "$DEP_RESOLVER" install "$component"; then
+        log_success "$component configured successfully"
+        dialog --msgbox "${CONFIG_PACKAGES[$component]} configured successfully!" 8 50
+    else
+        log_error "Failed to configure $component"
+        dialog --msgbox "Failed to configure ${CONFIG_PACKAGES[$component]}\\nCheck logs for details." 8 50
+    fi
+}
+
 install_all_dependencies() {
     log_info "Installing all PiTrac dependencies..."
     
@@ -356,7 +453,15 @@ show_verify_menu() {
         verify_options+=($i "${PACKAGES[$package]} $status")
         ((i++))
     done
-    verify_options+=($i "Verify All Packages")
+    
+    for package in "${!CONFIG_PACKAGES[@]}"; do
+        local status
+        status=$(show_installation_status "$package")
+        verify_options+=($i "${CONFIG_PACKAGES[$package]} $status")
+        ((i++))
+    done
+    
+    verify_options+=($i "Verify All Components")
     verify_options+=($(($i + 1)) "Go Back to Main Menu")
     
     local verify_choice
@@ -376,15 +481,15 @@ show_verify_menu() {
     
     if [ "$verify_choice" -eq $i ]; then
         # Verify all packages
-        verify_all_packages
+        verify_all_components
     else
-        # Verify specific package
         local package_index=$((verify_choice - 1))
-        local packages_array=(${!PACKAGES[@]})
-        local selected_package="${packages_array[$package_index]}"
+        
+        local all_packages_array=(${!PACKAGES[@]} ${!CONFIG_PACKAGES[@]})
+        local selected_package="${all_packages_array[$package_index]}"
         
         if [ -n "$selected_package" ]; then
-            verify_single_package "$selected_package"
+            verify_single_component "$selected_package"
         fi
     fi
     
@@ -392,10 +497,11 @@ show_verify_menu() {
     read -rp "Press Enter to continue..."
 }
 
-verify_all_packages() {
-    log_info "Verifying all installed packages..."
+verify_all_components() {
+    log_info "Verifying all installed components..."
     
     local all_good=true
+    
     for package in "${!PACKAGES[@]}"; do
         if "$DEP_RESOLVER" verify "$package" >/dev/null 2>&1; then
             log_success "${PACKAGES[$package]}: OK"
@@ -405,22 +511,40 @@ verify_all_packages() {
         fi
     done
     
+    for package in "${!CONFIG_PACKAGES[@]}"; do
+        if "$DEP_RESOLVER" verify "$package" >/dev/null 2>&1; then
+            log_success "${CONFIG_PACKAGES[$package]}: OK"
+        else
+            log_error "${CONFIG_PACKAGES[$package]}: FAILED"
+            all_good=false
+        fi
+    done
+    
     if $all_good; then
-        log_success "All installed packages verified successfully"
+        log_success "All components verified successfully"
     else
-        log_warn "Some packages failed verification"
+        log_warn "Some components failed verification"
     fi
 }
 
-verify_single_package() {
+verify_single_component() {
     local package="$1"
     
     log_info "Verifying $package..."
     
-    if "$DEP_RESOLVER" verify "$package"; then
-        log_success "${PACKAGES[$package]} verified successfully"
+    local description=""
+    if [[ -v PACKAGES[$package] ]]; then
+        description="${PACKAGES[$package]}"
+    elif [[ -v CONFIG_PACKAGES[$package] ]]; then
+        description="${CONFIG_PACKAGES[$package]}"
     else
-        log_error "${PACKAGES[$package]} verification failed"
+        description="$package"
+    fi
+    
+    if "$DEP_RESOLVER" verify "$package"; then
+        log_success "$description verified successfully"
+    else
+        log_error "$description verification failed"
     fi
 }
 
