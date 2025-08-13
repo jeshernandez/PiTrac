@@ -244,7 +244,21 @@ install_package() {
         *)
             if [ -n "$SCRIPT" ] && [ -f "${SCRIPT_DIR}/${SCRIPT}" ]; then
                 log_info "Running installation script: $SCRIPT"
-                if bash "${SCRIPT_DIR}/${SCRIPT}"; then
+                # Run with TTY if available, otherwise run normally
+                local script_success=false
+                if [ -t 0 ] && [ -t 1 ]; then
+                    # TTY available - run with TTY access
+                    bash "${SCRIPT_DIR}/${SCRIPT}" < /dev/tty && script_success=true
+                elif tty -s 2>/dev/null; then
+                    # TTY available via tty command
+                    bash "${SCRIPT_DIR}/${SCRIPT}" < $(tty) && script_success=true
+                else
+                    # No TTY - run in non-interactive mode
+                    log_warn "No TTY available - running $SCRIPT in non-interactive mode"
+                    bash "${SCRIPT_DIR}/${SCRIPT}" --non-interactive && script_success=true
+                fi
+                
+                if $script_success; then
                     echo "script:${SCRIPT}" >> "$INSTALL_LOG"
                     log_success "$package installed successfully"
                 else
