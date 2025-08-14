@@ -93,9 +93,10 @@ is_package_installed() {
                 # For SYSTEM packages, use SCRIPT field for actual package names
                 if [ -n "$SCRIPT" ]; then
                     local all_installed=true
+                    local pkg_item
                     IFS=',' read -ra PACKAGES <<< "$SCRIPT"
-                    for pkg in "${PACKAGES[@]}"; do
-                        if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+                    for pkg_item in "${PACKAGES[@]}"; do
+                        if ! dpkg -s "$pkg_item" >/dev/null 2>&1; then
                             all_installed=false
                             break
                         fi
@@ -107,9 +108,10 @@ is_package_installed() {
             else
                 # For apt packages with dependencies, check all packages in SCRIPT field
                 local all_installed=true
+                local pkg_item
                 IFS=',' read -ra PACKAGES <<< "${SCRIPT:-$PKG_NAME}"
-                for pkg in "${PACKAGES[@]}"; do
-                    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+                for pkg_item in "${PACKAGES[@]}"; do
+                    if ! dpkg -s "$pkg_item" >/dev/null 2>&1; then
                         all_installed=false
                         break
                     fi
@@ -154,6 +156,7 @@ check_circular_deps() {
         eval "$config"
         
         if [ "$DEPS" != "SYSTEM" ] && [ -n "$DEPS" ]; then
+            local dep
             IFS=',' read -ra DEP_ARRAY <<< "$DEPS"
             for dep in "${DEP_ARRAY[@]}"; do
                 dep=$(echo "$dep" | xargs)
@@ -205,6 +208,7 @@ resolve_dependencies() {
         fi
         
         # Process dependencies first
+        local dep
         IFS=',' read -ra DEP_ARRAY <<< "$DEPS"
         for dep in "${DEP_ARRAY[@]}"; do
             dep=$(echo "$dep" | xargs)  # trim whitespace
@@ -295,6 +299,7 @@ install_with_deps() {
     log_info "Installation order: ${install_order[*]}"
     
     # Install packages in dependency order
+    local package
     for package in "${install_order[@]}"; do
         if ! install_package "$package"; then
             log_error "Failed to install $package, aborting"
@@ -342,6 +347,7 @@ verify_installation() {
     mapfile -t order < <(resolve_dependencies "$package")
     
     local all_good=true
+    local pkg
     for pkg in "${order[@]}"; do
         if is_package_installed "$pkg"; then
             log_success "$pkg: OK"

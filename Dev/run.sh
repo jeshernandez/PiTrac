@@ -237,8 +237,9 @@ show_main_menu() {
             3 "Build PiTrac"
             4 "Verify Installations"
             5 "System Maintenance"
-            6 "View Logs"
-            7 "Exit"
+            6 "Test Image Processing (No Camera)"
+            7 "View Logs"
+            8 "Exit"
         )
         
         local main_choice
@@ -264,8 +265,9 @@ show_main_menu() {
             3) build_pitrac_menu ;;
             4) show_verify_menu ;;
             5) show_maintenance_menu ;;
-            6) show_logs_menu ;;
-            7) clear; exit 0 ;;
+            6) show_test_processing_menu ;;
+            7) show_logs_menu ;;
+            8) clear; exit 0 ;;
             *) log_error "Invalid selection: $main_choice" ;;
         esac
     done
@@ -642,6 +644,125 @@ show_maintenance_menu() {
                 rm -f "${SCRIPT_DIR}/scripts/.rollback.log"
                 log_info "Installation state reset"
             fi
+            ;;
+    esac
+    
+    echo
+    read -rp "Press Enter to continue..."
+}
+
+show_test_processing_menu() {
+    chmod +x "${SCRIPT_DIR}/scripts/test_image_processor.sh" 2>/dev/null || true
+    chmod +x "${SCRIPT_DIR}/scripts/test_results_server.py" 2>/dev/null || true
+    
+    # Ensure test-processor dependencies are installed
+    if ! "$DEP_RESOLVER" verify test-processor >/dev/null 2>&1; then
+        dialog --yesno "Test processor dependencies not installed.\n\nInstall now?" 8 50
+        if [ $? -eq 0 ]; then
+            clear
+            log_info "Installing test processor dependencies..."
+            if ! "$DEP_RESOLVER" install test-processor; then
+                log_error "Failed to install test processor dependencies"
+                read -rp "Press Enter to continue..."
+                return 1
+            fi
+        else
+            return 0
+        fi
+    fi
+    
+    local test_options=(
+        1 "Quick Test with Default Images"
+        2 "Test with Custom Images"
+        3 "List Available Test Images"
+        4 "View Latest Results"
+        5 "Start Results Web Server"
+        6 "Go Back to Main Menu"
+    )
+    
+    local test_choice
+    test_choice=$(dialog --clear \
+        --title "Test Image Processing (No Camera)" \
+        --menu "Select test option:" \
+        $HEIGHT $WIDTH $MENU_HEIGHT \
+        "${test_options[@]}" \
+        2>&1 >/dev/tty)
+        
+    local exit_code=$?
+    if [ $exit_code -ne 0 ] || [ "$test_choice" -eq 6 ]; then
+        return 0
+    fi
+    
+    clear
+    
+    local local_ip
+    local_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    [ -z "$local_ip" ] && local_ip="localhost"
+    
+    case "$test_choice" in
+        1)
+            log_info "Running quick test with default images..."
+            "${SCRIPT_DIR}/scripts/test_image_processor.sh" quick
+            if [ $? -eq 0 ]; then
+                log_success "Test completed successfully"
+                echo ""
+                log_info "To view results in browser, run option 5 (Start Results Web Server)"
+            fi
+            ;;
+        2)
+            log_info "Test with custom images"
+            
+            "${SCRIPT_DIR}/scripts/test_image_processor.sh" list
+            
+            echo ""
+            echo "Press Enter to continue to image selection..."
+            read -r
+            
+            local teed_img
+            local strobed_img
+            
+            local default_teed="${TEST_DIR:-${PITRAC_ROOT:-$(dirname "$SCRIPT_DIR")}/TestImages}/custom/teed.png"
+            local default_strobed="${TEST_DIR:-${PITRAC_ROOT:-$(dirname "$SCRIPT_DIR")}/TestImages}/custom/strobed.png"
+            
+            teed_img=$(dialog --inputbox "Enter path to teed ball image:" 8 70 "$default_teed" 2>&1 >/dev/tty)
+            if [ $? -ne 0 ]; then
+                log_info "Cancelled"
+                return 0
+            fi
+            
+            strobed_img=$(dialog --inputbox "Enter path to strobed image:" 8 70 "$default_strobed" 2>&1 >/dev/tty)
+            if [ $? -ne 0 ]; then
+                log_info "Cancelled"
+                return 0
+            fi
+            
+            clear
+            
+            if [ -n "$teed_img" ] && [ -n "$strobed_img" ]; then
+                "${SCRIPT_DIR}/scripts/test_image_processor.sh" custom "$teed_img" "$strobed_img"
+            else
+                log_warn "Test cancelled - images not specified"
+            fi
+            ;;
+        3)
+            log_info "Listing available test images..."
+            "${SCRIPT_DIR}/scripts/test_image_processor.sh" list
+            ;;
+        4)
+            log_info "Viewing latest test results..."
+            "${SCRIPT_DIR}/scripts/test_image_processor.sh" results
+            ;;
+        5)
+            log_info "Starting test results web server..."
+            
+            # Check if running over SSH
+            if [ -n "${SSH_CONNECTION:-}" ]; then
+                dialog --msgbox "Web server on port 8080\n\nSSH tunnel:\nssh -L 8080:localhost:8080 $(whoami)@${local_ip}\n\nDirect:\nhttp://${local_ip}:8080\n\nCtrl+C to stop" 12 60
+            else
+                dialog --msgbox "Web server on port 8080\n\nLocal: http://localhost:8080\nNetwork: http://${local_ip}:8080\n\nCtrl+C to stop" 10 50
+            fi
+            
+            python3 "${SCRIPT_DIR}/scripts/test_results_server.py"
             ;;
     esac
     
