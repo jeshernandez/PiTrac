@@ -235,11 +235,12 @@ show_main_menu() {
             1 "Install Software"
             2 "System Configuration"
             3 "Build PiTrac"
-            4 "Verify Installations"
-            5 "System Maintenance"
-            6 "Test Image Processing (No Camera)"
-            7 "View Logs"
-            8 "Exit"
+            4 "Run PiTrac Launch Monitor"
+            5 "Verify Installations"
+            6 "System Maintenance"
+            7 "Test Image Processing (No Camera)"
+            8 "View Logs"
+            9 "Exit"
         )
         
         local main_choice
@@ -263,11 +264,12 @@ show_main_menu() {
             1) show_install_menu ;;
             2) show_config_menu ;;
             3) build_pitrac_menu ;;
-            4) show_verify_menu ;;
-            5) show_maintenance_menu ;;
-            6) show_test_processing_menu ;;
-            7) show_logs_menu ;;
-            8) clear; exit 0 ;;
+            4) run_pitrac_menu ;;
+            5) show_verify_menu ;;
+            6) show_maintenance_menu ;;
+            7) show_test_processing_menu ;;
+            8) show_logs_menu ;;
+            9) clear; exit 0 ;;
             *) log_error "Invalid selection: $main_choice" ;;
         esac
     done
@@ -480,6 +482,183 @@ build_pitrac_menu() {
     else
         dialog --msgbox "PiTrac build failed!\n\nCheck the logs for details:\n/tmp/pitrac_build.log" 10 50
     fi
+}
+
+run_pitrac_menu() {
+    # Check if PiTrac is built using dep_resolver
+    if ! "$DEP_RESOLVER" verify pitrac-build >/dev/null 2>&1; then
+        dialog --msgbox "PiTrac is not built yet!\n\nPlease build PiTrac first (option 3)" 8 50
+        return
+    fi
+    
+    local run_options=(
+        1 "Run Single-Pi Setup"
+        2 "Run Two-Pi Setup (Camera 1)"
+        3 "Run Two-Pi Setup (Camera 2)"
+        4 "Start Camera 1 (Background)"
+        5 "Start Camera 2 (Background)"
+        6 "View Running Processes"
+        7 "View Background Logs"
+        8 "Stop All PiTrac Processes"
+        9 "Test Strobe Light"
+        10 "Test Camera Trigger"
+        11 "Configure Run Settings"
+        12 "Show Command-Line Help"
+        13 "Go Back to Main Menu"
+    )
+    
+    local run_choice
+    run_choice=$(dialog --clear \
+        --title "Run PiTrac Launch Monitor" \
+        --menu "Select operation mode:" \
+        $HEIGHT $WIDTH $MENU_HEIGHT \
+        "${run_options[@]}" \
+        2>&1 >/dev/tty)
+        
+    local exit_code=$?
+    if [ $exit_code -ne 0 ] || [ "$run_choice" -eq 13 ]; then
+        return 0
+    fi
+    
+    clear
+    
+    case "$run_choice" in
+        1)
+            log_info "Starting PiTrac in Single-Pi mode..."
+            log_info "Press Ctrl+C to stop"
+            "${SCRIPT_DIR}/scripts/run_pitrac.sh" run
+            ;;
+        2)
+            log_info "Starting Camera 1 (Primary Pi)..."
+            log_warn "Make sure Camera 2 is running on the secondary Pi first!"
+            log_info "Press Ctrl+C to stop"
+            "${SCRIPT_DIR}/scripts/run_pitrac.sh" cam1
+            ;;
+        3)
+            log_info "Starting Camera 2 (Secondary Pi)..."
+            log_info "Start this BEFORE starting Camera 1!"
+            log_info "Press Ctrl+C to stop"
+            "${SCRIPT_DIR}/scripts/run_pitrac.sh" cam2
+            ;;
+        4)
+            log_info "Starting Camera 1 in background..."
+            nohup "${SCRIPT_DIR}/scripts/run_pitrac.sh" cam1 > /tmp/pitrac_cam1.log 2>&1 &
+            local cam1_pid=$!
+            echo "$cam1_pid" > /tmp/pitrac_cam1.pid
+            log_success "Camera 1 started with PID: $cam1_pid"
+            log_info "Log: /tmp/pitrac_cam1.log"
+            sleep 2
+            ;;
+        5)
+            log_info "Starting Camera 2 in background..."
+            nohup "${SCRIPT_DIR}/scripts/run_pitrac.sh" cam2 > /tmp/pitrac_cam2.log 2>&1 &
+            local cam2_pid=$!
+            echo "$cam2_pid" > /tmp/pitrac_cam2.pid
+            log_success "Camera 2 started with PID: $cam2_pid"
+            log_info "Log: /tmp/pitrac_cam2.log"
+            sleep 2
+            ;;
+        6)
+            log_info "PiTrac Running Processes:"
+            echo ""
+            
+            # Check Camera 1
+            if [ -f /tmp/pitrac_cam1.pid ]; then
+                local pid=$(cat /tmp/pitrac_cam1.pid)
+                if kill -0 "$pid" 2>/dev/null; then
+                    log_success "Camera 1: Running (PID: $pid)"
+                else
+                    log_warn "Camera 1: Not running (stale PID file)"
+                fi
+            else
+                log_info "Camera 1: Not started"
+            fi
+            
+            # Check Camera 2
+            if [ -f /tmp/pitrac_cam2.pid ]; then
+                local pid=$(cat /tmp/pitrac_cam2.pid)
+                if kill -0 "$pid" 2>/dev/null; then
+                    log_success "Camera 2: Running (PID: $pid)"
+                else
+                    log_warn "Camera 2: Not running (stale PID file)"
+                fi
+            else
+                log_info "Camera 2: Not started"
+            fi
+            
+            # Check for any pitrac_lm processes
+            echo ""
+            log_info "All pitrac_lm processes:"
+            pgrep -f pitrac_lm && pgrep -f pitrac_lm -a || echo "  None found"
+            ;;
+        7)
+            log_info "Background Process Logs:"
+            echo ""
+            
+            local log_choice
+            log_choice=$(dialog --clear \
+                --title "View Background Logs" \
+                --menu "Select log to view:" \
+                10 50 3 \
+                1 "Camera 1 Log" \
+                2 "Camera 2 Log" \
+                3 "Back" \
+                2>&1 >/dev/tty)
+            
+            case "$log_choice" in
+                1)
+                    if [ -f /tmp/pitrac_cam1.log ]; then
+                        less /tmp/pitrac_cam1.log
+                    else
+                        log_warn "No Camera 1 log found"
+                    fi
+                    ;;
+                2)
+                    if [ -f /tmp/pitrac_cam2.log ]; then
+                        less /tmp/pitrac_cam2.log
+                    else
+                        log_warn "No Camera 2 log found"
+                    fi
+                    ;;
+            esac
+            ;;
+        8)
+            log_warn "Stopping all PiTrac processes..."
+            
+            # Stop using PID files
+            for pidfile in /tmp/pitrac_cam1.pid /tmp/pitrac_cam2.pid; do
+                if [ -f "$pidfile" ]; then
+                    local pid=$(cat "$pidfile")
+                    if kill -0 "$pid" 2>/dev/null; then
+                        kill "$pid"
+                        log_info "Stopped process $pid"
+                    fi
+                    rm -f "$pidfile"
+                fi
+            done
+            
+            # Also kill any remaining pitrac_lm processes
+            pkill -f pitrac_lm 2>/dev/null && log_info "Killed remaining pitrac_lm processes"
+            
+            log_success "All PiTrac processes stopped"
+            ;;
+        9)
+            log_info "Testing strobe light..."
+            "${SCRIPT_DIR}/scripts/run_pitrac.sh" test-strobe
+            ;;
+        10)
+            "${SCRIPT_DIR}/scripts/run_pitrac.sh" test-trigger
+            ;;
+        11)
+            dialog --msgbox "Edit run configuration:\n\n${SCRIPT_DIR}/scripts/defaults/run-pitrac.yaml\n\nKey settings:\n- pi_mode: single or dual\n- logging_level: info, debug, trace\n- auto_restart: enable auto-restart on failure" 14 60
+            ;;
+        12)
+            "${SCRIPT_DIR}/scripts/run_pitrac.sh" help
+            ;;
+    esac
+    
+    echo
+    read -rp "Press Enter to continue..."
 }
 
 show_verify_menu() {
