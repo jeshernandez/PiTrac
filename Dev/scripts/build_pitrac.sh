@@ -11,6 +11,7 @@ load_defaults "pitrac-build" "$@"
 # Configuration from defaults
 PITRAC_REPO="${PITRAC_REPO:-https://github.com/jamespilgrim/PiTrac.git}"
 PITRAC_BRANCH="${PITRAC_BRANCH:-main}"
+PITRAC_PR="${PITRAC_PR:-0}"
 BUILD_DIR="${BUILD_DIR:-$HOME/Dev}"
 BUILD_DIR="${BUILD_DIR/#\~/$HOME}"  # Expand tilde
 PITRAC_DIR="${BUILD_DIR}/PiTrac"
@@ -76,16 +77,35 @@ get_pitrac_source() {
             git stash push -m "Auto-stash before update $(date +%Y%m%d_%H%M%S)"
         fi
         
-        git fetch origin
-        git pull origin "$PITRAC_BRANCH" || log_warn "Could not update (might have conflicts)"
+        # Check if PR is specified
+        if [ "$PITRAC_PR" != "0" ] && [ -n "$PITRAC_PR" ]; then
+            log_info "Fetching and checking out pull request #$PITRAC_PR..."
+            git fetch origin "pull/$PITRAC_PR/head:pr-$PITRAC_PR"
+            git checkout "pr-$PITRAC_PR"
+        else
+            git fetch origin
+            git pull origin "$PITRAC_BRANCH" || log_warn "Could not update (might have conflicts)"
+        fi
     else
-        log_info "Cloning PiTrac repository (branch: $PITRAC_BRANCH)..."
+        log_info "Cloning PiTrac repository..."
         mkdir -p "$BUILD_DIR"
         cd "$BUILD_DIR"
         
-        if ! git clone -b "$PITRAC_BRANCH" "$PITRAC_REPO"; then
+        if ! git clone "$PITRAC_REPO"; then
             log_error "Failed to clone PiTrac repository"
             return 1
+        fi
+        
+        cd "$PITRAC_DIR"
+        
+        # Check if PR is specified
+        if [ "$PITRAC_PR" != "0" ] && [ -n "$PITRAC_PR" ]; then
+            log_info "Fetching and checking out pull request #$PITRAC_PR..."
+            git fetch origin "pull/$PITRAC_PR/head:pr-$PITRAC_PR"
+            git checkout "pr-$PITRAC_PR"
+        elif [ "$PITRAC_BRANCH" != "main" ]; then
+            log_info "Checking out branch: $PITRAC_BRANCH"
+            git checkout "$PITRAC_BRANCH" || git checkout -b "$PITRAC_BRANCH" "origin/$PITRAC_BRANCH"
         fi
         
         if [ ! -d "$PITRAC_DIR" ]; then
@@ -102,8 +122,13 @@ get_pitrac_source() {
 setup_environment() {
     log_info "Setting up PiTrac environment variables..."
     
-    # Set PITRAC_ROOT
-    export PITRAC_ROOT="${PITRAC_DIR}/Software/LMSourceCode"
+    # Set PITRAC_ROOT - try detection first, fall back to built location
+    local detected_root="$(detect_pitrac_root)"
+    if [ -d "$detected_root" ]; then
+        export PITRAC_ROOT="$detected_root"
+    else
+        export PITRAC_ROOT="${PITRAC_DIR}/Software/LMSourceCode"
+    fi
     
     if [ "$CONFIGURE_SHELL" != "1" ]; then
         log_info "Skipping shell configuration (CONFIGURE_SHELL=0)"

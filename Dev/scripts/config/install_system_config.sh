@@ -49,8 +49,8 @@ update_config_setting() {
   local full_setting="${setting}=${value}"
   
   if [ ! -f "$CONFIG_FILE" ]; then
-    log_error "$CONFIG_FILE not found. Are you on Raspberry Pi OS?"
-    return 1
+    # Not on Raspberry Pi, skip silently
+    return 0
   fi
   
   echo "Updating $CONFIG_FILE: $full_setting"
@@ -188,7 +188,13 @@ configure_swap() {
 
 # Check if system is configured
 is_system_config_installed() {
-  # Check if basic Pi configuration is done
+  # In non-Pi environments, consider it "installed" if we've run before
+  if [ ! -f "$CONFIG_FILE" ]; then
+    # Not on Pi, check for marker file
+    [ -f "$HOME/.pitrac_system_configured" ] && return 0
+    return 1
+  fi
+  # On Pi, check actual config
   check_config_setting "force_turbo" && return 0
   return 1
 }
@@ -205,6 +211,15 @@ configure_system() {
   fi
   
   echo "Configuring system settings for PiTrac..."
+  
+  # Check if we're on a Raspberry Pi
+  if [ ! -f "$CONFIG_FILE" ]; then
+    log_info "Not running on Raspberry Pi OS. Skipping hardware-specific configurations."
+    # Create marker for non-Pi environments
+    touch "$HOME/.pitrac_system_configured"
+    echo "System configuration completed (non-Pi environment)."
+    return 0
+  fi
   
   # Configure clock settings for consistent timing
   configure_clock

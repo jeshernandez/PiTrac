@@ -11,9 +11,34 @@ load_defaults "pitrac-environment" "$@"
 
 # Configuration with loaded defaults
 FORCE="${FORCE:-0}"
-DEFAULT_PITRAC_ROOT="${PITRAC_ROOT:-/home/$(whoami)/Dev/PiTrac/Software/LMSourceCode}"
-DEFAULT_IMAGE_DIR="${PITRAC_IMAGE_DIR:-/home/$(whoami)/LM_Shares/Images}"
-DEFAULT_WEB_DIR="${PITRAC_WEB_DIR:-/home/$(whoami)/LM_Shares/WebShare}"
+
+# Use detection from common.sh, prioritize actual directories over defaults
+DETECTED_ROOT="$(detect_pitrac_root)"
+if [ -d "$DETECTED_ROOT" ] && [ "$DETECTED_ROOT" != "/home/$(whoami)/Dev/PiTrac/Software/LMSourceCode" ]; then
+  DEFAULT_PITRAC_ROOT="$DETECTED_ROOT"
+else
+  DEFAULT_PITRAC_ROOT="${PITRAC_ROOT:-$DETECTED_ROOT}"
+fi
+
+if [ -d "$DETECTED_ROOT" ] && [ "$DETECTED_ROOT" != "/home/$(whoami)/Dev/PiTrac/Software/LMSourceCode" ]; then
+  PITRAC_BASE="$(dirname "$(dirname "$DETECTED_ROOT")")"
+  # If PiTrac is at /work or similar root, put LM_Shares there too
+  if [ "$PITRAC_BASE" = "/work" ] || [ "$PITRAC_BASE" = "/PiTrac" ]; then
+    DEFAULT_IMAGE_DIR="${PITRAC_IMAGE_DIR:-$PITRAC_BASE/LM_Shares/Images}"
+    DEFAULT_WEB_DIR="${PITRAC_WEB_DIR:-$PITRAC_BASE/LM_Shares/WebShare}"
+  else
+    # Otherwise put LM_Shares at same level as PiTrac
+    PARENT_DIR="$(dirname "$PITRAC_BASE")"
+    DEFAULT_IMAGE_DIR="${PITRAC_IMAGE_DIR:-$PARENT_DIR/LM_Shares/Images}"
+    DEFAULT_WEB_DIR="${PITRAC_WEB_DIR:-$PARENT_DIR/LM_Shares/WebShare}"
+  fi
+else
+  DETECTED_IMAGE_DIR="$(detect_lm_shares_dir "Images")"
+  DEFAULT_IMAGE_DIR="${PITRAC_IMAGE_DIR:-$DETECTED_IMAGE_DIR}"
+  
+  DETECTED_WEB_DIR="$(detect_lm_shares_dir "WebShare")"
+  DEFAULT_WEB_DIR="${PITRAC_WEB_DIR:-$DETECTED_WEB_DIR}"
+fi
 DEFAULT_MSG_BROKER_IP="${PITRAC_MSG_BROKER_IP:-10.0.0.41}"
 DEFAULT_E6_HOST="${PITRAC_E6_HOST:-}"
 DEFAULT_GSPRO_HOST="${PITRAC_GSPRO_HOST:-}"
@@ -128,13 +153,16 @@ generate_environment_config() {
   pi_model="$(detect_pi_model)"
   
   # Get libcamera config path
-  local libcamera_config
+  local libcamera_config=""
   case "$pi_model" in
     "5")
       libcamera_config="/usr/share/libcamera/pipeline/rpi/pisp/rpi_apps.yaml"
       ;;
     "4")
       libcamera_config="/usr/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml"
+      ;;
+    *)
+      libcamera_config=""
       ;;
   esac
   
@@ -167,8 +195,8 @@ EOF
 export PITRAC_SLOT1_CAMERA_TYPE=$PITRAC_SLOT1_CAMERA
 export PITRAC_SLOT2_CAMERA_TYPE=$PITRAC_SLOT2_CAMERA
 
-# libcamera configuration
-export LIBCAMERA_RPI_CONFIG_FILE="$libcamera_config"
+# libcamera configuration (only on Raspberry Pi)
+$([ -n "$libcamera_config" ] && echo "export LIBCAMERA_RPI_CONFIG_FILE=\"$libcamera_config\"")
 
 # Additional PiTrac environment settings
 export PITRAC_ENV_CONFIGURED=1

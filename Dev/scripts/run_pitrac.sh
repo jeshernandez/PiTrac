@@ -13,8 +13,13 @@ BUILD_DIR="${BUILD_DIR:-$HOME/Dev}"
 BUILD_DIR="${BUILD_DIR/#\~/$HOME}"
 PITRAC_DIR="${BUILD_DIR}/PiTrac"
 
-# Set PITRAC_ROOT from built location
-export PITRAC_ROOT="${PITRAC_DIR}/Software/LMSourceCode"
+# Set PITRAC_ROOT - try detection first, fall back to built location
+detected_root="$(detect_pitrac_root)"
+if [ -d "$detected_root" ]; then
+    export PITRAC_ROOT="$detected_root"
+else
+    export PITRAC_ROOT="${PITRAC_DIR}/Software/LMSourceCode"
+fi
 PITRAC_BINARY="${PITRAC_ROOT}/ImageProcessing/build/pitrac_lm"
 
 # Runtime configuration from defaults
