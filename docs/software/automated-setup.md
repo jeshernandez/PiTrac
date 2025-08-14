@@ -129,9 +129,21 @@ Building PiTrac: [================-----] 76% (342/450)
 
 Takes about 10-15 minutes depending on your Pi.
 
-### Step 6: Verify Everything Works
+### Step 6: Run PiTrac
 
-Choose option 4 "Verify Installations". This actually tests each component:
+Ready to see it work? Choose option 4 "Run PiTrac Launch Monitor".
+
+This opens a submenu where you can:
+- Run in single-Pi mode (one camera)
+- Run dual-Pi setup (two cameras)
+- Test the strobe light
+- Test without cameras using test images
+
+For detailed runtime options, see the [Running PiTrac]({% link software/running-pitrac.md %}) guide.
+
+### Step 7: Verify Everything Works
+
+Choose option 5 "Verify Installations". This actually tests each component:
 - OpenCV: Compiles and runs a test program
 - Libcamera: Checks camera detection
 - ActiveMQ: Verifies the broker starts
@@ -243,10 +255,11 @@ It adjusts the installation accordingly. Pi 5? Gets different camera configs. Li
 
 Once everything's installed, configured, and built, you're ready to rock:
 
-1. **Test the Launch Monitor** - Run `$PITRAC_ROOT/ImageProcessing/build/pitrac_lm --help`
-2. **Test Cameras** - Run `rpicam-hello` to verify camera works
-3. **Start Services** - ActiveMQ and TomEE should auto-start on boot
-4. **Access Web UI** - Browse to `http://your-pi-ip:8080/golfsim/monitor`
+1. **Run PiTrac** - Use menu option 4 or see [Running PiTrac]({% link software/running-pitrac.md %})
+2. **Test Without Hardware** - Try the test processor (menu option 7) - see [Testing Guide]({% link troubleshooting/testing-without-hardware.md %})
+3. **Test Cameras** - Run `rpicam-hello` to verify camera works
+4. **Start Services** - ActiveMQ and TomEE should auto-start on boot
+5. **Access Web UI** - Browse to `http://your-pi-ip:8080/golfsim/monitor`
 
 ## Updating Later
 

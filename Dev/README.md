@@ -22,7 +22,9 @@ The typical flow:
 1. **Install Software** - Gets all the dependencies
 2. **System Configuration** - Sets up your Pi hardware
 3. **Build PiTrac** - Actually builds the launch monitor
-4. **Verify Installations** - Make sure it all works
+4. **Run PiTrac** - Launch the monitor (single or dual-Pi mode)
+5. **Test Without Camera** - Test image processing without hardware
+6. **Verify Installations** - Make sure it all works
 
 ## How This Thing Actually Works
 
@@ -252,6 +254,73 @@ Need to rebuild from scratch?
 clean-build: 1
 force-clone: 1
 ```
+
+### Running PiTrac Launch Monitor
+
+After building, you can run PiTrac from the menu:
+
+```bash
+./run.sh
+# Choose option 4: Run PiTrac Launch Monitor
+```
+
+The run system supports:
+- **Single-Pi mode** - Everything runs on one Pi
+- **Dual-Pi mode** - Camera 1 (primary) and Camera 2 (secondary)
+- **Background processes** - Run cam1 and cam2 simultaneously
+- **Process management** - View logs, check status, stop processes
+- **Hardware tests** - Test strobe lights and camera triggers
+- **Auto-restart** - Configurable restart on failure
+
+Configuration in `scripts/defaults/run-pitrac.yaml`:
+```yaml
+pi_mode: single         # or dual
+logging_level: info     # trace, debug, info, warning, error
+auto_restart: 0         # Enable auto-restart on failure
+```
+
+The run script:
+- Checks for ActiveMQ and TomEE services (non-blocking)
+- Loads environment variables from your shell config
+- Falls back to RunScripts if they exist, or uses command-line params
+- Manages PIDs for background processes
+- Provides full process control from the menu
+
+For dual-Pi setup, the communication happens via ActiveMQ message broker (not SSH). Start Camera 2 first, then Camera 1.
+
+### Testing Without Camera Hardware
+
+Don't have cameras connected? Want to test the image processing? We've got you covered:
+
+```bash
+./run.sh
+# Choose option 7: Test Image Processing (No Camera)
+```
+
+This launches a test environment that:
+- **Uses test images** instead of live camera feed
+- **Processes teed and strobed ball images** 
+- **Generates full shot data** (speed, angles, spin)
+- **Creates visual outputs** (detected balls, trajectories)
+- **Runs a web server** to view results
+
+Test modes:
+1. **Quick Test** - Uses default test images from TestImages/
+2. **Custom Test** - Specify your own teed/strobed images
+3. **Results Server** - View results in browser at localhost:8080
+
+The test processor:
+- Verifies image processing algorithms
+- Tests ball detection and tracking
+- Validates spin calculation
+- Checks trajectory computation
+- No hardware required
+
+Perfect for:
+- Development and debugging
+- Algorithm verification
+- CI/CD pipelines
+- Learning how PiTrac works
 
 ### Writing a New Install Script
 
@@ -584,7 +653,10 @@ It's not perfect, but it's a hell of a lot better than copy-pasting from forum p
 
 ### Commands You'll Actually Use
 ```bash
-# Install something
+# Main menu - everything starts here
+./run.sh
+
+# Install something specific
 ./scripts/dep_resolver.sh install package_name
 
 # Check if something's installed
@@ -598,6 +670,16 @@ It's not perfect, but it's a hell of a lot better than copy-pasting from forum p
 
 # Undo last install
 ./scripts/dep_resolver.sh rollback
+
+# Run PiTrac after building
+./scripts/run_pitrac.sh           # Single-Pi mode
+./scripts/run_pitrac.sh cam1       # Camera 1 (dual-Pi)
+./scripts/run_pitrac.sh cam2       # Camera 2 (dual-Pi)
+
+# Test without cameras
+./scripts/test_image_processor.sh quick     # Quick test with defaults
+./scripts/test_image_processor.sh list      # List available test images
+python3 scripts/test_results_server.py      # View results in browser
 ```
 
 ### Files You'll Actually Edit
