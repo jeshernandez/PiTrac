@@ -2,20 +2,25 @@
 set -euo pipefail
 
 # LGPIO Library Installation Script
-CONFIG_FILE="/boot/firmware/config.txt"
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
+# Load defaults from config file
+load_defaults "lgpio" "$@"
+
+CONFIG_FILE="${CONFIG_FILE:-/boot/firmware/config.txt}"
+LGPIO_URL="${LGPIO_URL:-http://abyz.me.uk/lg/lg.zip}"
+BUILD_DIR="${BUILD_DIR:-/tmp/lgpio-build}"
+INSTALL_PREFIX="${INSTALL_PREFIX:-/usr/local}"
+ENABLE_SPI="${ENABLE_SPI:-1}"
+FORCE="${FORCE:-0}"
+
 SPI_LINE_ON="dtparam=spi=on"
 SPI_LINE_OFF="dtparam=spi=off"
-
-# Resolve assets path relative to this script
-SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 ASSETS_DIR="${SCRIPT_DIR}/assets"
 
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
 # Check if lgpio is installed
-lgpio_already_installed() {
+is_lgpio_installed() {
   # Check if library is available via ldconfig
   if ldconfig -p 2>/dev/null | grep -q 'liblgpio\.so'; then
     return 0
@@ -37,35 +42,23 @@ spi_already_enabled() {
 
 # Install LGPIO library
 install_lgpio() {
-  if lgpio_already_installed; then
+  # Run pre-flight checks
+  run_preflight_checks "lgpio" || return 1
+
+  if is_lgpio_installed; then
     echo "LGPIO already installed; skipping build/install."
     return 0
   fi
 
   # Ensure required packages are installed
-  local packages=("wget" "unzip" "build-essential" "ca-certificates")
-  for pkg in "${packages[@]}"; do
-    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
-      echo "Installing $pkg..."
-      $SUDO apt-get update
-      $SUDO apt-get install -y --no-install-recommends "$pkg"
-    fi
-  done
+  apt_ensure wget unzip build-essential ca-certificates
 
-  WORK_DIR="$(mktemp -d -t lgpio.XXXXXX)"
-  trap "rm -rf '$WORK_DIR'" EXIT
+  WORK_DIR="$(create_temp_dir "lgpio")"
 
-  echo "Download LGPIO into: $WORK_DIR"
+  log_info "Download LGPIO into: $WORK_DIR"
   cd "$WORK_DIR"
 
-  if command -v wget >/dev/null 2>&1; then
-    wget -q http://abyz.me.uk/lg/lg.zip
-  elif command -v curl >/dev/null 2>&1; then
-    curl -fsSLo lg.zip http://abyz.me.uk/lg/lg.zip
-  else
-    echo "ERROR: Neither wget nor curl available after installation attempt"
-    return 1
-  fi
+  download_with_progress "http://abyz.me.uk/lg/lg.zip" "lg.zip" "Downloading LGPIO"
 
   echo "Unpacking LGPIO..."
   unzip -q lg.zip
@@ -93,7 +86,7 @@ copy_lgpio_pc() {
 
   echo "Copying lgpio.pc to ${target_dir}..."
   if [ ! -f "$src_pc" ]; then
-    echo "WARNING: ${src_pc} not found. Skipping lgpio.pc copy."
+    log_warn "${src_pc} not found. Skipping lgpio.pc copy."
     return 0
   fi
 
@@ -101,16 +94,16 @@ copy_lgpio_pc() {
   $SUDO cp "$src_pc" "${target_dir}/"
 
   if [ -f "${target_dir}/lgpio.pc" ]; then
-    echo "Successfully copied lgpio.pc to ${target_dir}"
+    log_success "Successfully copied lgpio.pc to ${target_dir}"
   else
-    echo "Issue copying lgpio.pc to ${target_dir}"
-    exit 1
+    log_error "Issue copying lgpio.pc to ${target_dir}"
+    return 1
   fi
 }
 
 enable_spi() {
   if [ ! -f "$CONFIG_FILE" ]; then
-    echo "WARNING: ${CONFIG_FILE} not found. Are you on Raspberry Pi OS? Skipping SPI enable."
+    log_warn "${CONFIG_FILE} not found. Are you on Raspberry Pi OS? Skipping SPI enable."
     return 0
   fi
 
@@ -135,6 +128,9 @@ enable_spi() {
 
 # Main installation
 install_lgpio_full() {
+  # Run pre-flight checks
+  run_preflight_checks "lgpio" || return 1
+
   install_lgpio
   copy_lgpio_pc
   enable_spi

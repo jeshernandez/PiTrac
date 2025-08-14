@@ -3,32 +3,23 @@ set -euo pipefail
 
 # PiTrac Environment Configuration Script
 # Sets up environment variables, directories, and shell configuration
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/../common.sh"
 
-# Configuration
+# Load defaults from config file
+load_defaults "pitrac-environment" "$@"
+
+# Configuration with loaded defaults
 FORCE="${FORCE:-0}"
-DEFAULT_PITRAC_ROOT="/home/$(whoami)/Dev/PiTrac/Software/LMSourceCode"
-DEFAULT_IMAGE_DIR="/home/$(whoami)/LM_Shares/Images"
-DEFAULT_WEB_DIR="/home/$(whoami)/LM_Shares/WebShare"
-
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Utilities
-need_cmd() { 
-  command -v "$1" >/dev/null 2>&1
-}
-
-# Detect Pi model for libcamera config path
-detect_pi_model() {
-  if grep -q "Raspberry Pi 5" /proc/cpuinfo 2>/dev/null; then
-    echo "5"
-  elif grep -q "Raspberry Pi 4" /proc/cpuinfo 2>/dev/null; then
-    echo "4"
-  else
-    echo "4"  # Default to 4
-  fi
-}
+DEFAULT_PITRAC_ROOT="${PITRAC_ROOT:-/home/$(whoami)/Dev/PiTrac/Software/LMSourceCode}"
+DEFAULT_IMAGE_DIR="${PITRAC_IMAGE_DIR:-/home/$(whoami)/LM_Shares/Images}"
+DEFAULT_WEB_DIR="${PITRAC_WEB_DIR:-/home/$(whoami)/LM_Shares/WebShare}"
+DEFAULT_MSG_BROKER_IP="${PITRAC_MSG_BROKER_IP:-10.0.0.41}"
+DEFAULT_E6_HOST="${PITRAC_E6_HOST:-}"
+DEFAULT_GSPRO_HOST="${PITRAC_GSPRO_HOST:-}"
+DEFAULT_SLOT1_CAMERA="${PITRAC_SLOT1_CAMERA:-4}"
+DEFAULT_SLOT2_CAMERA="${PITRAC_SLOT2_CAMERA:-4}"
+UPDATE_SHELL_RC="${UPDATE_SHELL_RC:-1}"
 
 # Get current shell config file
 get_shell_config_file() {

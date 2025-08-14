@@ -2,25 +2,20 @@
 set -euo pipefail
 
 # MessagePack C++ Installation Script
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
+# Load defaults from config file
+load_defaults "msgpack" "$@"
+
+MSGPACK_VERSION="${MSGPACK_VERSION:-6.1.1}"
+INSTALL_METHOD="${INSTALL_METHOD:-apt}"
+BUILD_DIR="${BUILD_DIR:-/tmp/msgpack_build}"
+INSTALL_PREFIX="${INSTALL_PREFIX:-/usr/local}"
 FORCE="${FORCE:-0}"
 
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
 
-# Package management helper
-apt_ensure() {
-  local need=()
-  for p in "$@"; do 
-    dpkg -s "$p" >/dev/null 2>&1 || need+=("$p")
-  done
-  if [ "${#need[@]}" -gt 0 ]; then
-    $SUDO apt-get update
-    $SUDO apt-get install -y --no-install-recommends "${need[@]}"
-  fi
-}
-
-have_msgpack() {
+is_msgpack_installed() {
   # header-only lib usually installs these headers
   [ -f /usr/local/include/msgpack.hpp ] || [ -f /usr/include/msgpack.hpp ] && return 0
   # some distros lay out headers under msgpack/… only
@@ -30,7 +25,7 @@ have_msgpack() {
 
 verify_msgpack() {
   # Compile a tiny test that prints: [1,true,"example"]
-  local tmpdir; tmpdir="$(mktemp -d -t msgpack.verify.XXXXXX)"
+  local tmpdir; tmpdir="$(create_temp_dir "msgpack.verify")"
   cat > "${tmpdir}/test.cpp" <<'CPP'
 #include <iostream>
 #include <vector>
@@ -56,6 +51,9 @@ CPP
 
 # Install MessagePack C++
 install_msgpack() {
+  # Run pre-flight checks
+  run_preflight_checks "msgpack" || return 1
+
   # Check if already installed and skip if FORCE not set
   if [ "$FORCE" != "1" ] && have_msgpack; then
     echo "msgpack headers already present. Verifying..."
@@ -72,19 +70,18 @@ install_msgpack() {
 
   # Build from source
   local WORK
-  WORK="$(mktemp -d -t msgpack.XXXXXX)"
-  trap "rm -rf '$WORK'" EXIT
+  WORK="$(create_temp_dir "msgpack")"
   cd "$WORK"
 
   echo "Fetching msgpack-c (cpp_master)..."
-  wget -q https://github.com/msgpack/msgpack-c/archive/refs/heads/cpp_master.zip -O cpp_master.zip
+  download_with_progress "https://github.com/msgpack/msgpack-c/archive/refs/heads/cpp_master.zip" "cpp_master.zip"
 
   echo "Extracting source..."
   unzip -q cpp_master.zip
   local SRC_DIR="${WORK}/msgpack-c-cpp_master"
   
   if [ ! -d "$SRC_DIR" ]; then
-    echo "ERROR: expected source dir not found."
+    log_error "expected source dir not found."
     return 1
   fi
 
@@ -94,7 +91,7 @@ install_msgpack() {
   echo "Building..."
   cmake --build "$SRC_DIR/build" -j"$(nproc)"
 
-  echo "Installing to /usr/local..."
+  log_info "Installing to /usr/local..."
   $SUDO cmake --install "$SRC_DIR/build"
   $SUDO ldconfig 2>/dev/null || true
 
@@ -102,7 +99,7 @@ install_msgpack() {
   if verify_msgpack; then
     echo "MessagePack C++ successfully installed and verified!"
   else
-    echo "ERROR: MessagePack C++ install/verify failed."
+    log_error "MessagePack C++ install/verify failed."
     return 1
   fi
 }

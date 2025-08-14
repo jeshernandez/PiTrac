@@ -3,30 +3,33 @@ set -euo pipefail
 
 # Development Environment Setup Script for PiTrac
 # Installs and configures ZSH, Oh-My-ZSH, Neovim, and useful development tools
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/../common.sh"
+
+# Load defaults from config file
+load_defaults "dev-environment" "$@"
 
 # Configuration
 FORCE="${FORCE:-0}"
-
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Utilities
-need_cmd() { 
-  command -v "$1" >/dev/null 2>&1
-}
-
-# Package management helper
-apt_ensure() {
-  local need=()
-  for p in "$@"; do
-    dpkg -s "$p" >/dev/null 2>&1 || need+=("$p")
-  done
-  if [ "${#need[@]}" -gt 0 ]; then
-    $SUDO apt-get update
-    $SUDO apt-get install -y --no-install-recommends "${need[@]}"
-  fi
-}
+INSTALL_ZSH="${INSTALL_ZSH:-1}"
+SET_ZSH_DEFAULT="${SET_ZSH_DEFAULT:-1}"
+OMZ_THEME="${OMZ_THEME:-robbyrussell}"
+OMZ_PLUGINS="${OMZ_PLUGINS:-git,docker,kubectl,npm,python,pip,sudo,command-not-found}"
+INSTALL_NEOVIM="${INSTALL_NEOVIM:-1}"
+NVIM_CONFIG="${NVIM_CONFIG:-basic}"
+INSTALL_DEV_TOOLS="${INSTALL_DEV_TOOLS:-1}"
+DEV_TOOLS="${DEV_TOOLS:-htop,ncdu,tree,jq,ripgrep,fd-find,bat,fzf,tmux}"
+INSTALL_DOCKER="${INSTALL_DOCKER:-0}"
+DOCKER_USER_GROUP="${DOCKER_USER_GROUP:-1}"
+INSTALL_VSCODE_SERVER="${INSTALL_VSCODE_SERVER:-0}"
+CONFIGURE_GIT="${CONFIGURE_GIT:-1}"
+GIT_USER_NAME="${GIT_USER_NAME:-}"
+GIT_USER_EMAIL="${GIT_USER_EMAIL:-}"
+GIT_DEFAULT_BRANCH="${GIT_DEFAULT_BRANCH:-main}"
+INSTALL_PYTHON_DEV="${INSTALL_PYTHON_DEV:-1}"
+PYTHON_PACKAGES="${PYTHON_PACKAGES:-pip,setuptools,wheel,virtualenv,ipython,black,pylint}"
+INSTALL_NODEJS="${INSTALL_NODEJS:-0}"
+NODEJS_VERSION="${NODEJS_VERSION:-lts}"
 
 # Prompt for yes/no with default
 prompt_yes_no() {
@@ -48,7 +51,7 @@ install_zsh() {
     return 0
   fi
   
-  echo "Installing ZSH..."
+  log_info "Installing ZSH..."
   apt_ensure zsh curl
   
   # Install Oh-My-ZSH if not present
@@ -172,7 +175,7 @@ install_neovim() {
     return 0
   fi
   
-  echo "Installing Neovim and dependencies..."
+  log_info "Installing Neovim and dependencies..."
   apt_ensure neovim python3-neovim git
   
   # Create Neovim config directory
@@ -309,7 +312,7 @@ EOF
 install_dev_tools() {
   echo "=== Additional Development Tools ==="
   
-  echo "Installing useful development tools..."
+  log_info "Installing useful development tools..."
   apt_ensure tree htop git-extras ripgrep fd-find bat
   
   # Create symlinks for fd and bat (they have different names on Debian)

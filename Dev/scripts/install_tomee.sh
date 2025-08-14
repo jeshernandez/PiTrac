@@ -2,33 +2,20 @@
 set -euo pipefail
 
 # Apache TomEE Installation Script
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
+# Load defaults from config file
+load_defaults "tomee" "$@"
+
 TOMEE_VERSION="${TOMEE_VERSION:-10.1.0}"
-FILE_NAME="apache-tomee-${TOMEE_VERSION}-plume.zip"
+DISTRIBUTION="${DISTRIBUTION:-plume}"
+FILE_NAME="apache-tomee-${TOMEE_VERSION}-${DISTRIBUTION}.zip"
 URL="https://dlcdn.apache.org/tomee/tomee-${TOMEE_VERSION}/${FILE_NAME}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/tomee}"
 MARKER="${INSTALL_DIR}/.tomee-version"
 FORCE="${FORCE:-0}"
 
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Package management helper
-apt_ensure() {
-  local need=()
-  for p in "$@"; do 
-    dpkg -s "$p" >/dev/null 2>&1 || need+=("$p")
-  done
-  if [ "${#need[@]}" -gt 0 ]; then
-    $SUDO apt-get update
-    $SUDO apt-get install -y --no-install-recommends "${need[@]}"
-  fi
-}
-
-# Version comparison helper
-version_ge() { 
-  dpkg --compare-versions "$1" ge "$2"
-}
 
 get_installed_version() {
   # 1) Our marker (most reliable)
@@ -53,7 +40,7 @@ get_installed_version() {
 }
 
 # Check if tomee is installed
-get_tomee_installed_version() {
+is_tomee_installed() {
   local ver
   ver="$(get_installed_version)"
   [ -n "$ver" ] && return 0
@@ -91,20 +78,22 @@ precheck() {
 
 # Install TomEE
 install_tomee() {
+  # Run pre-flight checks
+  run_preflight_checks "tomee" || return 1
+
   echo "Ensuring prerequisites..."
   apt_ensure wget unzip ca-certificates file
 
   local WORK
-  WORK="$(mktemp -d -t tomee.XXXXXX)"
-  trap "rm -rf '$WORK'" EXIT
+  WORK="$(create_temp_dir "tomee")"
   cd "$WORK"
 
   echo "Downloading TomEE ${TOMEE_VERSION}..."
-  wget -q -O "$FILE_NAME" "$URL"
+  download_with_progress ""$URL"" ""$FILE_NAME""
 
   echo "Verifying archive..."
   file "$FILE_NAME" | grep -qi 'Zip archive data' || {
-    echo "ERROR: Downloaded file isn't a zip archive (mirror may have returned HTML)."
+    log_error "Downloaded file isn't a zip archive (mirror may have returned HTML)."
     return 1
   }
 
@@ -113,11 +102,11 @@ install_tomee() {
 
   local SRC_DIR="apache-tomee-plume-${TOMEE_VERSION}"
   [ -d "$SRC_DIR" ] || { 
-    echo "ERROR: '${SRC_DIR}' not found after unzip."
+    log_error "'${SRC_DIR}' not found after unzip."
     return 1
   }
 
-  echo "Installing to ${INSTALL_DIR}..."
+  log_info "Installing to ${INSTALL_DIR}..."
   $SUDO mkdir -p "$(dirname "$INSTALL_DIR")"
   $SUDO mv "$SRC_DIR" "$INSTALL_DIR"
 
@@ -347,12 +336,12 @@ EOF
       echo "Login: tomcat/tomcat"
       echo "PiTrac WebShare: http://$pi_ip:8080/golfsim/WebShare/"
     else
-      echo "WARNING: TomEE service started but may not be healthy"
+      log_warn "TomEE service started but may not be healthy"
       echo "Check status with: sudo systemctl status tomee"
       echo "Check logs with: sudo tail -f ${INSTALL_DIR}/logs/catalina.out"
     fi
   else
-    echo "WARNING: Failed to start TomEE service"
+    log_warn "Failed to start TomEE service"
     echo "Check logs with: sudo journalctl -u tomee"
   fi
 }
@@ -365,7 +354,7 @@ verify_tomee_service() {
   if [ -x "${INSTALL_DIR}/bin/startup.sh" ]; then
     echo "TomEE startup script is executable"
   else
-    echo "ERROR: TomEE startup script not found or not executable"
+    log_error "TomEE startup script not found or not executable"
     return 1
   fi
   
@@ -373,14 +362,14 @@ verify_tomee_service() {
   if systemctl is-enabled tomee >/dev/null 2>&1; then
     echo "TomEE service is enabled"
   else
-    echo "WARNING: TomEE service is not enabled"
+    log_warn "TomEE service is not enabled"
   fi
   
   # Check if TomEE is listening on port 8080
   if netstat -an 2>/dev/null | grep -q ":8080.*LISTEN"; then
     echo "TomEE listening on port 8080"
   else
-    echo "WARNING: TomEE not listening on port 8080"
+    log_warn "TomEE not listening on port 8080"
   fi
   
   # Check web share directory
@@ -391,7 +380,7 @@ verify_tomee_service() {
   if [ -d "$web_share_path" ]; then
     echo "PiTrac web share directory exists: $web_share_path"
   else
-    echo "WARNING: PiTrac web share directory missing: $web_share_path"
+    log_warn "PiTrac web share directory missing: $web_share_path"
     echo "  Create it with: mkdir -p $web_share_path"
   fi
   
@@ -400,6 +389,9 @@ verify_tomee_service() {
 
 # Main installation
 install_tomee_full() {
+  # Run pre-flight checks
+  run_preflight_checks "tomee" || return 1
+
   if precheck; then
     # precheck returned 0, meaning we should proceed with installation
     install_tomee

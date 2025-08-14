@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
+# ActiveMQ C++ CMS Installation Script
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/common.sh"
 
-# Package management helper
-apt_ensure() {
-  local pkgs=()
-  for p in "$@"; do 
-    dpkg -s "$p" >/dev/null 2>&1 || pkgs+=("$p")
-  done
-  if [ "${#pkgs[@]}" -gt 0 ]; then
-    $SUDO apt-get update
-    $SUDO apt-get install -y --no-install-recommends "${pkgs[@]}"
-  fi
-}
+# Load defaults from config file
+load_defaults "activemq-cpp" "$@"
+
+GIT_REPO="${GIT_REPO:-https://gitbox.apache.org/repos/asf/activemq-cpp.git}"
+BUILD_DIR="${BUILD_DIR:-/tmp/activemq-cpp-build}"
+CPU_CORES="${CPU_CORES:-$(get_cpu_cores)}"
+RUN_TESTS="${RUN_TESTS:-0}"
+INSTALL_PREFIX="${INSTALL_PREFIX:-/usr/local}"
+FORCE="${FORCE:-0}"
+
 
 # Check if activemq cpp is installed
 is_activemq_cpp_installed() {
@@ -34,12 +34,15 @@ is_activemq_cpp_installed() {
 
 # Install ActiveMQ C++ CMS
 install_activemq_cpp() {
+  # Run pre-flight checks
+  run_preflight_checks "activemq_cpp_cms" || return 1
+
   if is_activemq_cpp_installed; then
     echo "ActiveMQ-CPP already installed. Skipping build."
     return 0
   fi
 
-  echo "Installing prerequisites..."
+  log_info "Installing prerequisites..."
   apt_ensure \
     autoconf \
     automake \
@@ -56,8 +59,7 @@ install_activemq_cpp() {
 
   # Build ActiveMQ-CPP
   local WORK_DIR
-  WORK_DIR="$(mktemp -d -t activemq-cpp.XXXXXX)"
-  trap "rm -rf '$WORK_DIR'" EXIT
+  WORK_DIR="$(create_temp_dir "activemq-cpp")"
   cd "$WORK_DIR"
 
   echo "Cloning ActiveMQ-CPP..."
@@ -68,17 +70,17 @@ install_activemq_cpp() {
   ./autogen.sh
   ./configure
 
-  echo "Building..."
-  make -j"$(nproc)"
+  log_info "Building..."
+  run_with_progress "make -j$(get_cpu_cores)" "Building activemq-cpp" "/tmp/activemq_cpp_build.log"
 
-  echo "Installing..."
+  log_info "Installing..."
   $SUDO make install
   $SUDO ldconfig 2>/dev/null || true
 
-  echo "Generating Doxygen docs..."
+  log_info "Generating Doxygen docs..."
   make doxygen-run || echo "Doxygen documentation generation skipped."
 
-  echo "Running unit tests..."
+  log_info "Running unit tests..."
   make check || echo "Unit tests skipped or failed."
 
   echo "ActiveMQ-CPP installation complete."

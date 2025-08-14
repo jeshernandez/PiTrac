@@ -5,45 +5,16 @@ set -euo pipefail
 
 # Configuration
 SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
 DEPS_CONFIG="${SCRIPT_DIR}/deps.conf"
 INSTALL_LOG="${SCRIPT_DIR}/.install.log"
 ROLLBACK_LOG="${SCRIPT_DIR}/.rollback.log"
-
-# Use sudo only if not root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Logging functions
-log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
 
 # Initialize logs
 init_logs() {
     echo "# PiTrac installation log - $(date)" > "$INSTALL_LOG"
     echo "# PiTrac rollback log - $(date)" > "$ROLLBACK_LOG"
-}
-
-# Package management helpers
-apt_ensure() {
-    local need=()
-    for p in "$@"; do 
-        dpkg -s "$p" >/dev/null 2>&1 || need+=("$p")
-    done
-    if [ "${#need[@]}" -gt 0 ]; then
-        log_info "Installing system packages: ${need[*]}"
-        $SUDO apt-get update
-        $SUDO apt-get install -y --no-install-recommends "${need[@]}"
-        echo "apt:${need[*]}" >> "$INSTALL_LOG"
-    fi
 }
 
 # Parse dependency configuration
@@ -96,40 +67,26 @@ is_package_installed() {
             [ -f "$SCRIPT" ]
             ;;
         "function")
-            # Load script and call detection function
+            # Load script in subshell to avoid pollution
             local script_path="${SCRIPT_DIR}/${SCRIPT}"
             
-            if [ -f "$script_path" ]; then
-                # Source the entire script to get all functions
-                source "$script_path" 2>/dev/null || true
-                
-                # Call the detection function
-                local func_name=""
-                case "$package" in
-                    "activemq-broker") func_name="get_activemq_broker_version" ;;
-                    "activemq-cpp") func_name="is_activemq_cpp_installed" ;;
-                    "msgpack") func_name="have_msgpack" ;;
-                    "lgpio") func_name="lgpio_already_installed" ;;
-                    "opencv") func_name="is_opencv_installed" ;;
-                    "libcamera") func_name="have_libcamera" ;;
-                    "tomee") func_name="get_tomee_installed_version" ;;
-                    "system-config") func_name="is_system_config_installed" ;;
-                    "camera-config") func_name="is_camera_config_installed" ;;
-                    "pitrac-environment") func_name="is_pitrac_environment_installed" ;;
-                    "network-services") func_name="is_network_services_installed" ;;
-                    "dev-environment") func_name="is_dev_environment_installed" ;;
-                esac
-                
-                if [ -n "$func_name" ] && declare -F "$func_name" >/dev/null 2>&1; then
-                    "$func_name"
-                else
-                    log_warn "Detection function '$func_name' not found for $package"
-                    return 1
-                fi
-            else
+            if [ ! -f "$script_path" ]; then
                 log_warn "Script not found: $script_path"
                 return 1
             fi
+            
+            # Standard naming: is_<package>_installed
+            local func_name="is_${package//-/_}_installed"
+            
+            # Run detection in subshell to avoid side effects
+            (
+                source "$script_path" 2>/dev/null || exit 1
+                if declare -F "$func_name" >/dev/null 2>&1; then
+                    "$func_name"
+                else
+                    exit 1
+                fi
+            )
             ;;
         "apt")
             if [ "$DEPS" = "SYSTEM" ]; then
@@ -167,11 +124,64 @@ is_package_installed() {
     esac
 }
 
+# Check for circular dependencies
+check_circular_deps() {
+    local package="$1"
+    local -A visited
+    local -A in_stack
+    
+    _check_cycle() {
+        local pkg="$1"
+        local path="$2"
+        
+        if [[ -n "${in_stack[$pkg]:-}" ]]; then
+            log_error "Circular dependency detected: ${path} -> ${pkg}"
+            return 1
+        fi
+        
+        if [[ -n "${visited[$pkg]:-}" ]]; then
+            return 0
+        fi
+        
+        in_stack[$pkg]=1
+        visited[$pkg]=1
+        
+        local config
+        config=$(parse_deps_config "$pkg") 2>/dev/null || {
+            unset in_stack[$pkg]
+            return 0
+        }
+        eval "$config"
+        
+        if [ "$DEPS" != "SYSTEM" ] && [ -n "$DEPS" ]; then
+            IFS=',' read -ra DEP_ARRAY <<< "$DEPS"
+            for dep in "${DEP_ARRAY[@]}"; do
+                dep=$(echo "$dep" | xargs)
+                if [ -n "$dep" ]; then
+                    if ! _check_cycle "$dep" "${path} -> ${pkg}"; then
+                        return 1
+                    fi
+                fi
+            done
+        fi
+        
+        unset in_stack[$pkg]
+        return 0
+    }
+    
+    _check_cycle "$package" "$package"
+}
+
 # Resolve dependencies recursively
 resolve_dependencies() {
     local package="$1"
     local -A visited
     local -a install_order
+    
+    # Check for cycles first
+    if ! check_circular_deps "$package"; then
+        return 1
+    fi
     
     _resolve_recursive() {
         local pkg="$1"

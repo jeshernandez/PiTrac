@@ -3,32 +3,39 @@ set -euo pipefail
 
 # Network Services Configuration Script for PiTrac
 # Handles NAS mounting, Samba server setup, and SSH key configuration
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/../common.sh"
+
+# Load defaults from config file
+load_defaults "network-services" "$@"
 
 # Configuration
 FORCE="${FORCE:-0}"
 FSTAB_FILE="/etc/fstab"
 SAMBA_CONFIG="/etc/samba/smb.conf"
 
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
+# NAS defaults
+ENABLE_NAS="${ENABLE_NAS:-0}"
+NAS_SERVER="${NAS_SERVER:-}"
+NAS_SHARE="${NAS_SHARE:-PiTrac}"
+NAS_MOUNT_POINT="${NAS_MOUNT_POINT:-/mnt/nas}"
+NAS_USERNAME="${NAS_USERNAME:-}"
+NAS_PASSWORD="${NAS_PASSWORD:-}"
+NAS_MOUNT_OPTIONS="${NAS_MOUNT_OPTIONS:-vers=3.0,uid=1000,gid=1000,iocharset=utf8}"
 
-# Utilities
-need_cmd() { 
-  command -v "$1" >/dev/null 2>&1
-}
+# Samba defaults
+ENABLE_SAMBA="${ENABLE_SAMBA:-0}"
+SAMBA_SHARE_NAME="${SAMBA_SHARE_NAME:-PiTrac}"
+SAMBA_SHARE_PATH="${SAMBA_SHARE_PATH:-/home/pi/LM_Shares}"
+SAMBA_USER="${SAMBA_USER:-}"
+SAMBA_GUEST_OK="${SAMBA_GUEST_OK:-0}"
 
-# Package management helper
-apt_ensure() {
-  local need=()
-  for p in "$@"; do
-    dpkg -s "$p" >/dev/null 2>&1 || need+=("$p")
-  done
-  if [ "${#need[@]}" -gt 0 ]; then
-    $SUDO apt-get update
-    $SUDO apt-get install -y --no-install-recommends "${need[@]}"
-  fi
-}
+# SSH defaults
+SETUP_SSH_KEYS="${SETUP_SSH_KEYS:-0}"
+GITHUB_USERNAME="${GITHUB_USERNAME:-}"
+GENERATE_SSH_KEY="${GENERATE_SSH_KEY:-1}"
+SSH_KEY_TYPE="${SSH_KEY_TYPE:-ed25519}"
+
 
 # Prompt for user input with default
 prompt_with_default() {
@@ -151,10 +158,10 @@ configure_nas_mounting() {
       echo "NAS mounted successfully at $mount_point"
       ls -la "$mount_point" | head -5
     else
-      echo "WARNING: Mount command succeeded but mount point is not active"
+      log_warn "Mount command succeeded but mount point is not active"
     fi
   else
-    echo "WARNING: Mount test failed. Please check:"
+    log_warn "Mount test failed. Please check:"
     echo "  - NAS IP address and share name are correct"
     echo "  - Network connectivity to NAS"
     echo "  - NAS permissions allow access from this Pi"
@@ -177,7 +184,7 @@ configure_samba_server() {
   fi
   
   # Install Samba
-  echo "Installing Samba packages..."
+  log_info "Installing Samba packages..."
   apt_ensure samba samba-common-bin
   
   # Get configuration
@@ -240,7 +247,7 @@ EOF
     echo "To mount from another Pi, add to /etc/fstab:"
     echo "//$pi_ip/$share_name /home/<user>/LM_Shares cifs username=$username,password=<pwd>,workgroup=WORKGROUP,users,exec,auto,rw,file_mode=0777,dir_mode=0777,user_xattr 0 0"
   else
-    echo "WARNING: Samba service failed to start"
+    log_warn "Samba service failed to start"
     echo "Check logs with: sudo systemctl status smbd"
   fi
   
@@ -301,7 +308,7 @@ configure_ssh_keys() {
         cat "$pub_key_file" >> "$authorized_keys"
         echo "Public key added"
       else
-        echo "WARNING: File not found: $pub_key_file"
+        log_warn "File not found: $pub_key_file"
       fi
       ;;
       

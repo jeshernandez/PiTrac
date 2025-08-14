@@ -2,36 +2,20 @@
 set -euo pipefail
 
 # Libcamera and RpiCam Apps Installation Script
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
+# Load defaults from config file
+load_defaults "libcamera" "$@"
+
 REQUIRED_RPICAM_APPS_VERSION="${REQUIRED_RPICAM_APPS_VERSION:-1.5.3}"
+BUILD_FROM_SOURCE="${BUILD_FROM_SOURCE:-1}"
+BUILD_DIR="${BUILD_DIR:-/tmp/rpicam_build}"
+CPU_CORES="${CPU_CORES:-$(get_cpu_cores)}"
 
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Utilities
-need_cmd() { 
-  command -v "$1" >/dev/null 2>&1
-}
-
-# Package management helper
-apt_ensure() {
-  local pkgs=()
-  for p in "$@"; do
-    dpkg -s "$p" >/dev/null 2>&1 || pkgs+=("$p")
-  done
-  if [ "${#pkgs[@]}" -gt 0 ]; then
-    $SUDO apt-get update
-    $SUDO apt-get install -y --no-install-recommends "${pkgs[@]}"
-  fi
-}
-
-# Version comparison helper
-version_ge() {
-  dpkg --compare-versions "$1" ge "$2"
-}
 
 # Check if libcamera is installed
-have_libcamera() {
+is_libcamera_installed() {
   # Try common pkg-config names
   if pkg-config --exists libcamera 2>/dev/null; then
     return 0
@@ -55,6 +39,9 @@ rpicam_apps_meet_requirement() {
 
 # Installation functions
 install_libraries() {
+  # Run pre-flight checks
+  run_preflight_checks "libcamera" || return 1
+
   echo "Ensuring prerequisite libraries..."
   apt_ensure \
     git \
@@ -83,6 +70,9 @@ install_libraries() {
 }
 
 install_libcamera() {
+  # Run pre-flight checks
+  run_preflight_checks "libcamera" || return 1
+
   if have_libcamera; then
     echo "libcamera already present (pkg-config found it). Skipping build."
     return 0
@@ -90,8 +80,7 @@ install_libcamera() {
 
   echo "Downloading and building libcamera..."
   local WORK
-  WORK="$(mktemp -d -t rpi-build.XXXXXX)"
-  trap "rm -rf '$WORK'" EXIT
+  WORK="$(create_temp_dir "rpi-build")"
   cd "$WORK"
 
   git clone https://github.com/raspberrypi/libcamera.git
@@ -116,24 +105,26 @@ install_libcamera() {
   echo "Ninja build..."
   ninja -C build
 
-  echo "Installing libcamera..."
+  log_info "Installing libcamera..."
   $SUDO ninja -C build install
   echo "libcamera installed."
 }
 
 install_rpicam_apps() {
+  # Run pre-flight checks
+  run_preflight_checks "libcamera" || return 1
+
   if rpicam_apps_meet_requirement; then
     echo "rpicam-apps already meets requirement (>= ${REQUIRED_RPICAM_APPS_VERSION}). Skipping build."
     return 0
   fi
 
-  echo "Installing rpicam pre-required libraries..."
+  log_info "Installing rpicam pre-required libraries..."
   apt_ensure libboost-program-options-dev libdrm-dev libexif-dev
 
   echo "Downloading and building rpicam-apps..."
   local WORK
-  WORK="$(mktemp -d -t rpi-build.XXXXXX)"
-  trap "rm -rf '$WORK'" EXIT
+  WORK="$(create_temp_dir "rpi-build")"
   cd "$WORK"
 
   git clone https://github.com/raspberrypi/rpicam-apps.git
@@ -152,7 +143,7 @@ install_rpicam_apps() {
   echo "Compiling rpicam-apps..."
   meson compile -C build
 
-  echo "Installing rpicam-apps..."
+  log_info "Installing rpicam-apps..."
   $SUDO meson install -C build
   $SUDO ldconfig 2>/dev/null || true
 
@@ -160,10 +151,10 @@ install_rpicam_apps() {
 }
 
 verify_installation() {
-  echo "Verifying rpicam-apps installation..."
+  log_info "Verifying rpicam-apps installation..."
   if ! need_cmd rpicam-still; then
-    echo "ERROR: rpicam-still not found on PATH."
-    exit 2
+    log_error "rpicam-still not found on PATH."
+    return 2
   fi
 
   local installed ver
@@ -171,21 +162,24 @@ verify_installation() {
   ver="${installed#v}"
 
   if [ -z "$ver" ]; then
-    echo "WARNING: Could not determine rpicam-apps version."
-    exit 0
+    log_warn "Could not determine rpicam-apps version."
+    return 0
   fi
 
   if version_ge "$ver" "$REQUIRED_RPICAM_APPS_VERSION"; then
-    echo "OK: rpicam-apps $ver >= required $REQUIRED_RPICAM_APPS_VERSION"
-    exit 0
+    log_success "OK: rpicam-apps $ver >= required $REQUIRED_RPICAM_APPS_VERSION"
+    return 0
   else
-    echo "ERROR: rpicam-apps $ver < required $REQUIRED_RPICAM_APPS_VERSION"
-    exit 1
+    log_error "rpicam-apps $ver < required $REQUIRED_RPICAM_APPS_VERSION"
+    return 1
   fi
 }
 
 # Main installation
 install_libcamera_full() {
+  # Run pre-flight checks
+  run_preflight_checks "libcamera" || return 1
+
   install_libraries
   install_libcamera
   install_rpicam_apps

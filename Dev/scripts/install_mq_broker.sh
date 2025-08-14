@@ -2,27 +2,19 @@
 set -euo pipefail
 
 # ActiveMQ Broker Installation Script
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/common.sh"
+
+# Load defaults from config file
+load_defaults "activemq-broker" "$@"
+
+# Use loaded defaults or environment overrides
 ACTIVEMQ_VERSION="${ACTIVEMQ_VERSION:-6.1.7}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/apache-activemq}"
 FILENAME="apache-activemq-${ACTIVEMQ_VERSION}-bin.tar.gz"
 URL="https://www.apache.org/dyn/closer.cgi?filename=/activemq/${ACTIVEMQ_VERSION}/${FILENAME}&action=download"
 FORCE="${FORCE:-0}"
 
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Package management helper
-apt_ensure() {
-  local pkgs=()
-  for p in "$@"; do 
-    dpkg -s "$p" >/dev/null 2>&1 || pkgs+=("$p")
-  done
-  if [ "${#pkgs[@]}" -gt 0 ]; then
-    $SUDO apt-get update
-    $SUDO apt-get install -y --no-install-recommends "${pkgs[@]}"
-  fi
-}
 
 get_installed_version() {
   # Try the activemq script
@@ -40,17 +32,13 @@ get_installed_version() {
 }
 
 # Check if activemq is installed
-get_activemq_broker_version() {
+is_activemq_broker_installed() {
   local ver
   ver="$(get_installed_version)"
   [ -n "$ver" ] && return 0
   return 1
 }
 
-# Version comparison helper
-version_ge() { 
-  dpkg --compare-versions "$1" ge "$2"
-}
 
 # Backup existing installation
 backup_existing() {
@@ -93,20 +81,22 @@ precheck() {
 
 # Install ActiveMQ broker
 install_activemq_broker() {
-  echo "Installing prerequisite packages..."
+  # Run pre-flight checks
+  run_preflight_checks "mq_broker" || return 1
+
+  log_info "Installing prerequisite packages..."
   apt_ensure wget ca-certificates tar file
 
   local WORK
-  WORK="$(mktemp -d -t activemq.XXXXXX)"
-  trap "rm -rf '$WORK'" EXIT
+  WORK="$(create_temp_dir "activemq")"
   cd "$WORK"
 
   echo "Downloading ${FILENAME}..."
-  wget -q -O "$FILENAME" "$URL"
+  download_with_progress ""$URL"" ""$FILENAME""
 
   echo "Verifying archive..."
   file "$FILENAME" | grep -qi 'gzip compressed data' || {
-    echo "ERROR: Downloaded file isn't a gzip tarball (mirror may have returned HTML)."
+    log_error "Downloaded file isn't a gzip tarball (mirror may have returned HTML)."
     return 1
   }
 
@@ -115,11 +105,11 @@ install_activemq_broker() {
 
   local SRC_DIR="apache-activemq-${ACTIVEMQ_VERSION}"
   [ -d "$SRC_DIR" ] || { 
-    echo "ERROR: '${SRC_DIR}' not found after extract."
+    log_error "'${SRC_DIR}' not found after extract."
     return 1
   }
 
-  echo "Installing to ${INSTALL_DIR}..."
+  log_info "Installing to ${INSTALL_DIR}..."
   $SUDO mkdir -p "$(dirname "$INSTALL_DIR")"
   $SUDO mv "$SRC_DIR" "$INSTALL_DIR"
 
@@ -129,7 +119,7 @@ install_activemq_broker() {
     echo "Start: ${INSTALL_DIR}/bin/activemq start"
     echo "Stop : ${INSTALL_DIR}/bin/activemq stop"
   else
-    echo "ERROR: activemq script not found/executable in ${INSTALL_DIR}/bin"
+    log_error "activemq script not found/executable in ${INSTALL_DIR}/bin"
     return 1
   fi
 }
@@ -222,11 +212,11 @@ EOF
       echo "Default login: admin/admin"
       echo "ActiveMQ Broker URL: tcp://$pi_ip:61616"
     else
-      echo "WARNING: ActiveMQ service started but may not be healthy"
+      log_warn "ActiveMQ service started but may not be healthy"
       echo "Check status with: sudo systemctl status activemq"
     fi
   else
-    echo "WARNING: Failed to start ActiveMQ service"
+    log_warn "Failed to start ActiveMQ service"
     echo "Check logs with: sudo journalctl -u activemq"
   fi
 }
@@ -239,7 +229,7 @@ verify_activemq_service() {
   if [ -x "${INSTALL_DIR}/bin/activemq" ]; then
     echo "ActiveMQ binary is executable"
   else
-    echo "ERROR: ActiveMQ binary not found or not executable"
+    log_error "ActiveMQ binary not found or not executable"
     return 1
   fi
   
@@ -247,20 +237,20 @@ verify_activemq_service() {
   if systemctl is-enabled activemq >/dev/null 2>&1; then
     echo "ActiveMQ service is enabled"
   else
-    echo "WARNING: ActiveMQ service is not enabled"
+    log_warn "ActiveMQ service is not enabled"
   fi
   
   # Check if ActiveMQ is listening on expected ports
   if netstat -an 2>/dev/null | grep -q ":61616.*LISTEN"; then
     echo "ActiveMQ broker listening on port 61616"
   else
-    echo "WARNING: ActiveMQ broker not listening on port 61616"
+    log_warn "ActiveMQ broker not listening on port 61616"
   fi
   
   if netstat -an 2>/dev/null | grep -q ":8161.*LISTEN"; then
     echo "ActiveMQ web console listening on port 8161"
   else
-    echo "WARNING: ActiveMQ web console not listening on port 8161"
+    log_warn "ActiveMQ web console not listening on port 8161"
   fi
   
   echo "ActiveMQ verification completed"
@@ -268,6 +258,9 @@ verify_activemq_service() {
 
 # Main installation
 install_activemq_full() {
+  # Run pre-flight checks
+  run_preflight_checks "mq_broker" || return 1
+
   precheck
   install_activemq_broker
   configure_remote_access

@@ -3,30 +3,25 @@ set -euo pipefail
 
 # System Configuration Script for PiTrac
 # Handles Pi-specific hardware and OS configuration
+SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/../common.sh"
+
+# Load defaults from config file
+load_defaults "system-config" "$@"
 
 # Configuration
-CONFIG_FILE="/boot/firmware/config.txt"
+CONFIG_FILE="${CONFIG_FILE:-/boot/firmware/config.txt}"
+FORCE_TURBO="${FORCE_TURBO:-1}"
+ARM_BOOST="${ARM_BOOST:-1}"
+ENABLE_SPI="${ENABLE_SPI:-1}"
+ENABLE_I2C="${ENABLE_I2C:-0}"
+ENABLE_NVME="${ENABLE_NVME:-1}"
+GPU_MEM="${GPU_MEM:-128}"
+CAMERA_AUTO_DETECT="${CAMERA_AUTO_DETECT:-1}"
+DISPLAY_AUTO_DETECT="${DISPLAY_AUTO_DETECT:-1}"
+OVER_VOLTAGE="${OVER_VOLTAGE:-0}"
+SWAP_SIZE="${SWAP_SIZE:-2048}"
 FORCE="${FORCE:-0}"
-
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Utilities
-need_cmd() { 
-  command -v "$1" >/dev/null 2>&1
-}
-
-# Detect Pi model
-detect_pi_model() {
-  if grep -q "Raspberry Pi 5" /proc/cpuinfo 2>/dev/null; then
-    echo "5"
-  elif grep -q "Raspberry Pi 4" /proc/cpuinfo 2>/dev/null; then
-    echo "4"
-  else
-    echo "unknown"
-  fi
-}
 
 # Check if NVME hardware is present
 detect_nvme_hardware() {
@@ -54,7 +49,7 @@ update_config_setting() {
   local full_setting="${setting}=${value}"
   
   if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: $CONFIG_FILE not found. Are you on Raspberry Pi OS?"
+    log_error "$CONFIG_FILE not found. Are you on Raspberry Pi OS?"
     return 1
   fi
   

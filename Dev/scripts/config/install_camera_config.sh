@@ -6,28 +6,17 @@ set -euo pipefail
 
 # Configuration paths
 SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
-ASSETS_DIR="${SCRIPT_DIR}/assets"
+source "${SCRIPT_DIR}/../common.sh"
+
+# Load defaults from config file
+load_defaults "camera-config" "$@"
+
+ASSETS_DIR="${ASSETS_DIR:-${SCRIPT_DIR}/assets}"
+CAMERA_TIMEOUT_VALUE_MS="${CAMERA_TIMEOUT_VALUE_MS:-1000000}"
+INSTALL_IPA_FILES="${INSTALL_IPA_FILES:-1}"
+TUNING_FILE="${TUNING_FILE:-}"
+ENABLE_DEBUG="${ENABLE_DEBUG:-0}"
 FORCE="${FORCE:-0}"
-
-# Use sudo only if not already root
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
-export DEBIAN_FRONTEND=noninteractive
-
-# Utilities
-need_cmd() { 
-  command -v "$1" >/dev/null 2>&1
-}
-
-# Detect Pi model for correct libcamera paths
-detect_pi_model() {
-  if grep -q "Raspberry Pi 5" /proc/cpuinfo 2>/dev/null; then
-    echo "5"
-  elif grep -q "Raspberry Pi 4" /proc/cpuinfo 2>/dev/null; then
-    echo "4"
-  else
-    echo "unknown"
-  fi
-}
 
 # Get libcamera pipeline path based on Pi model
 get_libcamera_pipeline_path() {
@@ -130,7 +119,7 @@ install_ipa_files() {
   local ipa_path
   ipa_path="$(get_libcamera_ipa_path "$pi_model")"
   
-  echo "Installing IPA sensor files for Pi $pi_model..."
+  log_info "Installing IPA sensor files for Pi $pi_model..."
   
   # Check if IPA directory exists
   if [ ! -d "$ipa_path" ]; then
@@ -200,7 +189,7 @@ verify_camera_setup() {
       echo "Detected cameras:"
       libcamera-hello --list-cameras 2>/dev/null || true
     else
-      echo "WARNING: Camera detection test timed out or failed"
+      log_warn "Camera detection test timed out or failed"
       echo "This may be normal if no cameras are currently connected"
     fi
   else

@@ -16,8 +16,11 @@ DEP_RESOLVER="${SCRIPT_DIR}/scripts/dep_resolver.sh"
 LOCK_FILE="${SCRIPT_DIR}/.pitrac_install.lock"
 SESSION_LOG="${SCRIPT_DIR}/.session.log"
 
-# sudo only if needed
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
+# Handle sudo for both Docker and Pi
+SUDO=""
+if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+    SUDO="sudo"
+fi
 export DEBIAN_FRONTEND=noninteractive
 
 # Colors for output
@@ -231,10 +234,11 @@ show_main_menu() {
         local main_options=(
             1 "Install Software"
             2 "System Configuration"
-            3 "Verify Installations"
-            4 "System Maintenance"
-            5 "View Logs"
-            6 "Exit"
+            3 "Build PiTrac"
+            4 "Verify Installations"
+            5 "System Maintenance"
+            6 "View Logs"
+            7 "Exit"
         )
         
         local main_choice
@@ -257,10 +261,11 @@ show_main_menu() {
         case "$main_choice" in
             1) show_install_menu ;;
             2) show_config_menu ;;
-            3) show_verify_menu ;;
-            4) show_maintenance_menu ;;
-            5) show_logs_menu ;;
-            6) clear; exit 0 ;;
+            3) build_pitrac_menu ;;
+            4) show_verify_menu ;;
+            5) show_maintenance_menu ;;
+            6) show_logs_menu ;;
+            7) clear; exit 0 ;;
             *) log_error "Invalid selection: $main_choice" ;;
         esac
     done
@@ -440,6 +445,38 @@ install_single_package() {
     else
         log_error "Failed to install $package"
         dialog --msgbox "Failed to install ${PACKAGES[$package]}\nCheck logs for details." 8 50
+    fi
+}
+
+build_pitrac_menu() {
+    # Check if dependencies are installed first
+    local missing_deps=()
+    for dep in opencv libcamera msgpack lgpio activemq-cpp; do
+        if ! "$DEP_RESOLVER" verify "$dep" >/dev/null 2>&1; then
+            missing_deps+=("$dep")
+        fi
+    done
+    
+    if [ ${#missing_deps[@]} -gt 0 ]; then
+        dialog --msgbox "Cannot build PiTrac yet!\n\nMissing dependencies:\n${missing_deps[*]}\n\nPlease install software first (option 1)" 12 50
+        return
+    fi
+    
+    # Check if configuration is done
+    if [ ! -f "$HOME/.bashrc" ] || ! grep -q "PITRAC_ROOT" "$HOME/.bashrc" 2>/dev/null; then
+        if [ ! -f "$HOME/.zshrc" ] || ! grep -q "PITRAC_ROOT" "$HOME/.zshrc" 2>/dev/null; then
+            dialog --msgbox "PiTrac environment not configured!\n\nPlease run System Configuration first (option 2)" 10 50
+            return
+        fi
+    fi
+    
+    dialog --infobox "Starting PiTrac build process..." 3 40
+    
+    # Run the build script
+    if "${SCRIPT_DIR}/scripts/build_pitrac.sh"; then
+        dialog --msgbox "PiTrac build completed successfully!\n\nYou can now test the launch monitor:\n\$PITRAC_ROOT/ImageProcessing/build/pitrac_lm --help" 10 60
+    else
+        dialog --msgbox "PiTrac build failed!\n\nCheck the logs for details:\n/tmp/pitrac_build.log" 10 50
     fi
 }
 
