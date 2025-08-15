@@ -1,12 +1,12 @@
 # Default owner of the ship. No needed, but just adding. 
-@jamespilgrim
+* @jamespilgrim
 
 # Java Ownership files
 /Software/LMSourceCode/ImageProcessing/golfsim_tomee_webapp @jeshernandez 
 
 # Documentation files
-/docs @jeshernandez, @connorgallopo
+/docs @jeshernandez @connorgallopo
 
 # Installation Scripts
 
-/Dev @jeshernandez, @connorgallopo
+/Dev @jeshernandez @connorgallopo
