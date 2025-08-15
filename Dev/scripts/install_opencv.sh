@@ -146,6 +146,9 @@ build_opencv_standard() {
   log_info "Installing OpenCV..."
   $SUDO make install
   $SUDO ldconfig
+  
+  # Create pkg-config file
+  create_opencv_pkgconfig
 }
 
 run_opencv_script() {
@@ -177,6 +180,28 @@ run_opencv_script() {
   fi
 }
 
+create_opencv_pkgconfig() {
+  log_info "Creating/updating OpenCV pkg-config file..."
+  $SUDO mkdir -p /usr/local/lib/pkgconfig
+  
+  # Generate opencv4.pc
+  cat << 'EOF' | $SUDO tee /usr/local/lib/pkgconfig/opencv4.pc > /dev/null
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include/opencv4
+
+Name: OpenCV
+Description: Open Source Computer Vision Library
+Version: 4.11.0
+Libs: -L${libdir} -lopencv_gapi -lopencv_stitching -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_dnn_objdetect -lopencv_dnn_superres -lopencv_dpm -lopencv_face -lopencv_freetype -lopencv_fuzzy -lopencv_hfs -lopencv_img_hash -lopencv_intensity_transform -lopencv_line_descriptor -lopencv_mcc -lopencv_quality -lopencv_rapid -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_superres -lopencv_optflow -lopencv_surface_matching -lopencv_tracking -lopencv_highgui -lopencv_datasets -lopencv_text -lopencv_plot -lopencv_videostab -lopencv_videoio -lopencv_wechat_qrcode -lopencv_xfeatures2d -lopencv_shape -lopencv_ml -lopencv_ximgproc -lopencv_video -lopencv_xobjdetect -lopencv_objdetect -lopencv_calib3d -lopencv_imgcodecs -lopencv_features2d -lopencv_dnn -lopencv_flann -lopencv_xphoto -lopencv_photo -lopencv_imgproc -lopencv_core
+Libs.private: -ldl -lm -lpthread -lrt
+Cflags: -I${includedir}
+EOF
+  
+  log_success "OpenCV pkg-config file created/updated"
+}
+
 verify_installed() {
   local v
   v="$(detect_opencv_version)"
@@ -204,7 +229,15 @@ install_opencv() {
   current="$(detect_opencv_version)"
   if [ -n "$current" ] && [ "$FORCE" != "1" ]; then
     if version_ge "$current" "$REQUIRED_OPENCV_VERSION"; then
-      log_success "OpenCV already installed (version $current ≥ $REQUIRED_OPENCV_VERSION). Skipping."
+      log_success "OpenCV already installed (version $current ≥ $REQUIRED_OPENCV_VERSION)."
+      
+      # Check if pkg-config file exists, create if missing
+      if ! pkg-config --exists opencv4 2>/dev/null; then
+        log_warn "OpenCV installed but pkg-config file missing. Creating it..."
+        create_opencv_pkgconfig
+      else
+        log_success "OpenCV pkg-config file already exists."
+      fi
       return 0
     else
       log_info "OpenCV $current found (< $REQUIRED_OPENCV_VERSION). Will install/upgrade."
@@ -229,6 +262,7 @@ install_opencv() {
   echo "Verifying OpenCV installation..."
   if verify_installed; then
     echo "OpenCV installation completed successfully."
+    return 0
   else
     echo "OpenCV installation completed but version check failed."
     return 1
@@ -238,4 +272,5 @@ install_opencv() {
 # Run if called directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   install_opencv
+  exit $?
 fi

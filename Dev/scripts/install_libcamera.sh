@@ -120,7 +120,8 @@ install_rpicam_apps() {
   fi
 
   log_info "Installing rpicam pre-required libraries..."
-  apt_ensure libboost-program-options-dev libdrm-dev libexif-dev
+  # Ensure we use the same Boost version as defined in deps.conf (1.81)
+  apt_ensure libboost-program-options1.81-dev libdrm-dev libexif-dev
 
   echo "Downloading and building rpicam-apps..."
   local WORK
@@ -130,6 +131,9 @@ install_rpicam_apps() {
   git clone https://github.com/raspberrypi/rpicam-apps.git
   cd rpicam-apps
 
+  # Ensure pkg-config can find OpenCV if installed in /usr/local
+  export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/usr/local/lib64/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+  
   echo "Meson setup for rpicam-apps..."
   meson setup build \
     -Denable_libav=enabled \

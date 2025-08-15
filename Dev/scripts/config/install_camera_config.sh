@@ -62,9 +62,9 @@ configure_libcamera_timeouts() {
   
   # Check if pipeline directory exists
   if [ ! -d "$pipeline_path" ]; then
-    echo "Warning: libcamera pipeline path $pipeline_path does not exist"
-    echo "libcamera may not be installed or Pi model detection may be incorrect"
-    return 1
+    log_info "libcamera pipeline path $pipeline_path does not exist"
+    log_info "Not on Raspberry Pi hardware - skipping camera hardware configuration"
+    return 0
   fi
   
   local config_file="$pipeline_path/rpi_apps.yaml"
@@ -161,8 +161,9 @@ setup_libcamera_environment() {
   
   # Check if config file exists
   if [ ! -f "$config_file" ]; then
-    echo "Warning: libcamera config file $config_file does not exist"
-    return 1
+    log_info "libcamera config file $config_file does not exist"
+    log_info "Not on Raspberry Pi hardware - skipping environment configuration"
+    return 0
   fi
   
   # This will be added to the shell profile by the environment script
@@ -200,6 +201,12 @@ verify_camera_setup() {
 
 # Check if camera is configured
 is_camera_config_installed() {
+  # In non-Pi environments, check for marker
+  if [ ! -d "/usr/share/libcamera" ] && [ ! -d "/boot/firmware" ]; then
+    [ -f "$HOME/.pitrac_camera_configured" ] && return 0
+    return 1
+  fi
+  
   local pi_model
   pi_model="$(detect_pi_model)"
   local pipeline_path
@@ -224,6 +231,15 @@ configure_camera() {
   fi
   
   echo "Configuring camera system for PiTrac..."
+  
+  # Check if we're in a non-Pi environment (Docker, etc)
+  if [ ! -d "/usr/share/libcamera" ] && [ ! -d "/boot/firmware" ]; then
+    log_info "Not running on Raspberry Pi hardware. Skipping camera hardware configurations."
+    # Create marker for non-Pi environments
+    touch "$HOME/.pitrac_camera_configured"
+    echo "Camera configuration completed (non-Pi environment)."
+    return 0
+  fi
   
   # Configure libcamera timeouts for external triggers
   configure_libcamera_timeouts "$pi_model"

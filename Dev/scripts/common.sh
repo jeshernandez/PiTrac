@@ -361,14 +361,24 @@ check_system_requirements() {
     
     # Check memory
     local total_mem
-    total_mem=$(free -m | awk 'NR==2 {print $2}')
-    if [ "$total_mem" -lt 512 ]; then
+    if command -v free >/dev/null 2>&1; then
+        total_mem=$(free -m | awk 'NR==2 {print $2}')
+    elif [ -r /proc/meminfo ]; then
+        # Fallback to /proc/meminfo if free is not available
+        total_mem=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+    else
+        # If we can't determine memory, skip the check
+        log_info "Memory check skipped (unable to determine)"
+        total_mem=999999  # Set a high value to pass checks
+    fi
+    
+    if [ -n "$total_mem" ] && [ "$total_mem" -lt 512 ]; then
         log_warn "Low memory detected: ${total_mem}MB. Some installations may fail."
         if [[ "$package" =~ ^(opencv|libcamera)$ ]] && [ "$total_mem" -lt 1024 ]; then
             log_error "Insufficient memory for $package compilation (need at least 1GB)"
             return 1
         fi
-    else
+    elif [ -n "$total_mem" ]; then
         log_info "Memory: ${total_mem}MB"
     fi
     
@@ -461,15 +471,19 @@ monitor_compilation() {
     
     while IFS= read -r line; do
         # Check for compilation progress indicators
-        if [[ "$line" =~ \[\ *([0-9]+)%\] ]] || [[ "$line" =~ \[([0-9]+)/([0-9]+)\] ]]; then
-            if [[ "${BASH_REMATCH[2]}" ]]; then
-                # Format: [X/Y]
-                compiled="${BASH_REMATCH[1]}"
-                total_files="${BASH_REMATCH[2]}"
-            else
-                # Format: [X%]
-                local percent="${BASH_REMATCH[1]}"
+        if [[ "$line" =~ \[([0-9]+)/([0-9]+)\] ]]; then
+            # Format: [X/Y]
+            compiled="${BASH_REMATCH[1]}"
+            total_files="${BASH_REMATCH[2]}"
+            show_progress "$compiled" "$total_files" "$label"
+        elif [[ "$line" =~ \[\ *([0-9]+)%\] ]]; then
+            # Format: [X%]
+            local percent="${BASH_REMATCH[1]}"
+            if [ "$total_files" -gt 0 ]; then
                 compiled=$((total_files * percent / 100))
+            else
+                compiled="$percent"
+                total_files="100"
             fi
             
             show_progress "$compiled" "$total_files" "$label"
@@ -556,20 +570,24 @@ download_with_progress() {
     log_info "$label from: $url"
     
     if command -v wget >/dev/null 2>&1; then
-        wget --progress=bar:force -O "$output" "$url" 2>&1 | \
-            grep --line-buffered "%" | \
-            sed -u 's/.*\([0-9]\+\)%.*/\1/' | \
-            while read percent; do
-                show_progress "$percent" "100" "$label"
-            done
+        {
+            wget --progress=bar:force -O "$output" "$url" 2>&1 | \
+                grep --line-buffered "%" | \
+                sed -u 's/.*\([0-9]\+\)%.*/\1/' | \
+                while read percent; do
+                    show_progress "$percent" "100" "$label"
+                done
+        } || true
     elif command -v curl >/dev/null 2>&1; then
-        curl -# -L -o "$output" "$url" 2>&1 | \
-            tr '\r' '\n' | \
-            sed -n 's/.*\([0-9]\+\.[0-9]\+\)%.*/\1/p' | \
-            while read percent; do
-                percent=${percent%.*}
-                show_progress "$percent" "100" "$label"
-            done
+        {
+            curl -# -L -o "$output" "$url" 2>&1 | \
+                tr '\r' '\n' | \
+                sed -n 's/.*\([0-9]\+\.[0-9]\+\)%.*/\1/p' | \
+                while read percent; do
+                    percent=${percent%.*}
+                    show_progress "$percent" "100" "$label"
+                done
+        } || true
     else
         log_error "Neither wget nor curl found"
         return 1
@@ -584,6 +602,69 @@ download_with_progress() {
         log_error "$label failed"
         return 1
     fi
+}
+
+# detect_directory "relative/path" "fallback/path" "base1" "base2" ...
+detect_directory() {
+  local target_path="$1"
+  local fallback="$2"
+  shift 2
+  local search_bases=("$@")
+  
+  local current_dir="${DETECT_FROM_DIR:-$PWD}"
+  local check_dir="$current_dir"
+  
+  # Walk up directory tree
+  while [ "$check_dir" != "/" ]; do
+    if [ -d "$check_dir/$target_path" ]; then
+      echo "$check_dir/$target_path"
+      return 0
+    fi
+    check_dir="$(dirname "$check_dir")"
+  done
+  
+  # Check base directories
+  for base in "${search_bases[@]}"; do
+    if [ -d "$base/$target_path" ]; then
+      echo "$base/$target_path"
+      return 0
+    fi
+  done
+  
+  echo "$fallback"
+}
+
+detect_pitrac_root() {
+  detect_directory \
+    "Software/LMSourceCode" \
+    "/home/$(whoami)/Dev/PiTrac/Software/LMSourceCode" \
+    "/work" \
+    "$HOME/dev/personal/PiTrac" \
+    "$HOME/Dev/PiTrac" \
+    "/home/pi/Dev/PiTrac"
+}
+
+detect_lm_shares_dir() {
+  local subdir="${1:-Images}"
+  
+  # Check relative to PiTrac
+  local pitrac_source="$(detect_pitrac_root)"
+  if [ -n "$pitrac_source" ] && [ -d "$pitrac_source" ]; then
+    local pitrac_base="$(dirname "$(dirname "$pitrac_source")")"
+    local parent="$(dirname "$pitrac_base")"
+    
+    if [ -d "$parent/LM_Shares/$subdir" ]; then
+      echo "$parent/LM_Shares/$subdir"
+      return 0
+    fi
+  fi
+  
+  detect_directory \
+    "LM_Shares/$subdir" \
+    "/home/$(whoami)/LM_Shares/$subdir" \
+    "/work" \
+    "$HOME" \
+    "/home/pi"
 }
 
 # Detect Raspberry Pi model
@@ -622,7 +703,7 @@ load_defaults() {
         fi
         
         # Parse simple YAML (key: value format)
-        while IFS=': ' read -r key value; do
+        while IFS=': ' read -r key value || [ -n "$key" ]; do
             # Skip comments and empty lines
             [[ "$key" =~ ^#.*$ ]] && continue
             [ -z "$key" ] && continue
@@ -644,7 +725,7 @@ load_defaults() {
                 export "$var_name=$value"
                 [ "${NON_INTERACTIVE:-0}" = "1" ] && log_info "Using default: $var_name=$value"
             fi
-        done < "$defaults_file"
+        done < "$defaults_file" || true
     else
         if [ "${NON_INTERACTIVE:-0}" = "1" ]; then
             log_error "Non-interactive mode requires defaults file: $defaults_file"

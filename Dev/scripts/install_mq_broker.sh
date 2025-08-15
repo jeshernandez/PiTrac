@@ -57,26 +57,29 @@ precheck() {
     if [ -n "$cur" ]; then
       if version_ge "$cur" "$ACTIVEMQ_VERSION"; then
         echo "ActiveMQ ${cur} already installed at ${INSTALL_DIR} (>= ${ACTIVEMQ_VERSION}). Skipping."
-        return 0
+        return 1  # Return 1 to indicate skip
       else
         if [ "$FORCE" = "1" ]; then
           echo "ActiveMQ ${cur} found (< ${ACTIVEMQ_VERSION}). Will upgrade (FORCE=1)."
           backup_existing
+          return 0  # Return 0 to indicate proceed
         else
           echo "ActiveMQ ${cur} found at ${INSTALL_DIR}. Set FORCE=1 to upgrade to ${ACTIVEMQ_VERSION}."
-          return 0
+          return 1  # Return 1 to indicate skip
         fi
       fi
     else
       echo "ActiveMQ present at ${INSTALL_DIR}, but version unknown."
       if [ "$FORCE" = "1" ]; then
         backup_existing
+        return 0  # Return 0 to indicate proceed
       else
         echo "Set FORCE=1 to overwrite. Aborting."
-        return 0
+        return 1  # Return 1 to indicate skip
       fi
     fi
   fi
+  return 0  # No existing installation, proceed
 }
 
 # Install ActiveMQ broker
@@ -261,20 +264,26 @@ install_activemq_full() {
   # Run pre-flight checks
   run_preflight_checks "mq_broker" || return 1
 
-  precheck
-  install_activemq_broker
-  configure_remote_access
-  setup_systemctl_service
-  verify_activemq_service
-  
-  echo ""
-  echo "ActiveMQ installation and configuration completed!"
-  echo ""
-  echo "Service Management:"
-  echo "- Start:   sudo systemctl start activemq"
-  echo "- Stop:    sudo systemctl stop activemq" 
-  echo "- Status:  sudo systemctl status activemq"
-  echo "- Logs:    sudo journalctl -u activemq -f"
+  if precheck; then
+    # precheck returned 0, meaning we should proceed with installation
+    install_activemq_broker
+    configure_remote_access
+    setup_systemctl_service
+    verify_activemq_service
+    
+    echo ""
+    echo "ActiveMQ installation and configuration completed!"
+    echo ""
+    echo "Service Management:"
+    echo "- Start:   sudo systemctl start activemq"
+    echo "- Stop:    sudo systemctl stop activemq" 
+    echo "- Status:  sudo systemctl status activemq"
+    echo "- Logs:    sudo journalctl -u activemq -f"
+  else
+    # precheck returned 1, meaning we should skip installation
+    echo "Installation skipped based on precheck."
+    return 0
+  fi
 }
 
 # Run if called directly

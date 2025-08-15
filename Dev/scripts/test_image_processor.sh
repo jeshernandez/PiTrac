@@ -10,12 +10,16 @@ source "${SCRIPT_DIR}/common.sh"
 # Load defaults from YAML config
 load_defaults "test-processor" "$@"
 
-# Set up paths using defaults or environment
-PITRAC_ROOT="${PITRAC_ROOT:-$(dirname $(dirname "$SCRIPT_DIR"))}"
-TEST_DIR="${PITRAC_ROOT}/${test_base_dir:-TestImages}"
+# Set up paths using detection or environment
+if [ -z "${PITRAC_ROOT:-}" ]; then
+    PITRAC_ROOT="$(detect_pitrac_root)"
+fi
+# For test images, go to the base PiTrac directory
+PITRAC_BASE="$(dirname $(dirname "$PITRAC_ROOT"))"
+TEST_DIR="${PITRAC_BASE}/${test_base_dir:-TestImages}"
 RESULTS_DIR="${TEST_DIR}/results"
-CONFIG_FILE="${PITRAC_ROOT}/Software/LMSourceCode/ImageProcessing/golf_sim_config.json"
-PITRAC_BINARY="${PITRAC_ROOT}/Software/LMSourceCode/ImageProcessing/build/pitrac_lm"
+CONFIG_FILE="${PITRAC_ROOT}/ImageProcessing/golf_sim_config.json"
+PITRAC_BINARY="${PITRAC_ROOT}/ImageProcessing/build/pitrac_lm"
 
 # Test mode from command line or default
 TEST_MODE="${1:-quick}"

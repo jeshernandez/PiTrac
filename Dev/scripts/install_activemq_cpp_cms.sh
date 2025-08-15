@@ -37,7 +37,7 @@ install_activemq_cpp() {
   # Run pre-flight checks
   run_preflight_checks "activemq_cpp_cms" || return 1
 
-  if is_activemq_cpp_installed; then
+  if is_activemq_cpp_installed && [ "${FORCE:-0}" != "1" ]; then
     echo "ActiveMQ-CPP already installed. Skipping build."
     return 0
   fi
@@ -84,9 +84,11 @@ install_activemq_cpp() {
   make check || echo "Unit tests skipped or failed."
 
   echo "ActiveMQ-CPP installation complete."
+  return 0
 }
 
 # Run if called directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   install_activemq_cpp
+  exit $?
 fi

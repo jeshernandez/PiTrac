@@ -109,6 +109,9 @@ install_tomee() {
   log_info "Installing to ${INSTALL_DIR}..."
   $SUDO mkdir -p "$(dirname "$INSTALL_DIR")"
   $SUDO mv "$SRC_DIR" "$INSTALL_DIR"
+  
+  # Make all shell scripts executable
+  $SUDO chmod +x "${INSTALL_DIR}"/bin/*.sh
 
   # Write version marker for reliable detection
   echo "${TOMEE_VERSION}" | $SUDO tee "$MARKER" >/dev/null
