@@ -44,13 +44,10 @@ augroup resume_cursor
     autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 augroup END
 
-" Show invisible characters (tabs, trailing spaces)
-set list
-set listchars=tab:?\ ,trail:Â·
-
 " Better command-line completion
 set wildmenu
 set wildmode=longest:full,full
+
 
 " Allow backspacing over everything in insert mode
 set backspace=indent,eol,start
