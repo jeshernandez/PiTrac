@@ -66,7 +66,7 @@ Windows instructions (Mac similar):
 ## Example Debug Session
 
 1. Move relevant images to `kPCBaseImageLoggingDir`  
-2. Open `PiTrac.sln` in Visual Studio  
+2. Open `GolfSim.sln` in Visual Studio  
 3. In `golf_sim_config.json` set:  
    ```json
    "testing": {
