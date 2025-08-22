@@ -110,7 +110,7 @@ namespace golf_sim {
 					"Set the y coordinate of the center of the ball-search circle")
 				("simulate_found_ball", value<bool>(&simulate_found_ball_)->default_value(false)->implicit_value(true),
 					"Causes camera1 system to act as though a ball was found even if none is present.")
-				("camera_gain", value<double>(&camera_gain_)->default_value(1.0),
+				("camera_gain", value<double>(&camera_gain_)->default_value(0.0),
 					"Amount of gain for taking pictures")
 				("msg_broker_address", value<std::string>(&msg_broker_address_)->default_value(""),
 					"Specify the full hostname or ip address and port of the host of the Active MQ broker. For example: tcp://10.0.0.41:61616 . Default is: <empty string>")

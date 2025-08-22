@@ -161,7 +161,7 @@ void GolfSimOptions::Print() const
 		std::cout << "    search_center_x: " << std::to_string(search_center_x_) << std::endl;
 	if (search_center_y_ > 0)
 		std::cout << "    search_center_y: " << std::to_string(search_center_y_) << std::endl;
-	if (camera_gain_ > 0)
+	if (camera_gain_ > 0.0001)
 		std::cout << "    camera_gain (will override .json file settings): " << std::to_string(camera_gain_) << std::endl;
 
 }
