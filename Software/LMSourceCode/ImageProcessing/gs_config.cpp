@@ -102,6 +102,19 @@ namespace golf_sim {
 		return true;
 	}
 
+	// Returns the valiue of the environment variable PITRAC_ROOT
+	std::string GolfSimConfiguration::GetPiTracRootPath() {
+
+		std::string pi_trac_root = safe_getenv("PITRAC_ROOT");
+
+		if (pi_trac_root.empty()) {
+			GS_LOG_MSG(warning, "Environment variable PITRAC_ROOT is not set.");
+		}
+		else {
+			GS_LOG_MSG(trace, "Environment variable PITRAC_ROOT is: " + pi_trac_root + ".");
+		}
+		return pi_trac_root;
+	}
 
 	// TBD - Will need to be improved to adapt to having two cameras on the same
 	// Pi.

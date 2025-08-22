@@ -74,6 +74,9 @@ namespace golf_sim {
 		// messaging system.  
 		static std::string GetSystemID();
 
+		// Returns the valiue of the environment variable PITRAC_ROOT
+		static std::string GetPiTracRootPath();
+
 	protected:
 
 		static boost::property_tree::ptree configuration_root_;
