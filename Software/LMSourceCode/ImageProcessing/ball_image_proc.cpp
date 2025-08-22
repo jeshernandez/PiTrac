@@ -204,7 +204,7 @@ namespace golf_sim {
     // TODO: Fix defaults or remove these entirely
     std::string BallImageProc::kDetectionMethod = "legacy";
     std::string BallImageProc::kBallPlacementDetectionMethod = "legacy";
-    // Default ONNX model path - can be overridden by config file
+    // Default ONNX model path - can be overridden by config file or (more likely) the PITRAC_ROOT environment variable
     #ifdef _WIN32
     std::string BallImageProc::kONNXModelPath = "../../Software/GroundTruthAnnotator/experiments/high_performance_300e2/weights/best.onnx";
     #else
@@ -367,9 +367,26 @@ namespace golf_sim {
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedNarrowingRadiiDpParam", kPlacedNarrowingRadiiDpParam);
 
         // ONNX Detection Configuration
+
+
+        // ONNX Detection Configuration
+        GolfSimConfiguration::SetConstant("gs_config.ball_identification.kDetectionMethod", kDetectionMethod);
+        GolfSimConfiguration::SetConstant("gs_config.ball_identification.kONNXModelPath", kONNXModelPath);
+
+		// Get the ONNX path from the .json file and then use the PITRAC_ROOT environment variable to help compute the absolute path
+        // We expect that environment variable to be set in both the Pi and Windows environments
+        std::string root_path = GolfSimConfiguration::GetPiTracRootPath();
+        if (root_path.empty()) {
+            GolfSimConfiguration::SetConstant("gs_config.ball_identification.kONNXModelPath", kONNXModelPath);
+        }
+		else {
+            kONNXModelPath = root_path + "/" + kONNXModelPath;
+			GS_LOG_MSG(info, "Using PITRAC_ROOT environment variable to set ONNX model path to: " + kONNXModelPath);
+		}
+
+
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kDetectionMethod", kDetectionMethod);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kBallPlacementDetectionMethod", kBallPlacementDetectionMethod);
-        GolfSimConfiguration::SetConstant("gs_config.ball_identification.kONNXModelPath", kONNXModelPath);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kONNXConfidenceThreshold", kONNXConfidenceThreshold);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kONNXNMSThreshold", kONNXNMSThreshold);
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kONNXInputSize", kONNXInputSize);
@@ -4200,7 +4217,7 @@ namespace golf_sim {
                 return true;
             }
             
-            GS_LOG_MSG(info, "Loading YOLO model from: " + kONNXModelPath);
+            GS_LOG_MSG(trace, "Loading YOLO model from: " + kONNXModelPath);
             auto start_time = std::chrono::high_resolution_clock::now();
             
             yolo_model_ = cv::dnn::readNetFromONNX(kONNXModelPath);
@@ -4226,7 +4243,7 @@ namespace golf_sim {
             
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-            GS_LOG_MSG(info, "YOLO model preloaded successfully in " + 
+            GS_LOG_MSG(trace, "YOLO model preloaded successfully in " + 
                             std::to_string(duration.count()) + "ms. First detection will be fast!");
             
             return true;
@@ -4251,7 +4268,7 @@ namespace golf_sim {
             {
                 std::lock_guard<std::mutex> lock(yolo_model_mutex_);
                 if (!yolo_model_loaded_) {
-                    GS_LOG_MSG(info, "Loading YOLO model for the first time (one-time ~500ms operation)...");
+                    GS_LOG_MSG(trace, "Loading YOLO model for the first time (one-time ~500ms operation)...");
                     auto start_time = std::chrono::high_resolution_clock::now();
                     
                     yolo_model_ = cv::dnn::readNetFromONNX(kONNXModelPath);
@@ -4278,13 +4295,16 @@ namespace golf_sim {
                     
                     auto end_time = std::chrono::high_resolution_clock::now();
                     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-                    GS_LOG_MSG(info, "YOLO model loaded and cached successfully in " + 
+                    GS_LOG_MSG(trace, "YOLO model loaded and cached successfully in " + 
                                     std::to_string(duration.count()) + "ms. Buffers pre-allocated. Future detections will be fast!");
                 }
             }
             
             cv::dnn::Net& net = yolo_model_;
             
+            auto processing_start_time = std::chrono::high_resolution_clock::now();
+            GS_LOG_MSG(trace, "YOLO processing started.");
+
             if (preprocessed_img.channels() == 1) {
                 cv::cvtColor(preprocessed_img, yolo_input_buffer_, cv::COLOR_GRAY2RGB);
             } else if (preprocessed_img.channels() == 3) {
@@ -4436,7 +4456,11 @@ namespace golf_sim {
                 detected_circles.push_back(circle);
             }
             
-            GS_LOG_TRACE_MSG(trace, "ONNX detected " + std::to_string(detected_circles.size()) + " balls");
+            auto processing_end_time = std::chrono::high_resolution_clock::now();
+            auto processing_duration = std::chrono::duration_cast<std::chrono::milliseconds>(processing_end_time - processing_start_time);
+            GS_LOG_MSG(trace, "YOLO model completed processing in " + std::to_string(processing_duration.count()) + " ms.");
+
+            GS_LOG_TRACE_MSG(trace, "ONNX detected " + std::to_string(detected_circles.size()) + " balls.  YOLO processing complete");
             return !detected_circles.empty();
             
         } catch (const cv::Exception& e) {
