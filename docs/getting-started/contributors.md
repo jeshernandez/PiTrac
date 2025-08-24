@@ -59,5 +59,6 @@ We are also thankful for individual contributors who—even if we haven't used t
 
 We would not have been able to create the golf simulator interfaces without the help of the following folks:
 
-1. The very supportive GSPro business development people
+1. The very supportive GSPro business development people.
 2. The folks at TruGolf, especially Eric, Melissa and Ryan.
+3. Innomaker engineers and support folks.
