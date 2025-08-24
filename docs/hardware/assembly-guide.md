@@ -12,8 +12,10 @@ toc: true
 
 This document explains the process of building a typical PiTrac DIY Launch Monitor (LM). This process includes the assembly of all physical components, including the 3D-printed parts and hardware such as cameras and Raspberry Pi computers.
 
+NOTE:  A new assembly guide that is directed at the Version 2 enclosure is in the works.  Please go to the Discord Server to see how other folks have been assemblying their Version 2 system.  This assembly guide is still relevant at a high level, but was directed to the older (and clunkier) Version 1 enclosure.  Please also note there are some differences (and improvements) when using cameras such as the InnoMaker IMX296.  In particular, most of the difficult modifications required for the "official" Raspberry Pi cameras are no longer necessary.
+
 {: .note }
-**Important:** This document refers to the calibration steps for the camera sub-system, which should be consulted prior to building the enclosure. Calibration is most easily done *as the LM is being assembled* because it allows easier access to cameras and camera mounts before the LM is completed. See [Camera Calibration]({% link camera/camera-calibration.md %}) for details.
+**Important:** This document refers to the calibration steps for the camera sub-system, which should be consulted prior to building the enclosure. Calibration is most easily done *as the LM is being assembled* because it allows easier access to cameras and camera mounts before the LM is completed. See [Camera Calibration]({% link camera/camera-calibration.md %}) for details.  However, for the Version 2 enclosure, the cameras are much more accessible, and you can probably do the calibration after everything is built.
 
 ## Overview
 
@@ -111,8 +113,11 @@ Camera 2 is the bottom camera that captures the ball in flight and requires modi
 
 {: .warning }
 **WARNING:** These modifications void the camera warranty and are delicate operations that can damage the camera if performed incorrectly.
+Removing the IR filter is not necessary if using the InnoMaker IMX296 Mono camera, because it does not come with a IR filter.
 
 1. **Remove IR filter:** Use [official RPi instructions](https://www.raspberrypi.com/documentation/accessories/camera.html#filter-removal)
+
+NOTE - No modifications are necessary for the InnoMaker cameras.  They come with 2 pins (Trigger+ and Trigger-), and so are ready to work with external triggering right out of the box.
 
 2. **Add external triggering:** Follow [RPi external trigger guide](https://github.com/raspberrypi/documentation/blob/develop/documentation/asciidoc/accessories/camera/external_trigger.adoc)
    - Resistor removal is particularly difficult - use magnifying light and steady hands
@@ -124,6 +129,8 @@ Camera 2 is the bottom camera that captures the ball in flight and requires modi
 3. **Strain relief:** Add thick glue drop over wire/solder junction. Run wires down from camera top and pinch between camera and gimbal backplate.
 
 #### Camera Mount Assembly
+
+NOTE - If you are using Innomaker cameras, make sure you use the Innomaker-specific camera mounts.
 
 1. **Mount selection:** Use shorter mount for Camera 2 (doesn't need to point downward like Camera 1)
 2. **Cable first:** Attach CSI cable *before* bolting camera to backplate - lock cable securely
