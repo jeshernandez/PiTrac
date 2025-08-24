@@ -53,6 +53,7 @@ We are also thankful for individual contributors who—even if we haven't used t
 15. Merrygrin, Scuzzy On Discord
 16. Ron Heywood
 17. Connor Gallopo (@gallapagos on Discord)
+18. Ronald Muñoz
 
 ## Golf Simulator Interface Support
 
