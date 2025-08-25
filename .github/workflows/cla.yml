@@ -19,6 +19,11 @@ concurrency:
 jobs:
   cla-assistant:
     runs-on: ubuntu-latest
+ 
+    env:
+      SIGNATURE_PHRASE: "I have read the CLA Document and I hereby sign the CLA"
+      RECHECK_PHRASE: "recheck"
+
     steps:
       - name: "CLA Assistant"
         if: >
@@ -43,5 +48,26 @@ jobs:
           allowlist: "dependabot[bot],github-actions[bot]"
 
           # lock-pullrequest-aftermerge: true
-          # suggest-recheck: true
 
+          create-file-commit-message: "Create signatures store"
+          signed-commit-message: "$contributorName has signed the CLA in $owner/$repo#$pullRequestNo"
+
+          custom-notsigned-prcomment: |
+            Thanks for your PR! Before we can review it, please sign our Contributor License Agreement.
+
+            **How to sign (right here in this PR):**
+            1. Read the CLA: $pathToCLADocument
+            2. Add a new PR comment with exactly this line (copy & paste):
+               ```
+               ${{ env.SIGNATURE_PHRASE }}
+               ```
+            3. Already signed and not seeing the check pass? Ask me to recheck by commenting:
+               ```
+               ${{ env.RECHECK_PHRASE }}
+               ```
+
+          custom-pr-sign-comment: ${{ env.SIGNATURE_PHRASE }}
+
+          custom-allsigned-prcomment: "All contributors have signed the CLA. Thanks!"
+
+          suggest-recheck: true
