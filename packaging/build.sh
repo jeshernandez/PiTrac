@@ -98,6 +98,20 @@ build_pitrac() {
         exit 1
     fi
     
+    # Generate Bashly CLI if needed
+    if [[ ! -f "$SCRIPT_DIR/pitrac" ]]; then
+        log_warn "Bashly CLI not found, generating it now..."
+        if [[ -f "$SCRIPT_DIR/generate.sh" ]]; then
+            cd "$SCRIPT_DIR"
+            ./generate.sh
+            cd - > /dev/null
+            log_success "Generated pitrac CLI tool"
+        else
+            log_error "generate.sh not found!"
+            exit 1
+        fi
+    fi
+    
     # Setup QEMU for ARM64 emulation on x86_64
     setup_qemu
     
@@ -426,8 +440,16 @@ EOF
     
     log_info "Installing CLI tool..."
     if [[ ! -f "$SCRIPT_DIR/pitrac" ]]; then
-        log_error "Bashly CLI not found! Run ./generate.sh first"
-        exit 1
+        log_warn "Bashly CLI not found, generating it now..."
+        if [[ -f "$SCRIPT_DIR/generate.sh" ]]; then
+            cd "$SCRIPT_DIR"
+            ./generate.sh
+            cd - > /dev/null
+            log_success "Generated pitrac CLI tool"
+        else
+            log_error "generate.sh not found!"
+            exit 1
+        fi
     fi
     install -m 755 "$SCRIPT_DIR/pitrac" /usr/bin/pitrac
     
