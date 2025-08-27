@@ -235,7 +235,7 @@ build_dev() {
     # Boost libraries (runtime and dev)
     for pkg in libboost-system1.74.0 libboost-thread1.74.0 libboost-filesystem1.74.0 \
                libboost-program-options1.74.0 libboost-timer1.74.0 libboost-log1.74.0 \
-               libboost-regex1.74.0 libboost-dev; do
+               libboost-regex1.74.0 libboost-dev libboost-all-dev libyaml-cpp-dev; do
         if ! dpkg -l | grep -q "^ii  $pkg"; then
             missing_deps+=("$pkg")
         fi
