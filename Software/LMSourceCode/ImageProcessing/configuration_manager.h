@@ -172,6 +172,9 @@ private:
     // Validation errors
     mutable std::vector<std::string> validation_errors_;
 
+    // Reverse mapping cache (JSON path -> YAML key)
+    mutable std::map<std::string, std::string> json_to_yaml_map_;
+
     /**
      * Load parameter mappings from file
      * @param mappings_file Path to parameter-mappings.yaml
@@ -180,11 +183,23 @@ private:
     bool LoadMappings(const std::string& mappings_file);
 
     /**
+     * Build reverse mapping cache from loaded mappings
+     */
+    void BuildReverseMappingCache();
+
+    /**
      * Map a YAML key to JSON path
      * @param yaml_key YAML configuration key
      * @return Mapped JSON path or original key if no mapping
      */
     std::string MapToJsonPath(const std::string& yaml_key) const;
+
+    /**
+     * Map a JSON path to YAML key (reverse mapping)
+     * @param json_path JSON configuration path
+     * @return Mapped YAML key or original path if no mapping
+     */
+    std::string MapToYamlKey(const std::string& json_path) const;
 
     /**
      * Convert YAML value to JSON format
@@ -246,7 +261,21 @@ T ConfigurationManager::GetValue(const std::string& key, const T& default_value)
         return val.value();
     }
 
-    // Check YAML config
+    // For YAML config, we need to handle both cases:
+    // 1. If the key is a JSON path (e.g., "gs_config.cameras.kCamera1Gain"), 
+    //    map it to YAML key and check
+    // 2. If the key is already a YAML key, check directly
+    
+    // Try to map JSON path to YAML key
+    std::string yaml_key = MapToYamlKey(key);
+    if (yaml_key != key) {
+        // It was a JSON path that got mapped to a YAML key
+        if (auto val = GetFromTree<T>(yaml_config_, yaml_key)) {
+            return val.value();
+        }
+    }
+    
+    // Also check with the original key in case it's already a YAML key
     if (auto val = GetFromTree<T>(yaml_config_, key)) {
         return val.value();
     }
