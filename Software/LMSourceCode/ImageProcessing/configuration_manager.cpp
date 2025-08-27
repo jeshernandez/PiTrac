@@ -310,6 +310,9 @@ bool ConfigurationManager::LoadMappings(const std::string& mappings_file) {
             presets_ = *presets;
         }
         
+        // Build reverse mapping cache
+        BuildReverseMappingCache();
+        
         GS_LOG_MSG(info, "Loaded parameter mappings from: " + mappings_file);
         return true;
     } catch (const std::exception& e) {
@@ -334,6 +337,42 @@ std::string ConfigurationManager::MapToJsonPath(const std::string& yaml_key) con
     
     // No mapping found, return original key
     return yaml_key;
+}
+
+std::string ConfigurationManager::MapToYamlKey(const std::string& json_path) const {
+    // First check the cache
+    auto it = json_to_yaml_map_.find(json_path);
+    if (it != json_to_yaml_map_.end()) {
+        return it->second;
+    }
+    
+    // No mapping found, return original path
+    return json_path;
+}
+
+void ConfigurationManager::BuildReverseMappingCache() {
+    json_to_yaml_map_.clear();
+    
+    try {
+        auto mappings = mappings_.get_child_optional("mappings");
+        if (!mappings) {
+            return;
+        }
+        
+        // Iterate through all mappings and build reverse map
+        for (const auto& [yaml_key, mapping_node] : *mappings) {
+            auto json_path = mapping_node.get_optional<std::string>("json_path");
+            if (json_path) {
+                // Store the reverse mapping: JSON path -> YAML key
+                json_to_yaml_map_[*json_path] = yaml_key;
+                GS_LOG_TRACE_MSG(trace, "Reverse mapping: " + *json_path + " -> " + yaml_key);
+            }
+        }
+        
+        GS_LOG_MSG(debug, "Built reverse mapping cache with " + std::to_string(json_to_yaml_map_.size()) + " entries");
+    } catch (const std::exception& e) {
+        GS_LOG_MSG(warning, "Failed to build reverse mapping cache: " + std::string(e.what()));
+    }
 }
 
 std::string ConfigurationManager::ConvertToJson(const std::string& yaml_key, const std::string& value) const {
