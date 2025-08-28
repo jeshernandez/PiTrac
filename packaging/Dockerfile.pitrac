@@ -31,6 +31,7 @@ RUN apt-get install -y \
     libaprutil1 \
     libapr1-dev \
     libaprutil1-dev \
+    libyaml-cpp-dev \
     libssl3 \
     # OpenCV runtime deps
     libgtk-3-0 \
@@ -119,13 +120,21 @@ RUN groupadd -g ${GID} builder && \
 USER builder
 WORKDIR /build
 
-# Default build command - build with closed source files optional
+# Default build command - Release mode with parallel compilation
 CMD ["bash", "-c", "cd /build/Software/LMSourceCode/ImageProcessing && \
     export PITRAC_ROOT=/build/Software/LMSourceCode && \
     export CXXFLAGS='-I/opt/opencv/include/opencv4' && \
     mkdir -p ClosedSourceObjectFiles && \
     touch ClosedSourceObjectFiles/gs_e6_response.cpp.o && \
-    rm -rf build && \
-    find /build -type f -newer /etc/passwd -exec touch {} \\; 2>/dev/null || true && \
-    meson setup build --buildtype=release -Denable_recompile_closed_source=false && \
-    ninja -C build pitrac_lm"]
+    if [ ! -d build ]; then \
+        echo 'Setting up new build directory (release mode with full optimization)...' && \
+        meson setup build --buildtype=release -Denable_recompile_closed_source=false -Db_lto=false; \
+    else \
+        echo 'Using existing build directory for incremental build...' && \
+        echo -n 'Object files found: ' && \
+        ls -1 build/pitrac_lm.p/*.o 2>/dev/null | wc -l || echo '0' && \
+        echo 'Configuring for release build...' && \
+        meson configure build --buildtype=release -Db_lto=false; \
+    fi && \
+    echo 'Building with parallel compilation for speed...' && \
+    ninja -C build -j 8 pitrac_lm"]

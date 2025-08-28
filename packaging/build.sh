@@ -130,6 +130,9 @@ build_pitrac() {
         --platform=linux/arm64 \
         -v "$REPO_ROOT:/build:rw" \
         -u "$(id -u):$(id -g)" \
+        --memory=16g \
+        --memory-swap=24g \
+        --cpus="8" \
         pitrac-poc:arm64
     
     # Check result
