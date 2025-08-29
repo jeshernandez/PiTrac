@@ -87,7 +87,7 @@ This document provides a comprehensive list of all components needed to build a 
 | 1   | Sys1_Conn1    | ~      | 4-pin header   | 2.54 mm vertical |
 | 1   | Sys2_Conn1    | ~      | 3-pin header   | 2.54 mm vertical |
 | 2   | U2, U3        | H11L1  | [Optocoupler](https://www.amazon.com/10PCS-H11L1M-Photoelectric-Coupler-Optocoupler/dp/B09PK3V339) | **Must be DIP-6 style, not surface mount** |
-| 1   | U4            | 74HC04 | Hex inverter   | DIP-14 with socket |
+| 1   | U4            | 74HC04 | Hex inverter   | DIP-14 with socket [SN74HC04N](https://www.digikey.com/en/products/detail/texas-instruments/SN74HC04N/277212) |
 | 1   | U5            | ~      | [Dual MOS Driver Module](https://www.amazon.com/Anmbest-High-Power-Adjustment-Electronic-Brightness/dp/B07NWD8W26/) | For LED switching |
 
 ### Optional Connector Board Parts
@@ -106,7 +106,7 @@ This document provides a comprehensive list of all components needed to build a 
 | N/A      | [3-pin and 4-pin ribbon cables](https://www.amazon.com/Kidisoii-Dupont-Connector-Pre-Crimped-5P-10CM/dp/B0CCV1HVM9/) | GPIO to Connector Board wiring |
 | 1        | 15.5 cm × 24 cm plexiglass window | **Must not block IR!** Protects cameras from ball strikes |
 
-## Version 2 Additional Components (Work in Progress)
+## Version 2 Additional Components (TBD - DO NOT PURCHASE YET)
 
 | Quantity | Hardware | Purpose |
 |----------|----------|---------|
