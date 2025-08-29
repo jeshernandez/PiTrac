@@ -204,3 +204,21 @@ body:
         - Modified PCB design
         - Alternative mounting solution
         - Different camera models
+
+  - type: dropdown
+    id: discord-contact
+    attributes:
+      label: Discord Contact
+      description: Can we reach out to you on Discord about this hardware issue?
+      options:
+        - "Yes, I'm active on the PiTrac Discord"
+        - "No, please contact me through GitHub only"
+    validations:
+      required: true
+
+  - type: input
+    id: discord-username
+    attributes:
+      label: Discord Username
+      description: What's your username on the PiTrac Discord server? (Leave blank if you prefer GitHub contact)
+      placeholder: "username#1234 or @username"
