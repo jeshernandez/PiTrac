@@ -1,6 +1,11 @@
 # Default owner of the ship. Not needed, but just adding. 
 * @jamespilgrim
+/.github/workflows/CODEOWNERS @jamespilgrim
 
+# GitHub Workflows
+/.github/workflows/ @jamespilgrim @connorgallopo @jeshernandez
+
+# Top Level Software Ownership
 /Software/ @jamespilgrim
 
 # Java Ownership files 
@@ -23,5 +28,3 @@
 # Packaging
 /packaging/ @connorgallopo
 
-# GitHub Workflows
-/.github/workflows/ @jamespilgrim @connorgallopo @jeshernandez
