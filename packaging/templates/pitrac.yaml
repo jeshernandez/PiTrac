@@ -1,0 +1,96 @@
+# PiTrac Configuration
+# This file configures system-level settings for PiTrac.
+# Settings here override defaults in golf_sim_config.json when uncommented.
+#
+# IMPORTANT: With the latest fixes, YAML overrides now work correctly!
+# You can uncomment and modify any of these settings to override JSON defaults.
+
+version: 1.0
+
+# ============================================================================
+# CAMERA CONFIGURATION
+# These values map directly to JSON parameters and will override them
+# ============================================================================
+
+cameras:
+  # Camera gain (brightness) settings - Override JSON defaults
+  # camera1_gain: 1.0      # Maps to gs_config.cameras.kCamera1Gain
+  # camera2_gain: 1.0      # Maps to gs_config.cameras.kCamera2Gain
+  
+  # Camera hardware types - Set via environment variables  
+  # Note: These are passed as PITRAC_SLOT1_CAMERA_TYPE environment variables
+  slot1:
+    type: 4  # 1=PiCam1.3, 2=PiCam2, 3=PiHQ, 4=PiGS, 5=InnoMaker
+    lens: 1  # 1=6mm, 2=3.6mm_M12 (optional, defaults to 1)
+  slot2:
+    type: 4  # 1=PiCam1.3, 2=PiCam2, 3=PiHQ, 4=PiGS, 5=InnoMaker
+    lens: 1  # 1=6mm, 2=3.6mm_M12 (optional, defaults to 1)
+
+# ============================================================================
+# SYSTEM MODE
+# These settings control the system mode (putting vs normal)
+# ============================================================================
+
+system:
+  # putting_mode: false    # Maps to gs_config.modes.kStartInPuttingMode
+
+# ============================================================================
+# SIMULATOR INTERFACES
+# Configure simulator connections
+# ============================================================================
+
+simulators:
+  # E6 Connect Settings
+  # e6_host: "192.168.1.100"    # Maps to gs_config.golf_simulator_interfaces.E6.kE6ConnectAddress
+  # e6_port: 2483                # Maps to gs_config.golf_simulator_interfaces.E6.kE6ConnectPort
+  
+  # GSPro Settings  
+  # gspro_host: "192.168.1.100"  # Maps to gs_config.golf_simulator_interfaces.GSPro.kGSProConnectAddress
+  # gspro_port: 921               # Maps to gs_config.golf_simulator_interfaces.GSPro.kGSProConnectPort
+
+# ============================================================================
+# BALL DETECTION SETTINGS
+# Override image processing parameters
+# ============================================================================
+
+ball_detection:
+  # method: "legacy"           # Maps to gs_config.ball_identification.kDetectionMethod
+                                # Options: legacy, experimental, experimental_sahi
+  
+  # use_clahe: true            # Maps to gs_config.ball_identification.kUseCLAHEProcessing
+  # clahe_clip_limit: 8        # Maps to gs_config.ball_identification.kCLAHEClipLimit (1-40)
+  
+  # ball_radius_pixels: 100    # Maps to gs_config.ball_position.kExpectedBallRadiusPixelsAt40cm
+
+# ============================================================================
+# ADVANCED BALL DETECTION (for fine-tuning)
+# ============================================================================
+
+ball_detection_advanced:
+  strobed_balls:
+    # canny_lower: 33          # Maps to gs_config.ball_identification.kStrobedBallsCannyLower
+    # canny_upper: 90          # Maps to gs_config.ball_identification.kStrobedBallsCannyUpper
+    # min_circles: 6           # Maps to gs_config.ball_identification.kStrobedBallsMinHoughReturnCircles
+    # max_circles: 20          # Maps to gs_config.ball_identification.kStrobedBallsMaxHoughReturnCircles
+
+# ============================================================================
+# AI DETECTION SETTINGS (for experimental YOLO detection)
+# ============================================================================
+
+ai_detection:
+  # model_path: "../../Software/GroundTruthAnnotator/experiments/high_performance_300e2/weights/best.onnx"
+                              # Maps to gs_config.ball_identification.kONNXModelPath
+  # confidence_threshold: 0.5  # Maps to gs_config.ball_identification.kONNXConfidenceThreshold
+  # nms_threshold: 0.4         # Maps to gs_config.ball_identification.kONNXNMSThreshold
+  # input_size: 1472           # Maps to gs_config.ball_identification.kONNXInputSize
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# 
+# 1. Camera slot types are passed as environment variables to the binary
+# 2. Other settings override the corresponding JSON configuration values
+# 3. All ball tracking parameters not listed here remain in golf_sim_config.json
+# 4. To see all available parameters, check:
+#    - /etc/pitrac/config/parameter-mappings.yaml (defines all mappings)
+#    - /etc/pitrac/golf_sim_config.json (contains all default values)
