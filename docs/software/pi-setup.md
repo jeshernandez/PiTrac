@@ -736,7 +736,7 @@ NOTE - The new "single-pi" version of PiTrac does not have its own documentation
              #export PITRAC_SLOT2_CAMERA_TYPE=6
              ```
 
-       2. `sudo apt-get -y install libraspberrypi-dev raspberrypi-kernel-headers`
+       2. `sudo apt-get -y install libraspberrypi-dev raspberrypi-kernel-headers libyaml-cpp-dev`
        3. Add extended timeout to `rpi_apps.yaml` file so that even if an external trigger doesn't fire for a really long time, the libcamera library won't time-out:  
           1. (**NOTE** for Pi 5, use `/usr/share/libcamera/pipeline/rpi/pisp` instead of `/usr/share/libcamera/pipeline/rpi/vc4`, below)  
              ```bash
