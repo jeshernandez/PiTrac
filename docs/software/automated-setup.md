@@ -59,7 +59,7 @@ chmod +x run.sh
 ./run.sh
 ```
 
-That's it. You'll see a menu like this:
+That's it. After any initial installation of required software, you'll see a menu like this:
 
 ```
 ========================================
@@ -86,9 +86,9 @@ Choice:
 
 ### Step 3: Install Everything
 
-Choose option 1, then select "Install All Required Software". 
+Choose option 1, then select "Install All Required Dependencies". 
 
-Now go grab a coffee. The installer will:
+Select "Yes".  Now go grab a coffee. The installer will:
 1. Check your system (disk space, internet, etc.)
 2. Install system packages
 3. Build OpenCV (this takes the longest)
@@ -104,7 +104,7 @@ Building OpenCV: [===========----------] 55% (247/450)
 
 ### Step 4: Configure Your System
 
-After installation finishes, choose option 2 "Configure System" from the main menu:
+After installation finishes and you navigate back to the main menu, choose option 2 "System Configuration" from the main menu:
 
 1. **System Configuration** - Sets up GPU memory, boot options, hardware stuff
 2. **Camera Configuration** - Detects your camera sensor, configures it
@@ -127,6 +127,7 @@ You'll see progress as it builds:
 Building PiTrac: [================-----] 76% (342/450)
 ```
 
+If the system complains about anything that was not installed, go back to the System Configuration and install any missing packages.
 Takes about 10-15 minutes depending on your Pi.
 
 ### Step 6: Run PiTrac
