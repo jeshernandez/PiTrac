@@ -12,7 +12,7 @@ parent: Troubleshooting
 
 This document is for folks who:
 
-* Don’t have a Raspaberry Pi and haven’t assembled a physical PiTrac, but still want to look into how the code works.  
+* Don’t have a Raspberry Pi and haven’t assembled a physical PiTrac, but still want to look into how the code works.  
   * Or doesn’t work. Sometimes the latter. :/  
 * Saw some unexpected results from PiTrac and want to figure out what went wrong.  
   * For example – Why is the calculated speed 659.75 mph? Did I really hit the ball with a forward spin of 454,623 RPM? Why didn’t the system “see” my shot correct? And so on…  
@@ -41,7 +41,16 @@ Windows instructions (Mac similar):
    - See [installation guide](https://docs.opencv.org/4.x/d3/d52/tutorial_windows_install.html)  
 3. **Install Boost**  
    - Download prebuilt binaries from [SourceForge](https://sourceforge.net/projects/boost/files/boost-binaries/) or build from source  
-4. **Configure VS Project**  
+4. **Install yaml-cpp**
+   - Download yaml-cpp source and build it (preferably in debug mode)
+   - cd <your development root directory>
+   - git clone https://github.com/jbeder/yaml-cpp.git
+   - cd yaml-cpp
+   - mkdir build
+   - cd build
+   - cmake -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Debug ..
+   - cmake --build . --config Debug
+5. **Configure VS Project**  
    - Set `Include Directories` (e.g., `E:\Dev_Libs\opencv\build\include;E:\Dev_Libs\boost_1_87_0`)  
    - Set `Library Directories`  
    - Define preprocessor constants:  
@@ -49,6 +58,7 @@ Windows instructions (Mac similar):
      BOOST_BIND_GLOBAL_PLACEHOLDERS
      BOOST_ALL_DYN_LINK
      BOOST_USE_WINAPI_VERSION=0x0A00
+     YAML_CPP_STATIC_DEFINE
      _DEBUG
      _CONSOLE
      ```
