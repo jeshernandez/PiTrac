@@ -130,9 +130,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>BOOST_BIND_GLOBAL_PLACEHOLDERS;BOOST_ALL_DYN_LINK;BOOST_USE_WINAPI_VERSION=0x0A00;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BOOST_BIND_GLOBAL_PLACEHOLDERS;BOOST_ALL_DYN_LINK;BOOST_USE_WINAPI_VERSION=0x0A00;YAML_CPP_STATIC_DEFINE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\Dev_Libs\opencv\build\include;E:\Dev_Libs\boost_1_87_0\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Dev_Libs\opencv\build\include;E:\Dev_Libs\boost_1_87_0\;E:\Dev_Libs\yaml-cpp\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
@@ -140,7 +140,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>E:\Dev_Libs\opencv\build\x64\vc16\lib;E:\Dev_Libs\boost_1_87_0\lib64-msvc-14.3</AdditionalLibraryDirectories>
-      <AdditionalDependencies>E:\Dev_Libs\opencv\build\x64\vc16\lib\opencv_world4100d.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>E:\Dev_Libs\opencv\build\x64\vc16\lib\opencv_world4120d.lib;E:\dev_libs\yaml-cpp\build\Debug\yaml-cppd.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -210,14 +210,15 @@
     <ClCompile Include="ball_image_proc.cpp" />
     <ClCompile Include="ball_watcher.cpp" />
     <ClCompile Include="ball_watcher_image_buffer.cpp" />
-    <ClCompile Include="Camera\build\CMakeFiles\4.0.2\CompilerIdCXX\CMakeCXXCompilerId.cpp" />
-    <ClCompile Include="Camera\build\CMakeFiles\4.0.2\CompilerIdC\CMakeCCompilerId.c" />
-    <ClCompile Include="Camera\tests\domain\test_advanced_domain.cpp" />
-    <ClCompile Include="Camera\tests\domain\test_camera_domain.cpp" />
-    <ClCompile Include="Camera\tests\infrastructure\test_platform_selection.cpp" />
-    <ClCompile Include="Camera\tests\test_main.cpp" />
+    <ClCompile Include="Camera\build\CMakeFiles\4.0.2\CompilerIdCXX\CMakeCXXCompilerId.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Camera\build\CMakeFiles\4.0.2\CompilerIdC\CMakeCCompilerId.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="camera_hardware.cpp" />
     <ClCompile Include="colorsys.cpp" />
+    <ClCompile Include="configuration_manager.cpp" />
     <ClCompile Include="core\dma_heaps.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -274,9 +275,6 @@
     <ClCompile Include="gs_sim_interface.cpp" />
     <ClCompile Include="gs_sim_socket_interface.cpp" />
     <ClCompile Include="ImageAnalysis\infrastructure\opencv_image_analyzer.cpp" />
-    <ClCompile Include="ImageAnalysis\tests\test_approval_with_pitrac_images.cpp" />
-    <ClCompile Include="ImageAnalysis\tests\test_image_analysis_domain.cpp" />
-    <ClCompile Include="ImageAnalysis\tests\test_opencv_analyzer.cpp" />
     <ClCompile Include="lm_main.cpp" />
     <ClCompile Include="gs_ipc_mat.cpp" />
     <ClCompile Include="gs_ipc_system.cpp" />
@@ -393,6 +391,7 @@
     <ClInclude Include="Camera\tests\test_utilities.hpp" />
     <ClInclude Include="camera_hardware.h" />
     <ClInclude Include="colorsys.h" />
+    <ClInclude Include="configuration_manager.h" />
     <ClInclude Include="core\buffer_sync.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
@@ -540,9 +539,8 @@
     <Text Include="image\CMakeLists.txt" />
     <Text Include="output\CMakeLists.txt" />
     <Text Include="post_processing_stages\CMakeLists.txt" />
-    <Text Include="preview\CMakeLists.txt" />  
+    <Text Include="preview\CMakeLists.txt" />
   </ItemGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
