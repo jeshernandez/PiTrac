@@ -46,7 +46,7 @@
 
     <!-- misc -->
     <msgpack-core.version>0.9.6</msgpack-core.version>
-    <gson.version>2.9.0</gson.version>
+    <gson.version>2.13.1</gson.version>
 
     <!-- logging -->
     <log4j.version>2.24.3</log4j.version>
