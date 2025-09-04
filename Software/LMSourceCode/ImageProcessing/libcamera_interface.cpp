@@ -16,7 +16,7 @@
 
 #include <chrono>
 
-
+#include <fstream>
 #include <opencv2/calib3d/calib3d.hpp>
 
 // TBD - May need to be before ball_watcher, as there is a mman.h conflict
@@ -1077,6 +1077,14 @@ bool SetLibcameraTuningFileEnvVariable(const GolfSimCamera& camera) {
             GS_LOG_TRACE_MSG(trace, "Detected PiModel::kRPi4 and color camera 2.");
             tuning_file = "/usr/share/libcamera/ipa/rpi/vc4/imx296_noir.json";
         }
+    }
+
+    // Make sure the environment actually has the file available
+    std::ifstream file(tuning_file);
+    if (!file.good()) {
+        GS_LOG_MSG(error, "SetLibcameraTuningFileEnvVariable failed to open file: " + tuning_file);
+        GS_LOG_MSG(error, "If necessary, find the example file (e.g., imx296_noir.json.PI_5_FOR_PISP_DIRECTORY), and copy it to the expected file name.");
+        return false;
     }
 
     setenv("LIBCAMERA_RPI_TUNING_FILE", tuning_file.c_str(), 1);

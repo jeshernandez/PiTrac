@@ -13,6 +13,7 @@
 
 #include <cmath>
 #include <fcntl.h>
+#include <fstream>
 #include <stdlib.h>
 
 #include <sys/ioctl.h>
@@ -25,6 +26,7 @@
 #include <libcamera/orientation.h>
 
 #include "logging_tools.h"
+#include "gs_config.h"
 
 
 unsigned int RPiCamApp::verbosity = 1;
@@ -53,34 +55,52 @@ static libcamera::PixelFormat mode_to_pixel_format(Mode const &mode)
 	return libcamera::formats::SBGGR12_CSI2P;
 }
 
-static void set_pipeline_configuration(Platform platform)
+static bool set_pipeline_configuration(Platform platform)
 {
 	GS_LOG_TRACE_MSG(trace, "set_pipeline_configuration called for platform: " + std::to_string((int)platform));
 
+	bool found_valid_file = false;
+	std::string configure_file_name;
+
 	// Respect any pre-existing value in the environment variable.
-	char const *existing_config = getenv("LIBCAMERA_RPI_CONFIG_FILE");
-	if (existing_config && existing_config[0])
-		return;
+	std::string existing_config = golf_sim::GolfSimConfiguration::safe_getenv("LIBCAMERA_RPI_CONFIG_FILE");
+	if (!existing_config.empty()) {
+		found_valid_file = true;
+		configure_file_name = existing_config;
+	}
 
-	// Otherwise point it at whichever of these we find first (if any) for the given platform.
-	static const std::vector<std::pair<Platform, std::string>> config_files = {
-		{ Platform::VC4, "/usr/local/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml" },
-		{ Platform::VC4, "/usr/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml" },
-		{ Platform::PISP, "/usr/local/share/libcamera/pipeline/rpi/pisp/rpi_apps.yaml" },
-		{ Platform::PISP, "/usr/share/libcamera/pipeline/rpi/pisp/rpi_apps.yaml" },
-	};
+	if (!found_valid_file) {
+		// Otherwise point it at whichever of these we find first (if any) for the given platform.
+		static const std::vector<std::pair<Platform, std::string>> config_files = {
+			{ Platform::VC4, "/usr/local/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml" },
+			{ Platform::VC4, "/usr/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml" },
+			{ Platform::PISP, "/usr/local/share/libcamera/pipeline/rpi/pisp/rpi_apps.yaml" },
+			{ Platform::PISP, "/usr/share/libcamera/pipeline/rpi/pisp/rpi_apps.yaml" },
+		};
 
-	for (auto &config_file : config_files)
-	{
-		struct stat info;
-		if (config_file.first == platform && stat(config_file.second.c_str(), &info) == 0)
+		for (auto& config_file : config_files)
 		{
-			GS_LOG_TRACE_MSG(trace, "set_pipeline_configuration setting yaml pipeline file to : " + config_file.second);
+			struct stat info;
+			if (config_file.first == platform && stat(config_file.second.c_str(), &info) == 0)
+			{
+				GS_LOG_TRACE_MSG(trace, "set_pipeline_configuration setting yaml pipeline file to : " + config_file.second);
 
-			setenv("LIBCAMERA_RPI_CONFIG_FILE", config_file.second.c_str(), 1);
-			break;
+				configure_file_name = config_file.second;
+				setenv("LIBCAMERA_RPI_CONFIG_FILE", config_file.second.c_str(), 1);
+				break;
+			}
 		}
 	}
+
+	// Make sure the environment actually has the file available
+	std::ifstream file(configure_file_name);
+	if (!file.good()) {
+		GS_LOG_MSG(error, "set_pipeline_configuration failed to open file: " + configure_file_name);
+		GS_LOG_MSG(error, "If necessary, find the example.yaml file, copy it to the expected file name, and ensure the timeout value is set correctly.");
+		return false;
+	}
+
+	return true;
 }
 
 RPiCamApp::RPiCamApp(std::unique_ptr<Options> opts)
@@ -105,7 +125,10 @@ RPiCamApp::RPiCamApp(std::unique_ptr<Options> opts)
 		exit(-1);
 	}
 
-	set_pipeline_configuration(platform);
+	if (!set_pipeline_configuration(platform)) {
+		fprintf(stderr, "ERROR: failed to set the libcamera pipeline configuration.  Exiting Program.\n");
+		exit(-1);
+	}
 }
 
 RPiCamApp::~RPiCamApp()
