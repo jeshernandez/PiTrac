@@ -1,0 +1,3 @@
+[submodule "libshotscope"]
+	path = libshotscope
+	url = https://github.com/gdifiore/libshotscope.git
