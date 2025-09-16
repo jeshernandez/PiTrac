@@ -5,157 +5,273 @@ nav_order: 2
 parent: Software
 ---
 
-# PiTrac Testing and Start-Up Documentation
+# PiTrac Startup Guide
 
-If you are at this point, you should have PiTrac compiled on both Pi's, your enclosure built, and your cameras calibrated. If that's not quite done yet, see the [Automated Setup]({% link software/automated-setup.md %}) for the quickest path, or the [Raspberry Pi Setup]({% link software/pi-setup.md %}) for manual installation.
+This guide will walk you through getting PiTrac up and running on your Raspberry Pi.
 
-## Environment Setup
+## Prerequisites
 
-### Required Environment Variables
+- Raspberry Pi 5 with 8GB RAM
+- Raspberry Pi OS Bookworm 64-bit
+- Active internet connection for installation
+- Sudo privileges on your Pi
 
-Ensure each account you will run PiTrac from has the following environment variables set. Add these to your `.zshrc` file in your user's root directory:
+## Installation
 
-```bash
-export PITRAC_ROOT=/Dev/PiTrac/Software
-# Note: The ~ symbol is only expanded by the shell, so 
-# may not work if pulled directly into PiTrac code. However,
-# these variables are expanded before being injected into PiTrac
-# via command-line parameters
-export PITRAC_ROOT=/mnt/PiTracShare/Dev/PiTrac/Software/LMSourceCode
-export PITRAC_BASE_IMAGE_LOGGING_DIR=~/LM_Shares/Images/
-export PITRAC_WEBSERVER_SHARE_DIR=~/LM_Shares/WebShare/
-export PITRAC_MSG_BROKER_FULL_ADDRESS=tcp://10.0.0.41:61616
+### Step 1: Clone the Repository
 
-# Only uncomment and set the following if connecting to the
-# respective golf sim (e.g., E6/TruGolf, GSPro, etc.)
-#export PITRAC_E6_HOST_ADDRESS=10.0.0.29
-#export PITRAC_GSPRO_HOST_ADDRESS=10.0.0.29
-```
-
-### Configuration File
-
-Ensure the `golf_sim_config.json` file is correctly set up. If unsure, follow the [Configuration File documentation]({% link software/configuration.md %}).
-
-### Basic Executable Test
-
-Check that the executable runs by itself:
+First, clone the PiTrac repository to your Raspberry Pi:
 
 ```bash
-cd $PITRAC_ROOT/ImageProcessing
-build/pitrac_lm --help
+git clone https://github.com/jamespilgrim/PiTrac.git
+cd PiTrac
 ```
 
-The executable should show the command-line parameters.
+### Step 2: Run Developer Installation
 
-## Hardware Testing
+Navigate to the packaging directory and run the developer installation script with sudo:
 
-### Strobe Light and Camera Triggering Test
+```bash
+cd packaging
+sudo ./build.sh dev
+```
 
-Problems can sometimes exist in the pathway from Pi 1 to Pi 2 Camera and the Strobe Assembly through the Connector Board. Perform these initial checks:
+This installation process will:
+- Check and install all required build dependencies
+- Extract pre-built dependency artifacts (OpenCV, ActiveMQ, lgpio, etc.)
+- Build the PiTrac binary from source
+- Install the PiTrac CLI tool at `/usr/bin/pitrac`
+- Install and configure the Python web server
+- Set up ActiveMQ message broker
+- Configure all necessary services
 
-1. **Position PiTrac** so you can see into the IR LEDs through the LED lens (small array of square LEDs should be visible)
+The installation typically takes 5-10 minutes on a Pi 5.
 
-2. **Run strobe-light test:**
+### Step 3: Start the Web Interface
+
+Once installation is complete, start the PiTrac web server:
+
+```bash
+pitrac web start
+```
+
+You can verify the web server is running with:
+
+```bash
+pitrac web status
+```
+
+### Step 4: Access the Web Dashboard
+
+Open a web browser and navigate to:
+
+```
+http://[YOUR_PI_IP_ADDRESS]:8080
+```
+
+To find your Pi's IP address, you can run:
+
+```bash
+pitrac web url
+```
+
+This will display both the local URL (http://localhost:8080) and the network URL for accessing from other devices.
+
+## Web Interface Overview
+
+The PiTrac web dashboard provides comprehensive control and monitoring capabilities:
+
+### Main Dashboard
+- **Real-time Shot Display**: View live golf shot metrics including ball speed, carry distance, launch angles, and spin rates
+- **System Status Indicators**: Monitor the health of WebSocket connection, ActiveMQ broker, and camera systems
+- **Shot Images Gallery**: Browse captured images from each shot
+
+### Configuration
+Access the configuration section to:
+- **Adjust Camera Settings**: Configure camera types, lens parameters, and gain settings
+- **Select Detection Methods**: Choose between HoughCircles, YOLO, or YOLO+SAHI ball detection
+- **Configure Simulators**: Set up connectivity to E6, GSPro, or TruGolf
+- **Manage Logging**: Control log levels and diagnostic outputs
+- **Calibrate System**: Fine-tune strobing, spin analysis, and calibration parameters
+
+The configuration interface features:
+- Search functionality to quickly find settings
+- Basic/Advanced view modes
+- Real-time validation with error messages
+- Change tracking and batch save operations
+- Import/Export for backup and restore
+
+### Process Control
+The PiTrac Process section allows you to:
+- **Start/Stop PiTrac**: Control the launch monitor processes
+- **Monitor Status**: View real-time process status and health
+- **Manage Dual Cameras**: Independent control of Camera 1 and Camera 2
+
+### Calibration Wizard
+The calibration section provides a 4-step wizard:
+1. **Setup**: Select cameras and prepare for calibration
+2. **Verify**: Check ball placement with live imaging
+3. **Calibrate**: Run automatic or manual calibration
+4. **Complete**: Review results and save parameters
+
+### Testing Tools
+The Testing section includes tools for:
+- **Hardware Testing**: Test IR strobes and capture still images
+- **Calibration Testing**: Verify ball detection and camera alignment
+- **System Testing**: Run automated test suites and connectivity checks
+
+### Logs Viewer
+Monitor system operation through the Logs section:
+- View real-time logs from PiTrac cameras, ActiveMQ, and web server
+- Filter by service and log level
+- Download logs for offline analysis
+
+## Managing PiTrac Services
+
+### Web Server Commands
+
+```bash
+# Start the web server
+pitrac web start
+
+# Stop the web server
+pitrac web stop
+
+# Restart the web server
+pitrac web restart
+
+# Check web server status
+pitrac web status
+
+# View web server logs
+pitrac web logs
+
+# Follow logs in real-time
+pitrac web logs --follow
+```
+
+### PiTrac Process Control
+
+The PiTrac launch monitor processes are managed through the web interface:
+
+1. Navigate to the "PiTrac Process" section in the web dashboard
+2. Use the Start/Stop buttons to control the launch monitor
+3. Monitor the status indicators for each camera
+
+## File Locations
+
+After installation, PiTrac components are located at:
+
+- **Web Server Code**: `/usr/lib/pitrac/web-server/`
+  - `server.py` - Main FastAPI application
+  - `listeners.py` - ActiveMQ message handlers
+  - `managers.py` - Shot and session management
+  - `static/` - Frontend assets
+  - `templates/` - HTML templates
+
+- **Configuration Files**: `/etc/pitrac/`
+  - `pitrac.yaml` - Main configuration
+
+- **PiTrac Binary**: `/usr/lib/pitrac/pitrac_lm`
+
+- **User Data**: `~/.pitrac/`
+  - `config/` - User-specific configuration overrides
+  - `logs/` - Application logs
+  - `state/` - Runtime state files
+
+- **Test Resources**: `/usr/share/pitrac/test-images/`
+
+## Troubleshooting
+
+### Web Server Won't Start
+
+Check the service status and logs:
+
+```bash
+pitrac web status
+pitrac web logs --follow
+```
+
+Common issues:
+- Port 8080 already in use
+- Python dependencies not installed
+- ActiveMQ not running
+
+### Cannot Access Web Interface
+
+1. Verify the web server is running:
    ```bash
-   cd $PITRAC_ROOT/ImageProcessing
-   ./RunScripts/runPulseTest.sh
+   systemctl status pitrac-web
    ```
 
-3. **Observe the test:** The script sends short "on" pulses to the LED strobe light. Due to the IR wavelengths used, you should see very short groups of dark-reddish pulses in the LED lens.
-
-   {: .warning }
-   **Safety:** Look at the LED from at least a couple feet away, especially with higher-power LEDs.
-
-4. **Troubleshoot if no pulsing:**
-   - Check runPulseTest script output
-   - Verify connections from Pi 1 (top of LM) to Connector Board
-   - If you can't see red pulses:
-     - Check if small red LED on Connector Board is pulsing
-     - If Connector Board LED pulses but no strobe light pulses:
-       - Verify power supply to Connector Board connection
-       - Check wiring from Connector Board output to LED strobe assembly
-
-5. **Stop the test:** Hit `Ctrl-C` to stop the pulse test
-
-   {: .danger }
-   **WARNING:** Double-check after stopping that the LED is OFF (showing no red color)!
-
-### Camera 2 Shutter Triggering Test
-
-When running normally, Pi 1 triggers Camera 2's shutter. Confirm this signal pathway works:
-
-1. **Set external triggering mode:**
+2. Check the firewall isn't blocking port 8080:
    ```bash
-   # On Pi 2:
-   cd $PITRAC_ROOT/ImageProcessing
-   sudo ./CameraTools/setCameraTriggerExternal.sh
+   sudo ufw status
    ```
 
-2. **Test camera response:**
+3. Confirm the correct IP address:
    ```bash
-   rpicam-hello
-   ./RunScripts/runCam2Still.sh
+   hostname -I
    ```
 
-   Normally, the camera won't take a picture because it's waiting for Pi 1's signal. The `rpicam-hello` should hang and do nothing while external triggering is set.
+### ActiveMQ Connection Issues
 
-3. **Trigger from Pi 1:**
-   ```bash
-   # On Pi 1:
-   ./RunScripts/runPulseTest.sh
-   ```
+Verify ActiveMQ is running:
 
-   As soon as Pi 1 starts sending pulses to Camera 2 (and LED strobe), Camera 2 should take a picture. The resulting picture will likely be dark if you have the IR filter installed.
+```bash
+systemctl status activemq
+sudo systemctl start activemq  # If not running
+```
 
-4. **Return to internal triggering:**
-   ```bash
-   # On Pi 2:
-   $PITRAC_ROOT/CameraTools/setCameraTriggerInternal.sh
-   ```
+Check ActiveMQ is listening on port 61616:
 
-## Full System Startup
+```bash
+netstat -tln | grep 61616
+```
 
-### Running PiTrac
+### Build Errors During Installation
 
-For the easiest way to run PiTrac, see the [Running PiTrac]({% link software/running-pitrac.md %}) guide which covers the menu system, background processes, and all runtime options.
+If the build fails, try a clean rebuild:
 
-To run PiTrac manually, start both camera scripts:
+```bash
+cd packaging
+sudo ./build.sh dev force
+```
 
-1. **Start Pi 2 first:**
-   ```bash
-   # On Pi 2:
-   ./RunScripts/runCam2.sh
-   ```
-
-2. **Then start Pi 1:**
-   ```bash
-   # On Pi 1:
-   ./RunScripts/runCam1.sh
-   ```
-
-Start Pi 2 executable first so it's ready to take pictures as soon as Pi 1 determines a ball has appeared.
-
-### Logging Levels
-
-- Run executables with `--logging_level=info` or higher (e.g., `warning`)
-- Setting to `DEBUG` or `TRACE` may slow the system so much it won't reliably catch golf ball flight
-- However, trace-level information is often useful for debugging
-
-### Troubleshooting
-
-For problems, see the [Troubleshooting Guide]({% link troubleshooting/troubleshooting.md %}).
-
-## Performance Tips
-
-- **Memory:** Ensure adequate swap space for compilation (see [Pi Setup Guide]({% link software/pi-setup.md %}))
-- **Network:** Use wired Ethernet for stability during operation
-- **Storage:** NVMe drives significantly improve performance over SD cards
-- **Cooling:** Active cooling helps maintain consistent performance during long sessions
+This forces a complete rebuild from scratch.
 
 ## Next Steps
 
-Once the system is running reliably:
+Once PiTrac is running:
 
-1. **Calibration:** Fine-tune camera calibration if needed ([Camera Calibration]({% link camera/camera-calibration.md %}))
-2. **Integration:** Set up simulator connections ([Integration]({% link integration/integration.md %}))
-3. **Optimization:** Adjust settings for your specific setup and environment
+1. **Calibrate Your Cameras**: Use the Calibration Wizard in the web interface
+2. **Configure Your Simulator**: Set up E6, GSPro, or TruGolf connectivity
+3. **Test the System**: Run test shots using the Testing tools
+4. **Fine-tune Settings**: Adjust detection parameters for your setup
+
+For detailed configuration options and advanced features, refer to the [Configuration Guide](configuration-guide.md).
+
+## Development and Updates
+
+To update PiTrac with the latest changes:
+
+```bash
+cd ~/PiTrac
+git pull
+cd packaging
+sudo ./build.sh dev
+```
+
+For incremental builds (faster, only rebuilds changed files):
+
+```bash
+sudo ./build.sh dev
+```
+
+For a complete clean rebuild:
+
+```bash
+sudo ./build.sh dev force
+```
+
+The web server will be automatically updated during the build process. If the service was running, it will be restarted with the new code.

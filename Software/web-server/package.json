@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "lint": "eslint static/**/*.js",
+    "lint:fix": "eslint static/**/*.js --fix"
+  },
+  "devDependencies": {
+    "eslint": "^9.35.0"
+  }
+}
