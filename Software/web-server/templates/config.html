@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}PiTrac Configuration{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/config.css">
+{% endblock %}
+
+{% block content %}
+<div class="status-bar">
+    <div class="status-left">
+        <div class="config-status-indicator">
+            <span class="config-status-label">Modified:</span>
+            <span class="config-status-value" id="modifiedCount">0</span>
+        </div>
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+    <div class="status-right">
+        <button class="btn btn-primary" onclick="saveChanges()" id="saveBtn" disabled>
+            Save Changes
+        </button>
+        <button class="btn btn-secondary" onclick="reloadConfig()">
+            Reload
+        </button>
+        <button class="btn btn-secondary" onclick="showDiff()">
+            Diff
+        </button>
+        <button class="btn btn-danger" onclick="resetAll()">
+            Reset
+        </button>
+    </div>
+</div>
+
+<div class="config-container">
+    <div class="category-sidebar">
+        <h3>Categories</h3>
+        <ul id="categoryList" class="category-list">
+        </ul>
+    </div>
+
+    <div class="config-panel">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search settings..." class="search-input" oninput="searchConfig()">
+            <button onclick="clearSearch()" class="clear-search">Clear</button>
+        </div>
+
+        <div id="configContent" class="config-content">
+        </div>
+    </div>
+</div>
+
+<div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading configuration...</p>
+</div>
+
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Confirm</h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="modalConfirmBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/js/config.js"></script>
+{% endblock %}
