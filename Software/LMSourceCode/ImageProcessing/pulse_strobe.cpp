@@ -63,7 +63,7 @@ namespace golf_sim {
 
 	long PulseStrobe::kCam2SetupPeriodMilliseconds = 2000;
 	int PulseStrobe::kNumberPrimingPulses = 12;
-	int PulseStrobe::kPrimingPulseFPS = 30;
+	int PulseStrobe::kPrimingPulseFPS = 15;
 	long PulseStrobe::kPauseBeforeReadyForTriggerMicroSeconds = 100;
 	int PulseStrobe::kPauseToSetUpInnoMakerExternalTriggerMilliseconds = 1000;
 	int PulseStrobe::kPauseBeforeReadyForFinalPrimingPulseMs = 100;
