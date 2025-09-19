@@ -435,6 +435,31 @@ namespace golf_sim {
 			GS_LOG_MSG(warning, "PulseStrobe::InitGPIOSystem called more than once!  Ignoring");
 			return true;
 		}
+
+		GolfSimConfiguration::SetConstant("gs_config.strobing.kCam2SetupPeriodMilliseconds", kCam2SetupPeriodMilliseconds);
+		GolfSimConfiguration::SetConstant("gs_config.strobing.kNumberPrimingPulses", kNumberPrimingPulses);
+		GolfSimConfiguration::SetConstant("gs_config.strobing.kPrimingPulseFPS", kPrimingPulseFPS);
+		GolfSimConfiguration::SetConstant("gs_config.strobing.kPauseBeforeReadyForTriggerMicroSeconds", kPauseBeforeReadyForTriggerMicroSeconds);
+		GolfSimConfiguration::SetConstant("gs_config.strobing.kPauseToSetUpInnoMakerExternalTriggerMilliseconds", kPauseToSetUpInnoMakerExternalTriggerMilliseconds);
+		GolfSimConfiguration::SetConstant("gs_config.strobing.kPauseBeforeReadyForFinalPrimingPulseMs", kPauseBeforeReadyForFinalPrimingPulseMs);
+
+		gpio_system_initialized_ = true;
+
+	        // If this is the non-camera1 process, then no need to further initialize the GPIO system, as the
+                // camera1 process would already have done so
+                if (GolfSimOptions::GetCommandLineOptions().system_mode_ != SystemMode::kCamera1 &&
+                    GolfSimOptions::GetCommandLineOptions().system_mode_ != SystemMode::kCamera1TestStandalone &&
+                    !GolfSimOptions::GetCommandLineOptions().camera_still_mode_ &&
+                    GolfSimOptions::GetCommandLineOptions().system_mode_ != SystemMode::kCamera1AutoCalibrate &&
+                    GolfSimOptions::GetCommandLineOptions().system_mode_ != SystemMode::kCamera2AutoCalibrate &&
+                    GolfSimOptions::GetCommandLineOptions().system_mode_ != SystemMode::kCamera1BallLocation &&
+                    GolfSimOptions::GetCommandLineOptions().system_mode_ != SystemMode::kCamera2BallLocation) {
+			GS_LOG_MSG(trace, "PulseStrobe::InitGPIOSystem setting constants and then returning.");
+			return true;
+
+		}
+	
+
 #ifdef __unix__  // Ignore in Windows environment
 
 		if (GolfSimConfiguration::GetPiModel() == GolfSimConfiguration::PiModel::kRPi5) {
@@ -522,15 +547,6 @@ namespace golf_sim {
 			return false;
 		}
 
-		GolfSimConfiguration::SetConstant("gs_config.strobing.kCam2SetupPeriodMilliseconds", kCam2SetupPeriodMilliseconds);
-		GolfSimConfiguration::SetConstant("gs_config.strobing.kNumberPrimingPulses", kNumberPrimingPulses);
-		GolfSimConfiguration::SetConstant("gs_config.strobing.kPrimingPulseFPS", kPrimingPulseFPS);
-		GolfSimConfiguration::SetConstant("gs_config.strobing.kPauseBeforeReadyForTriggerMicroSeconds", kPauseBeforeReadyForTriggerMicroSeconds);
-		GolfSimConfiguration::SetConstant("gs_config.strobing.kPauseToSetUpInnoMakerExternalTriggerMilliseconds", kPauseToSetUpInnoMakerExternalTriggerMilliseconds);
-		GolfSimConfiguration::SetConstant("gs_config.strobing.kPauseBeforeReadyForFinalPrimingPulseMs", kPauseBeforeReadyForFinalPrimingPulseMs);
-		
-
-		gpio_system_initialized_ = true;
 		return true;
 	}
 

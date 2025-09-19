@@ -117,7 +117,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 	auto start_time = std::chrono::high_resolution_clock::now();
 
 	// This should be slightly more time than it takes to get all of the timing pulses
-	long kQuiesceTimeMs = (gs::PulseStrobe::kNumberPrimingPulses + 1) * (1000 / gs::PulseStrobe::kPrimingPulseFPS);
+	long kQuiesceTimeMs = (gs::PulseStrobe::kNumberPrimingPulses ) * (1000 / gs::PulseStrobe::kPrimingPulseFPS) + 10;
 
 	// If appropriate, add the time we allow to setup external trigginer for the InnoMaker cameras
 	const gs::CameraHardware::CameraModel  camera_model = gs::GolfSimCamera::kSystemSlot2CameraType;

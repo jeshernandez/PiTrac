@@ -946,20 +946,9 @@ namespace golf_sim {
         
         GsUISystem::SendIPCStatusMessage(GsIPCResultType::kInitializing);
 
-        // Even if we are in kCamera2 mode, but also in still mode, we will wan to initialize
-        // the GPIO system
-        if (GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera1 ||
-            GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera1TestStandalone ||
-            GolfSimOptions::GetCommandLineOptions().camera_still_mode_ ||
-            GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera1AutoCalibrate ||
-            GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera2AutoCalibrate ||
-            GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera1BallLocation ||
-            GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera2BallLocation) {
-
-            if (!PulseStrobe::InitGPIOSystem(default_signal_handler)) {
-                GS_LOG_MSG(error, "Failed to InitGPIOSystem.");
-                return false;
-            }
+        if (!PulseStrobe::InitGPIOSystem(default_signal_handler)) {
+            GS_LOG_MSG(error, "Failed to InitGPIOSystem.");
+            return false;
         }
 
         // Only the camera1 system deals with the simulator interfaces
