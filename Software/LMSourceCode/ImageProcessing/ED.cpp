@@ -321,8 +321,8 @@ void ED::ComputeGradient()
 			int com1 = smoothImg[(i + 1) * width + j + 1] - smoothImg[(i - 1) * width + j - 1];
 			int com2 = smoothImg[(i - 1) * width + j + 1] - smoothImg[(i + 1) * width + j - 1];
 
-			int gx;
-			int gy;
+			int gx = 0;
+			int gy = 0;
 
 #ifdef __unix__  // Ignore in Windows environment
 #pragma GCC diagnostic push
