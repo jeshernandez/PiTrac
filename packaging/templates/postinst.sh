@@ -32,11 +32,14 @@ case "$1" in
             if [ -f /usr/lib/pitrac/pitrac-common-functions.sh ]; then
                 . /usr/lib/pitrac/pitrac-common-functions.sh
                 if [ -d /usr/share/pitrac/models ]; then
-                    USER_MODELS_DIR="/home/$ACTUAL_USER/LM_Shares/models"
-                    mkdir -p "$USER_MODELS_DIR"
-                    cp -r /usr/share/pitrac/models/* "$USER_MODELS_DIR/" 2>/dev/null || true
-                    chown -R "$ACTUAL_USER:$ACTUAL_USER" "/home/$ACTUAL_USER/LM_Shares"
-                    echo "Installed ONNX models to $USER_MODELS_DIR"
+                    SYSTEM_MODELS_DIR="/etc/pitrac/models"
+                    mkdir -p "$SYSTEM_MODELS_DIR"
+                    cp -r /usr/share/pitrac/models/* "$SYSTEM_MODELS_DIR/" 2>/dev/null || true
+                    # Set proper permissions - models should be readable by all users
+                    chmod -R 644 "$SYSTEM_MODELS_DIR"/*/*.onnx 2>/dev/null || true
+                    chmod -R 755 "$SYSTEM_MODELS_DIR"/* 2>/dev/null || true
+                    chmod 755 "$SYSTEM_MODELS_DIR"
+                    echo "Installed ONNX models to $SYSTEM_MODELS_DIR"
                 fi
             fi
 
@@ -121,16 +124,16 @@ case "$1" in
         if [ -f "$CONFIG_FILE" ]; then
             echo "Configuring boot settings in $CONFIG_FILE..."
 
-            # Add settings if not present
-            grep -q "camera_auto_detect=1" "$CONFIG_FILE" || echo "camera_auto_detect=1" >> "$CONFIG_FILE"
-            grep -q "dtparam=i2c_arm=on" "$CONFIG_FILE" || echo "dtparam=i2c_arm=on" >> "$CONFIG_FILE"
-            grep -q "dtparam=spi=on" "$CONFIG_FILE" || echo "dtparam=spi=on" >> "$CONFIG_FILE"
-            grep -q "force_turbo=1" "$CONFIG_FILE" || echo "force_turbo=1" >> "$CONFIG_FILE"
+            # Add settings if not present (check for the parameter name, not specific value)
+            grep -q "^camera_auto_detect=" "$CONFIG_FILE" || echo "camera_auto_detect=1" >> "$CONFIG_FILE"
+            grep -q "^dtparam=i2c_arm=" "$CONFIG_FILE" || echo "dtparam=i2c_arm=on" >> "$CONFIG_FILE"
+            grep -q "^dtparam=spi=" "$CONFIG_FILE" || echo "dtparam=spi=on" >> "$CONFIG_FILE"
+            grep -q "^force_turbo=" "$CONFIG_FILE" || echo "force_turbo=1" >> "$CONFIG_FILE"
 
             if [ "$PI_MODEL" = "pi5" ]; then
-                grep -q "arm_boost=1" "$CONFIG_FILE" || echo "arm_boost=1" >> "$CONFIG_FILE"
+                grep -q "^arm_boost=" "$CONFIG_FILE" || echo "arm_boost=1" >> "$CONFIG_FILE"
             else
-                grep -q "gpu_mem=256" "$CONFIG_FILE" || echo "gpu_mem=256" >> "$CONFIG_FILE"
+                grep -q "^gpu_mem=" "$CONFIG_FILE" || echo "gpu_mem=256" >> "$CONFIG_FILE"
             fi
         fi
 
