@@ -637,6 +637,7 @@ namespace golf_sim {
 /*********** Invalid state/event ************/
 
     GolfSimState onEvent(const auto&, const auto&) {
+        GS_LOG_TRACE_MSG(warning, "Unsupported state transition. Resetting ");
         throw std::logic_error{ "Unsupported state transition" };
     }
 
