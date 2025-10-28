@@ -471,8 +471,8 @@
             "GSPro": {
                 "kGSProComment": "USE CMD LINE OPTION - Example:  --gspro_host_address 10.0.0.47",
                 "kGSProConnectAddress": "",
-                "kGSProConnectPort": "49152",
-                "OLDkGSProConnectPort": "0921"
+                "ALTkGSProConnectPort": "49152",
+                "kGSProConnectPort": "0921"
             },
             "E6": {
                 "kE6Comment": "USE CMD LINE - Exampe:  --e6_host_address 10.0.0.29",
