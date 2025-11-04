@@ -113,7 +113,7 @@ check_artifacts() {
 build_deps() {
     log_info "Building dependency artifacts..."
 
-    if [ "$FORCE_REBUILD" = "true" ]; then
+    if [ "$FORCE_REBUILD" = "true" ] || [ "$FORCE_REBUILD" = "force" ]; then
         log_warn "Force rebuild enabled - removing existing artifacts"
         rm -f "$ARTIFACT_DIR"/*.tar.gz
     fi
@@ -249,12 +249,6 @@ build_dev() {
         exit 1
     fi
 
-    # Check for force rebuild flag
-    if [[ "${2:-}" == "force" ]]; then
-        FORCE_REBUILD="true"
-        log_info "Force rebuild requested - will clean build directory"
-    fi
-
     log_info "Regenerating pitrac CLI tool..."
     if [[ -f "$SCRIPT_DIR/generate.sh" ]]; then
         cd "$SCRIPT_DIR"
@@ -284,17 +278,15 @@ build_dev() {
         fi
     done
 
-    # Boost libraries (runtime and dev)
-    for pkg in libboost-system1.74.0 libboost-thread1.74.0 libboost-filesystem1.74.0 \
-               libboost-program-options1.74.0 libboost-timer1.74.0 libboost-log1.74.0 \
-               libboost-regex1.74.0 libboost-dev libboost-all-dev libyaml-cpp-dev; do
+    # Boost libraries (dev packages pull in correct runtime versions automatically)
+    for pkg in libboost-dev libboost-all-dev libyaml-cpp-dev; do
         if ! dpkg -l | grep -q "^ii  $pkg"; then
             missing_deps+=("$pkg")
         fi
     done
 
-    # Core libraries
-    for pkg in libcamera0.0.3 libcamera-dev libcamera-tools libfmt-dev libssl-dev libssl3 \
+    # Core libraries (libcamera-dev pulls in correct runtime version)
+    for pkg in libcamera-dev libcamera-tools libfmt-dev libssl-dev \
                libmsgpack-cxx-dev \
                libapr1 libaprutil1 libapr1-dev libaprutil1-dev; do
         if ! dpkg -l | grep -q "^ii  $pkg"; then
@@ -334,9 +326,9 @@ build_dev() {
         fi
     fi
 
-    # OpenCV runtime dependencies
-    for pkg in libgtk-3-0 libavcodec59 libavformat59 libswscale6 libtbb12 \
-               libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 libopenexr-3-1-30; do
+    # OpenCV runtime dependencies (using -dev packages to handle version differences)
+    # Note: GTK3 changed from libgtk-3-0 to libgtk-3-0t64 in Trixie
+    for pkg in libgtk-3-dev libtbb-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libopenexr-dev; do
         if ! dpkg -l | grep -q "^ii  $pkg"; then
             missing_deps+=("$pkg")
         fi
@@ -453,7 +445,29 @@ build_dev() {
 
     log_info "Installing pre-built dependencies..."
     mkdir -p /usr/lib/pitrac
-    extract_all_dependencies "$ARTIFACT_DIR" "/usr/lib/pitrac"
+
+    # Try APT repository first, fall back to local packages
+    local use_apt=false
+    if configure_pitrac_apt_repo; then
+        if install_dependencies_from_apt; then
+            use_apt=true
+            log_success "Dependencies installed from APT repository"
+        else
+            log_warn "APT installation failed, falling back to local packages"
+        fi
+    else
+        log_info "APT repository not available, using local packages"
+    fi
+
+    # Fall back to local packages if APT didn't work
+    if [[ "$use_apt" == "false" ]]; then
+        if ! check_artifacts; then
+            log_error "Neither APT repository nor local packages available"
+            log_info "Local packages should be in: $ARTIFACT_DIR"
+            exit 1
+        fi
+        extract_all_dependencies "$ARTIFACT_DIR" "/usr/lib/pitrac"
+    fi
 
     # Update library cache
     ldconfig
@@ -516,13 +530,13 @@ build_dev() {
     fi
 
     # Determine if we need a clean build
-    if [[ "$FORCE_REBUILD" == "true" ]]; then
+    if [[ "$FORCE_REBUILD" == "true" ]] || [[ "$FORCE_REBUILD" == "force" ]]; then
         log_info "Force rebuild requested - cleaning build directory..."
         rm -rf build
     fi
 
-    # Only run meson setup if build directory doesn't exist
-    if [[ ! -d "build" ]]; then
+    # Only run meson setup if build directory doesn't exist or force rebuild was requested
+    if [[ ! -d "build" ]] || [[ "$FORCE_REBUILD" == "true" ]] || [[ "$FORCE_REBUILD" == "force" ]]; then
         log_info "Configuring build with Meson..."
         meson setup build --buildtype=release -Denable_recompile_closed_source=false
     elif [[ "meson.build" -nt "build/build.ninja" ]] 2>/dev/null; then
@@ -813,7 +827,17 @@ EOF
     echo "  Configs: /etc/pitrac/"
     echo "  Web Server: /usr/lib/pitrac/web-server (updated)"
     echo ""
+
+    # Show dependency source
+    if [[ -f /etc/apt/sources.list.d/pitrac.list ]]; then
+        echo "Dependencies: PiTrac APT Repository"
+        echo "  Repository: https://github.com/PiTracLM/packages"
+        echo "  Distribution: $(detect_debian_codename)"
+    else
+        echo "Dependencies: Local packages (deps-artifacts)"
+    fi
     echo ""
+
     echo "Web server status:"
     if systemctl is-active --quiet pitrac-web.service; then
         echo "  Web service is running"

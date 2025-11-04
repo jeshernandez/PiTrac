@@ -1,11 +1,14 @@
 ---
-title: Getting Started
+title: Build Your PiTrac
 layout: default
 nav_order: 2
-description: Step-by-step guide to building and setting up your PiTrac golf launch monitor
+description: Complete step-by-step guide to building your PiTrac DIY golf launch monitor from ordering parts to tracking your first shot. Hardware assembly, software installation, and camera calibration included.
+keywords: build golf launch monitor, DIY launch monitor tutorial, raspberry pi golf setup, launch monitor assembly guide, golf tracker build instructions
+og_image: /assets/images/logos/PiTrac_Square.png
+last_modified_date: 2025-01-04
 ---
 
-# Getting Started with PiTrac
+# Build Your PiTrac
 
 Welcome to PiTrac! This guide will walk you through the complete process of building your own DIY golf launch monitor.
 
