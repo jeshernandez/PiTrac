@@ -38,8 +38,11 @@ namespace golf_sim {
 	std::vector<float>  PulseStrobe::pulse_intervals_slow_ms_;
 	int PulseStrobe::number_bits_for_slow_on_pulse_ = 0;
 
-	// Currently only true if using InnoMaker cameras
-	bool PulseStrobe::kUsingActiveHighTriggerCamera = false;
+	// Currently true for both Pi and InnoMaker cameras
+	// Should be set false if we are using the OG V1 Connector board,
+	// because that board would invert the external shutter signal (XTR)
+	// The new V2 board will not invert the XTR
+	bool PulseStrobe::kUsingActiveHighTriggerCamera = true;
 
 	// The on-pulses for the tail repeat vector will be the same
 	// as the slow on pulses
@@ -386,12 +389,10 @@ namespace golf_sim {
 
 
 		// Open shutter - 
-		// Note - the hardware will invert the signal to the XTR camera trigger
+		// Note - the old V1 Connector Board  hardware will invert the signal to the XTR camera trigger
 
-		// TBD - Remove for speed
-		// GS_LOG_MSG(trace, "Shutter OPEN");
-
-		// InnoMaker cameras are active high, not low
+		// Current cameras are active low, so the kOFF setting will open the
+		// shutter
 		if (kUsingActiveHighTriggerCamera) {
 			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kOFF);
 		}
@@ -408,9 +409,6 @@ namespace golf_sim {
 		}
 
 		// Close shutter now that all of the strobe pulses should have been sent
-
-		// TBD - Remove for speed
-		// GS_LOG_MSG(trace, "Shutter SHUT");
 
 		if (kUsingActiveHighTriggerCamera) {
 			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kON);
@@ -489,11 +487,14 @@ namespace golf_sim {
 			}
 
 
-			const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot2CameraType;
+			// The active-high setting will depend on which board the user sets
+			int kConnectionBoardVersionIntValue = 0;
+			GolfSimConfiguration::SetConstant("gs_config.strobing.kConnectionBoardVersion", kConnectionBoardVersionIntValue);
+			GolfSimConfiguration::ConnectionBoardType kConnectionBoardVersion = (GolfSimConfiguration::ConnectionBoardType)kConnectionBoardVersionIntValue;
 
-			// Certain InnoMaker cameras may be active high, not low,  If so, activate the next line
-			// kUsingActiveHighTriggerCamera = (camera_model == CameraHardware::CameraModel::InnoMakerIMX296GS_Mono);
-			kUsingActiveHighTriggerCamera = false;
+			// Set the static (class global) active high/low setting accordingly.
+			// The setting will be used throughout this class to invert (or not) the shutter signal
+			kUsingActiveHighTriggerCamera = (kConnectionBoardVersion == GolfSimConfiguration::ConnectionBoardType::kVersion1_0) ? false : true;
 
 			// Note that the Connector Board will invert the shutter output
 			if (kUsingActiveHighTriggerCamera) {
@@ -579,14 +580,14 @@ namespace golf_sim {
 	void PulseStrobe::SendOnOffPulse(long length_us) {
 #ifdef __unix__  // Ignore in Windows environment
 
-		if (!kUsingActiveHighTriggerCamera) {
-			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kON);
-			usleep(length_us);
+		if (kUsingActiveHighTriggerCamera) {
 			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kOFF);
+			usleep(length_us);
+			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kON);
 		} else {
-			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kOFF);
-			usleep(length_us);
 			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kON);
+			usleep(length_us);
+			lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kOFF);
 		}
 #endif // #ifdef __unix__  // Ignore in Windows environment
 	}

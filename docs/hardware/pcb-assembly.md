@@ -244,6 +244,15 @@ The dual 555 timer circuit forces a 10% duty cycle on the strobe line, preventin
 
 - **J6 (USB-A):** Originally for LED strip, but Pi5 has USB 2.0 ports already - this is redundant
 
+## Configuring PiTrac
+
+You'll need to tell PiTrac which version of the Connection Board you are using. This is done in the Configuration screen in the UI.  
+
+Before you run the PiTrac system for the first time, set the board type appropriately here:
+   ![Connection Board Setting]({{ '/assets/images/hardware/setting_connection_board_version.png' | relative_url }})
+
+Note that the current default value is for the Version 1.0 board.
+
 ## Design Files
 
 Full design documentation:

@@ -264,6 +264,22 @@
       "passedVia": "json",
       "passedTo": "both"
     },
+    "gs_config.strobing.kConnectionBoardVersion": {
+      "category": "System",
+      "subcategory": "advanced",
+      "basicSubcategory": "System",
+      "displayName": "Connection Board Version",
+      "description": "The original Ver. 1.0 board inverts the external shutter signal, so this setting tells the system whether to pre-invert the signal or not.",
+      "type": "select",
+      "options": {
+        "1": "Version 1.0",
+        "2": "Version 2.0"
+      },
+      "default": "1",
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
     "system.camera_role": {
       "category": "System",
       "subcategory": "advanced",

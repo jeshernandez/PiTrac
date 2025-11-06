@@ -21,6 +21,12 @@ namespace golf_sim {
 
 	public:
 
+		enum ConnectionBoardType {
+			kVersion1_0 = 1,
+			kVersion1_2 = 2,
+			kRConnectionBoardTypeUnknown
+		};
+
 		enum PiModel {
 			kRPi5,
 			kRPi4,
