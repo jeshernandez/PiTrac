@@ -224,6 +224,10 @@ namespace golf_sim {
     }
 
     void GsUISystem::ClearWebserverImages() {
+	// TBD - At least for now, disable this function.  We're often losing images
+	// that people need for debugging.
+	return;
+
         // The kWebServerShareDirectory is already setup to have a trailing "/"
         std::string command = "rm -f " + kWebServerShareDirectory + "*.png";
 
