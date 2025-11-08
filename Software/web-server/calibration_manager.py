@@ -341,7 +341,7 @@ class CalibrationManager:
             search_x = 700
             search_y = 500
 
-        logging_level = config.get("gs_config", {}).get("logging", {}).get("kLoggingLevel", "info")
+        logging_level = config.get("logging", {}).get("level", "warn")
 
         camera_gain_key = "kCamera1Gain" if camera == "camera1" else "kCamera2Gain"
         camera_gain = self.config_manager.get_config(f"gs_config.cameras.{camera_gain_key}")
@@ -436,7 +436,7 @@ class CalibrationManager:
         if search_y is None:
             search_y = 500  # Default from configurations.json
 
-        logging_level = config.get("gs_config", {}).get("logging", {}).get("kLoggingLevel", "info")
+        logging_level = config.get("logging", {}).get("level", "warn")
 
         camera_gain = self.config_manager.get_config("gs_config.cameras.kCamera1Gain")
         if camera_gain is None:
@@ -607,7 +607,7 @@ class CalibrationManager:
             return await self._run_standard_calibration_fallback(camera, timeout)
 
         env = self._build_environment(camera)
-        logging_level = config.get("gs_config", {}).get("logging", {}).get("kLoggingLevel", "info")
+        logging_level = config.get("logging", {}).get("level", "warn")
 
         camera2_gain = self.config_manager.get_config("gs_config.cameras.kCamera2Gain")
         if camera2_gain is None:
@@ -808,7 +808,7 @@ class CalibrationManager:
             search_x = 700
             search_y = 500
 
-        logging_level = config.get("gs_config", {}).get("logging", {}).get("kLoggingLevel", "info")
+        logging_level = config.get("logging", {}).get("level", "warn")
 
         camera_gain_key = "kCamera1Gain" if camera == "camera1" else "kCamera2Gain"
         camera_gain = self.config_manager.get_config(f"gs_config.cameras.{camera_gain_key}")
@@ -889,7 +889,7 @@ class CalibrationManager:
             search_x = 700
             search_y = 500
 
-        logging_level = config.get("gs_config", {}).get("logging", {}).get("kLoggingLevel", "info")
+        logging_level = config.get("logging", {}).get("level", "warn")
 
         camera_gain_key = "kCamera1Gain" if camera == "camera1" else "kCamera2Gain"
         camera_gain = self.config_manager.get_config(f"gs_config.cameras.{camera_gain_key}")
