@@ -1097,6 +1097,12 @@ class CalibrationManager:
         env["PITRAC_SLOT1_LENS_TYPE"] = str(slot1_lens)
         env["PITRAC_SLOT2_LENS_TYPE"] = str(slot2_lens)
 
+        # Orientation types come from cameras.slot1.orientation and cameras.slot2.orientation (default 1 = UpsideUp)
+        slot1_orientation = config.get("cameras", {}).get("slot1", {}).get("orientation", 1)
+        slot2_orientation = config.get("cameras", {}).get("slot2", {}).get("orientation", 1)
+        env["PITRAC_SLOT1_CAMERA_ORIENTATION"] = str(slot1_orientation)
+        env["PITRAC_SLOT2_CAMERA_ORIENTATION"] = str(slot2_orientation)
+
         base_dir = config.get("gs_config", {}).get("logging", {}).get("kPCBaseImageLoggingDir", "~/LM_Shares/Images/")
         env["PITRAC_BASE_IMAGE_LOGGING_DIR"] = str(base_dir).replace("~", str(Path.home()))
 

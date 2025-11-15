@@ -112,7 +112,7 @@ namespace golf_sim {
 
 	// Sets up a libcamera encoder with options necessary for a high FPS video loop in a cropped part of
 	// the camera sensor.
-	bool ConfigureLibCameraOptions(RPiCamEncoder& app, const cv::Vec2i& cropping_window_size, uint cropped_frame_rate_fps_fps);
+	bool ConfigureLibCameraOptions(const GolfSimCamera& camera, RPiCamEncoder& app, const cv::Vec2i& cropping_window_size, uint cropped_frame_rate_fps_fps);
 
 	std::string GetCmdLineForMediaCtlCropping(const GolfSimCamera &camera_number, cv::Vec2i croppedHW, cv::Vec2i cropOffsetXY);
 

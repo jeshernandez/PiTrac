@@ -118,10 +118,11 @@ namespace golf_sim {
 
         const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot1CameraType;
         const CameraHardware::LensType camera_lens_type = GolfSimCamera::kSystemSlot1LensType;
+        const CameraHardware::CameraOrientation camera_orientation = GolfSimCamera::kSystemSlot1CameraOrientation;
 
         // TBD - refactor this to get rid of the dummy camera necessity
         GolfSimCamera c;
-        c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_model, camera_lens_type);
+        c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_model, camera_lens_type, camera_orientation);
 
         if (!WatchForBallMovement(c, ball, motion_detected)) {
             GS_LOG_MSG(error, "Failed to WatchForBallMovement.");
@@ -366,6 +367,21 @@ namespace golf_sim {
             return true;
         }
 
+		// If the camera is flipped, the cropping has to be adjusted accordingly so that the crop offset is flipped vertically
+        GsCameraNumber camera_number = camera.camera_hardware_.camera_number_;
+        const CameraHardware::CameraOrientation  camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+
+        if (camera_orientation == CameraHardware::CameraOrientation::kUpsideDown) {
+            GS_LOG_TRACE_MSG(trace, "Original watching_crop_offset[1] = " + std:: to_string(watching_crop_offset[1]));
+            float half_screen_height = std::round(camera.camera_hardware_.video_resolution_y_ / 2);
+            watching_crop_offset[1] = half_screen_height - (watching_crop_offset[1] - half_screen_height);
+
+	    // We essentially need to swap the top and bottom of the cropping rectangle 
+            watching_crop_offset[1] -= watching_crop_size[1];
+
+            GS_LOG_TRACE_MSG(trace, "Flipped watching_crop_offset[1] = " + std::to_string(watching_crop_offset[1]));
+        }
+
         if (!SendCameraCroppingCommand(camera, watching_crop_size, watching_crop_offset)) {
             GS_LOG_TRACE_MSG(error, "Failed to SendCameraCroppingCommand.");
             return false;
@@ -382,7 +398,7 @@ namespace golf_sim {
             return false;
         }
 
-        if (!ConfigureLibCameraOptions(app, watching_crop_size, cropped_frame_rate_fps)) {
+        if (!ConfigureLibCameraOptions(camera, app, watching_crop_size, cropped_frame_rate_fps)) {
             GS_LOG_TRACE_MSG(error, "Failed to ConfigureLibCameraOptions.");
             return false;
         }
@@ -403,6 +419,11 @@ namespace golf_sim {
         float size_difference_x = largest_inscribed_square_side_length_of_ball - watching_crop_width;
         float size_difference_y = largest_inscribed_square_side_length_of_ball - watching_crop_height;
 
+	float flipped_orientation_multiplier = 1.0;
+
+        if (camera_orientation == CameraHardware::CameraOrientation::kUpsideDown) {
+			flipped_orientation_multiplier = -1.0;
+		}
         if (size_difference_x >= 0.0) {
             // The cropped area is already fully inside the ball (assuming we're not dealing with club strike data
             // so just have the ROI match the cropping area
@@ -431,6 +452,14 @@ namespace golf_sim {
             // Essentially center the ROI within the image, assuming that the ball is centered in the cropping area
             // (which will likely not be the case if we are widening the cropping area for club strike data)
             roi_offset_y = -0.5 * (roi_size_y - watching_crop_height);
+	    roi_offset_y *= flipped_orientation_multiplier;
+        }
+
+		// If the camera is reversed, we need to move the offset in the opposite direction of the original offset
+        if (camera_orientation == CameraHardware::CameraOrientation::kUpsideDown) {
+            GS_LOG_TRACE_MSG(trace, "Original roi_offset_y = " + std::to_string(roi_offset_y));
+            roi_offset_y = -roi_offset_y;
+            GS_LOG_TRACE_MSG(trace, "Updated roi_offset_y = " + std::to_string(roi_offset_y));
         }
 
         roi_offset_x = std::max(roi_offset_x, 0.0f);
@@ -443,6 +472,7 @@ namespace golf_sim {
 
         roi_offset_x = std::min(roi_offset_x, (float)camera.camera_hardware_.video_resolution_x_);
         roi_offset_y = std::min(roi_offset_y, (float)camera.camera_hardware_.video_resolution_y_);
+
 
         cv::Vec2i roi_offset = cv::Vec2i((int)roi_offset_x, (int)roi_offset_y);
         cv::Vec2i roi_size = cv::Vec2i((uint)roi_size_x, (uint)roi_size_y);
@@ -703,7 +733,9 @@ bool ConfigurePostProcessing(const cv::Vec2i& roi_size, const cv::Vec2i& roi_off
 }
 
 
-bool ConfigureLibCameraOptions(RPiCamEncoder& app, const cv::Vec2i& cropping_window_size, uint cropped_frame_rate_fps) {
+bool ConfigureLibCameraOptions(const GolfSimCamera& camera, RPiCamEncoder& app, const cv::Vec2i& cropping_window_size, uint cropped_frame_rate_fps) {
+
+    GsCameraNumber camera_number = camera.camera_hardware_.camera_number_;
 
     VideoOptions* options = app.GetOptions();
 
@@ -755,6 +787,17 @@ bool ConfigureLibCameraOptions(RPiCamEncoder& app, const cv::Vec2i& cropping_win
     options->viewfinder_height = 0;
     options->info_text = "";
     options->level = "4.2";
+
+    const CameraHardware::CameraOrientation  camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+
+    if (camera_orientation == CameraHardware::CameraOrientation::kUpsideDown) {
+     // Tell libcamera to flip the image vertically back to where it should be
+        options->transform = libcamera::Transform::VFlip;
+        GS_LOG_MSG(trace, "Flipping still picture upside down.");
+    }
+    else {
+        GS_LOG_MSG(trace, "NOT flipping still picture upside down.");
+    }
 
     // On the Pi5, there's no hardware H.264 encoding, so let's try to turn it off entirely
     // TBD - See video_options.cpp to consider other options like libav
@@ -1112,6 +1155,17 @@ LibcameraJpegApp* ConfigureForLibcameraStill(const GolfSimCamera& camera) {
         }
         options->info_text = "";
 
+        const CameraHardware::CameraOrientation  camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+
+        if (camera_orientation == CameraHardware::CameraOrientation::kUpsideDown) {
+    	    // Tell libcamera to flip the image vertically back to where it should be
+            options->transform = libcamera::Transform::VFlip;
+            GS_LOG_MSG(trace, "Flipping still picture upside down.");
+        }
+	else {
+            GS_LOG_MSG(trace, "NOT flipping still picture upside down.");
+	}
+
         if (!SetLibcameraTuningFileEnvVariable(camera) ) {
             GS_LOG_TRACE_MSG(error, "failed to SetLibcameraTuningFileEnvVariable");
             return nullptr;
@@ -1235,9 +1289,10 @@ bool CheckForBallEnhanced(GolfBall& ball, cv::Mat& img) {
         GolfSimCamera::kSystemSlot1CameraType : GolfSimCamera::kSystemSlot2CameraType;
     const CameraHardware::LensType camera_lens_type = (camera_number == GsCameraNumber::kGsCamera1) ? 
         GolfSimCamera::kSystemSlot1LensType : GolfSimCamera::kSystemSlot2LensType;
-    
+    const CameraHardware::CameraOrientation camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+
     GolfSimCamera camera;
-    camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type);
+    camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, camera_orientation);
     
     if (!TakeRawPicture(camera, img)) {
         GS_LOG_MSG(error, "Failed to TakeRawPicture.");
@@ -1299,9 +1354,10 @@ bool CheckForBallLegacy(GolfBall& ball, cv::Mat& img) {
     // TBD - This repeats the camera initialization that we just did
     const CameraHardware::CameraModel  camera_model = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraType : GolfSimCamera::kSystemSlot2CameraType;
     const CameraHardware::LensType camera_lens_type = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1LensType : GolfSimCamera::kSystemSlot2LensType;
+    const CameraHardware::CameraOrientation camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
 
     GolfSimCamera camera;
-    camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type);
+    camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, camera_orientation);
     camera.camera_hardware_.firstCannedImageFileName = std::string("/mnt/VerdantShare/dev/GolfSim/LM/Images/") + "FirstWaitingImage";
     camera.camera_hardware_.firstCannedImage = img;
 
@@ -1333,8 +1389,11 @@ bool WaitForCam2Trigger(cv::Mat& return_image) {
     // Create a camera just to set the resolution and for un-distort operation
     const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot2CameraType;
     const CameraHardware::LensType camera_lens_type = GolfSimCamera::kSystemSlot2LensType;
+    const CameraHardware::CameraOrientation camera_orientation = GolfSimCamera::kSystemSlot2CameraOrientation;
+
+
     GolfSimCamera c;
-    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera2, camera_model, camera_lens_type);
+    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera2, camera_model, camera_lens_type, camera_orientation);
 
     try
     {
@@ -1400,6 +1459,16 @@ bool WaitForCam2Trigger(cv::Mat& return_image) {
         options->height = c.camera_hardware_.resolution_y_;
         options->shutter.set("11111us"); // Not actually used for external triggering.  Just needs to be set to something
         options->info_text = "";
+
+	// We know we are using camera 2
+        if (GolfSimCamera::kSystemSlot2CameraOrientation == CameraHardware::CameraOrientation::kUpsideDown) {
+    	    // Tell libcamera to flip the image vertically back to where it should be
+            options->transform = libcamera::Transform::VFlip;
+            GS_LOG_MSG(trace, "Flipping still picture upside down.");
+        }
+	else {
+            GS_LOG_MSG(trace, "NOT flipping still picture upside down.");
+	}
 
         if (!SetLibcameraTuningFileEnvVariable(c)) {
             GS_LOG_TRACE_MSG(error, "failed to SetLibcameraTuningFileEnvVariable");
@@ -1519,7 +1588,7 @@ bool PerformCameraSystemStartup() {
 
             // Create a camera just for purposes of setting the tuning file variable
             GolfSimCamera camera;
-            camera.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera2, GolfSimCamera::kSystemSlot2CameraType, GolfSimCamera::kSystemSlot2LensType);
+            camera.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera2, GolfSimCamera::kSystemSlot2CameraType, GolfSimCamera::kSystemSlot2LensType, GolfSimCamera::kSystemSlot1CameraOrientation);
 
             if (!SetLibcameraTuningFileEnvVariable(camera)) {
                 GS_LOG_TRACE_MSG(error, "failed to SetLibcameraTuningFileEnvVariable");

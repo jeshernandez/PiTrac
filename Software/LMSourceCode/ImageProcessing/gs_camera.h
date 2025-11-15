@@ -200,6 +200,8 @@ namespace golf_sim {
         static CameraHardware::LensType kSystemSlot1LensType;
         static CameraHardware::LensType kSystemSlot2LensType;
 
+        static CameraHardware::CameraOrientation kSystemSlot1CameraOrientation;
+        static CameraHardware::CameraOrientation kSystemSlot2CameraOrientation;
 
         // Refers to the camera_hardware device object associated with this higher-level camera object
         CameraHardware camera_hardware_;

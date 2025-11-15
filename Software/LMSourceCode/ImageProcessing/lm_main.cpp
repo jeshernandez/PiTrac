@@ -347,6 +347,8 @@ bool testSpinDetection() {
 
     CameraHardware::CameraModel  camera_2_model = GolfSimCamera::kSystemSlot1CameraType;
     CameraHardware::LensType  camera_2_lens_type = GolfSimCamera::kSystemSlot1LensType;
+    CameraHardware::CameraOrientation camera_orientation = CameraHardware::CameraOrientation::kUpsideUp;
+
 
     if (!GsAutomatedTesting::ReadTestImages(k0_DegreeBallFileName_00, kUnknown_DegreeBallFileName_00, ball1ImgGray, ball2ImgGray, ball1ImgColor, ball2ImgColor, camera_2_model, false /*No Undistort*/)) {
         GS_LOG_TRACE_MSG(trace, "Failed to read valid images.");
@@ -357,7 +359,7 @@ bool testSpinDetection() {
     // using that calibrated data from the first ball.
 
     GolfSimCamera c;
-    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_2_model, camera_2_lens_type);
+    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_2_model, camera_2_lens_type, camera_orientation);
 
     GolfBall ball1, ball2;
 
@@ -564,8 +566,10 @@ bool test_strobed_balls_detection() {
     c.camera_hardware_.secondCannedImage = ball2ImgColor;
     CameraHardware::CameraModel  camera_1_model = GolfSimCamera::kSystemSlot1CameraType;
     CameraHardware::LensType  camera_2_lens_type = GolfSimCamera::kSystemSlot1LensType;
+    CameraHardware::CameraOrientation camera_2_orientation = CameraHardware::CameraOrientation::kUpsideUp;
 
-    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_1_model, camera_2_lens_type);
+
+    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_1_model, camera_2_lens_type, camera_2_orientation);
 
     std::vector<cv::Vec3d> camera_positions_from_origin = std::vector<cv::Vec3d>({ GolfSimCamera::kCamera1PositionsFromExpectedBallMeters, GolfSimCamera::kCamera2PositionsFromExpectedBallMeters });
 
@@ -622,6 +626,7 @@ bool test_hit_trigger() {
     //get camera operational and make sure working correctly
     GolfSimCamera c;
     c.camera_hardware_.camera_model_ = CameraHardware::CameraModel::PiCam2;
+    c.camera_hardware_.camera_orientation_ = CameraHardware::CameraOrientation::kUpsideUp;
 
     cv::Mat ball1ImgColor;
     cv::Mat ball2ImgColor;
@@ -636,8 +641,8 @@ bool test_hit_trigger() {
 
     cv::Mat ball1Img;
     cv::Mat ball2Img;
-    ball1Img = GsAutomatedTesting::UndistortImage(ball1ImgColor, c.camera_hardware_.camera_model_, c.camera_hardware_.lens_type_);
-    ball2Img = GsAutomatedTesting::UndistortImage(ball2ImgColor, c.camera_hardware_.camera_model_, c.camera_hardware_.lens_type_);
+    ball1Img = GsAutomatedTesting::UndistortImage(ball1ImgColor, c.camera_hardware_.camera_model_, c.camera_hardware_.lens_type_, c.camera_hardware_.camera_orientation_);
+    ball2Img = GsAutomatedTesting::UndistortImage(ball2ImgColor, c.camera_hardware_.camera_model_, c.camera_hardware_.lens_type_, c.camera_hardware_.camera_orientation_);
 
     c.camera_hardware_.resolution_x_ = ball1Img.cols;
     c.camera_hardware_.resolution_y_ = ball1Img.rows;
@@ -647,7 +652,7 @@ bool test_hit_trigger() {
     c.camera_hardware_.secondCannedImageFileName = kBaseTestDir + kStationaryBallFileName_01;
     c.camera_hardware_.firstCannedImage = ball1Img;
     c.camera_hardware_.secondCannedImage = ball2Img;
-    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, c.camera_hardware_.camera_model_, c.camera_hardware_.lens_type_);
+    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, c.camera_hardware_.camera_model_, c.camera_hardware_.lens_type_, c.camera_hardware_.camera_orientation_);
 
 
     if (!c.prepareToTakePhoto()) {
@@ -919,9 +924,11 @@ void signal_handler(int sig) {
     }
     
     try {
+#ifdef __unix__
         GS_LOG_MSG(info, "Shutting down IPC system...");
         GolfSimIpcSystem::ShutdownIPCSystem();
         GS_LOG_MSG(info, "IPC system shutdown successfully");
+#endif
     } catch (const std::exception& e) {
         GS_LOG_MSG(error, "Error during IPC cleanup: " + std::string(e.what()));
     } catch (...) {
@@ -1114,7 +1121,9 @@ void run_main(int argc, char* argv[])
         GolfSimCamera camera;
         const CameraHardware::CameraModel camera_model = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraType : GolfSimCamera::kSystemSlot2CameraType;
         CameraHardware::LensType camera_lens_type = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1LensType : GolfSimCamera::kSystemSlot2LensType;
-        camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type);
+        CameraHardware::CameraOrientation camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+
+        camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, camera_orientation);
 
         if (!GolfSimCamera::TakeStillPicture(camera, image)) {
             GS_LOG_MSG(error, "FAILED to PulseStrobe::SendCameraPrimingPulses");
@@ -1340,7 +1349,9 @@ void run_main(int argc, char* argv[])
             GolfSimCamera camera;
             const CameraHardware::CameraModel camera_model = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraType : GolfSimCamera::kSystemSlot2CameraType;
             CameraHardware::LensType camera_lens_type = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1LensType : GolfSimCamera::kSystemSlot2LensType;
-            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type);
+            CameraHardware::CameraOrientation camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+
+            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, camera_orientation);
 
             int i = 0;
 
@@ -1449,7 +1460,8 @@ void run_main(int argc, char* argv[])
             GolfSimCamera camera;
             CameraHardware::CameraModel camera_model = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraType : GolfSimCamera::kSystemSlot2CameraType;
             CameraHardware::LensType camera_lens_type = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1LensType : GolfSimCamera::kSystemSlot2LensType;
-            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type);
+			CameraHardware::CameraOrientation camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, camera_orientation);
 
             cv::Mat color_image;
 
@@ -1463,8 +1475,9 @@ void run_main(int argc, char* argv[])
             camera_number = GolfSimOptions::GetCommandLineOptions().GetCameraNumber();
             camera_model = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraType : GolfSimCamera::kSystemSlot2CameraType;
             camera_lens_type = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1LensType : GolfSimCamera::kSystemSlot2LensType;
+            camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
 
-            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type);
+            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, camera_orientation);
             camera.camera_hardware_.firstCannedImageFileName = std::string("/mnt/VerdantShare/dev/GolfSim/LM/Images/") + "FirstWaitingImage";
             camera.camera_hardware_.firstCannedImage = color_image;
 
@@ -1611,8 +1624,10 @@ int main(int argc, char *argv[])
         }
         
         try {
+#ifdef __unix__
             golf_sim::GolfSimIpcSystem::ShutdownIPCSystem();
             GS_LOG_MSG(info, "IPC system cleaned up successfully");
+#endif
         } catch (const std::exception& e) {
             GS_LOG_MSG(error, "Error during IPC cleanup: " + std::string(e.what()));
         }
@@ -1628,7 +1643,9 @@ int main(int argc, char *argv[])
         }
         
         try {
+#ifdef __unix__
             golf_sim::GolfSimIpcSystem::ShutdownIPCSystem();
+#endif
         } catch (...) {
             GS_LOG_MSG(error, "Failed to cleanup IPC on exception");
         }

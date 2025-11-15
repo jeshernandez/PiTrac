@@ -122,6 +122,9 @@ namespace golf_sim {
     CameraHardware::LensType GolfSimCamera::kSystemSlot1LensType = CameraHardware::LensType::Lens_6mm;
     CameraHardware::LensType GolfSimCamera::kSystemSlot2LensType = CameraHardware::LensType::Lens_6mm;
 
+    CameraHardware::CameraOrientation GolfSimCamera::kSystemSlot1CameraOrientation = CameraHardware::CameraOrientation::kUpsideUp;
+    CameraHardware::CameraOrientation GolfSimCamera::kSystemSlot2CameraOrientation = CameraHardware::CameraOrientation::kUpsideUp;
+
     BallImageProc* get_image_processor() {
         static BallImageProc* ip = nullptr;
 
@@ -3319,12 +3322,13 @@ namespace golf_sim {
 
             const CameraHardware::CameraModel  camera_1_model = GolfSimCamera::kSystemSlot1CameraType;
             const CameraHardware::LensType  camera_lens_type = GolfSimCamera::kSystemSlot1LensType;
+            const CameraHardware::CameraOrientation camera_orientation = GolfSimCamera::kSystemSlot1CameraOrientation;
 
             // Get the ball data.  We will calibrate based on the first ball and then get the second one
             // using that calibrated data from the first ball.
 
             GolfSimCamera camera_1;
-            camera_1.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_1_model, camera_lens_type);
+            camera_1.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_1_model, camera_lens_type, camera_orientation);
 
             // One set of positions, below describes the relationship of camera2 to itself and the z-plane of the ball.
             // That set does not contain any displacement in the X,Y plane.
@@ -3385,8 +3389,9 @@ namespace golf_sim {
             GolfSimCamera camera_2;
             CameraHardware::CameraModel  camera_2_model = GolfSimCamera::kSystemSlot2CameraType;
             CameraHardware::LensType  camera_2_lens_type = GolfSimCamera::kSystemSlot2LensType;
+            const CameraHardware::CameraOrientation camera_2_orientation = GolfSimCamera::kSystemSlot2CameraOrientation;
 
-            camera_2.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera2, camera_2_model, camera_2_lens_type);
+            camera_2.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera2, camera_2_model, camera_2_lens_type, camera_2_orientation);
 
 
             success = camera_2.AnalyzeStrobedBalls(strobed_balls_color_image,
@@ -4126,11 +4131,12 @@ namespace golf_sim {
             if (camera_number == GsCameraNumber::kGsCamera1) {
                 // We will need a camera for context
                 // TBD - Refactor to avoid having to hard-set the camera model
-                CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot1CameraType;
-                CameraHardware::LensType  camera_2_lens_type = GolfSimCamera::kSystemSlot2LensType;
+                const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot1CameraType;
+                const CameraHardware::LensType  camera_2_lens_type = GolfSimCamera::kSystemSlot2LensType;
+                const CameraHardware::CameraOrientation camera_orientation = GolfSimCamera::kSystemSlot1CameraOrientation;
 
                 GolfSimCamera camera;
-                camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_2_lens_type);
+                camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_2_lens_type, camera_orientation);
 
                 if (!TakeRawPicture(camera, color_image)) {
                     GS_LOG_MSG(error, "Failed to TakeRawPicture.");
@@ -4393,11 +4399,13 @@ namespace golf_sim {
             GS_LOG_TRACE_MSG(trace, "AutoCalibrateCamera called with camera model = " + std::to_string(camera_model));
             const CameraHardware::LensType  camera_lens_type = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1LensType : GolfSimCamera::kSystemSlot2LensType;
             GS_LOG_TRACE_MSG(trace, "AutoCalibrateCamera called with camera lens type = " + std::to_string(camera_lens_type));
+			const CameraHardware::CameraOrientation camera_orientation = (camera_number == GsCameraNumber::kGsCamera1) ? GolfSimCamera::kSystemSlot1CameraOrientation : GolfSimCamera::kSystemSlot2CameraOrientation;
+            GS_LOG_TRACE_MSG(trace, "AutoCalibrateCamera called with camera orientation = " + std::to_string(camera_orientation));
 
             GolfSimCamera camera;
             // Use the default focal length for the camera, as the focal length is one parameter
             // that this function is being called to re-set
-            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, true /* Use default, not .json focal-length*/);
+            camera.camera_hardware_.init_camera_parameters(camera_number, camera_model, camera_lens_type, camera_orientation, true /* Use default, not .json focal-length*/);
 
             cv::Mat color_image;
 

@@ -54,6 +54,15 @@ namespace golf_sim {
             BallGoneFrames
         };
 
+		// kUpsideUp means the camera is mounted normally, kUpsideDown means the camera is upside down
+		// The "normal" orientation depends on the specific camera model, but means that when you use rpicam-still or
+		// other utilities to take a picture, the image appears right-side up.
+        enum CameraOrientation {
+            kUpsideUp = 1,
+            kUpsideDown = 2,
+            kCameraOrientationUnknown
+        };
+
         // This is the camera number from the perspective of the PiTrac system.
         // So kGsCamera1 is the camera that watches the teed-up ball, and 
         // kGsCamera2 is the camera that images the ball in flight
@@ -61,6 +70,8 @@ namespace golf_sim {
 
         CameraModel camera_model_ = CameraModel::PiGS;
         LensType lens_type_ = LensType::Lens_6mm;
+		CameraOrientation camera_orientation_ = CameraOrientation::kCameraOrientationUnknown;
+
         float focal_length_ = 0;        // In millimeters
         float horizontalFoV_ = 0;        // In degrees
         float verticalFoV_ = 0;          // In degrees
@@ -106,7 +117,8 @@ namespace golf_sim {
 
         static CameraModel string_to_camera_model(const std::string& model_enum_value_string);
         static LensType string_to_lens_type(const std::string& lens_enum_value_string);
-        
+        static CameraOrientation string_to_camera_orientation(const std::string& lens_enum_value_string);
+
         bool camera_is_mono() const;
 
         // Used when using test images instead of live photos
@@ -119,6 +131,7 @@ namespace golf_sim {
         void init_camera_parameters(const GsCameraNumber camera_number, 
                                     const CameraModel model, 
                                     const LensType lens_type,
+                                    const CameraOrientation orientation,
                                     const bool use_default_focal_length = false);
 
         bool prepareToTakePhoto();

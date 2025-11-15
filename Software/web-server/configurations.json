@@ -376,6 +376,22 @@
       "passedTo": "camera1",
       "envVariable": "PITRAC_SLOT1_LENS_TYPE"
     },
+    "cameras.slot1.orientation": {
+      "category": "Cameras",
+      "subcategory": "advanced",
+      "displayName": "Camera 1 orientation",
+      "description": "Orientation for camera 1",
+      "type": "select",
+      "options": {
+        "1": "UpsideUp - Standard orientation (system will not change)",
+        "2": "UpsideDown - Upside down orientation (system will flip)"
+      },
+      "default": "1",
+      "requiresRestart": true,
+      "passedVia": "environment",
+      "passedTo": "camera1",
+      "envVariable": "PITRAC_SLOT1_CAMERA_ORIENTATION"
+    },
     "cameras.slot2.type": {
       "category": "Cameras",
       "subcategory": "basic",
@@ -417,6 +433,22 @@
       "passedVia": "environment",
       "passedTo": "camera2",
       "envVariable": "PITRAC_SLOT2_LENS_TYPE"
+    },
+    "cameras.slot2.orientation": {
+      "category": "Cameras",
+      "subcategory": "advanced",
+      "displayName": "Camera 2 orientation",
+      "description": "Orientation for camera 2",
+      "type": "select",
+      "options": {
+        "1": "UpsideUp - Standard orientation (system will not change)",
+        "2": "UpsideDown - Upside down orientation (system will flip)"
+      },
+      "default": "1",
+      "requiresRestart": true,
+      "passedVia": "environment",
+      "passedTo": "camera2",
+      "envVariable": "PITRAC_SLOT2_CAMERA_ORIENTATION"
     },
     "logging.level": {
       "category": "Logging",

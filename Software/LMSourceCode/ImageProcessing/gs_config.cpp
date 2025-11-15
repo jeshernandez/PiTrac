@@ -279,6 +279,40 @@ bool GolfSimConfiguration::ReadValues() {
 	}
 
 
+	std::string slot1_camera_orientation_env = safe_getenv("PITRAC_SLOT1_CAMERA_ORIENTATION");
+	GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT1_CAMERA_ORIENTATION environment variable was: " + slot1_camera_orientation_env);
+	if (slot1_camera_orientation_env.empty()) {
+		GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT1_CAMERA_ORIENTATION environment variable was not set.  Assuming default of: " + std::to_string(GolfSimCamera::kSystemSlot1CameraOrientation));
+	}
+	else {
+#ifndef __unix__  // Ignore in Windows environment
+		// Ensure we don't have any trailing spaces.  Visual Studio seems to add them?
+		slot1_camera_orientation_env = slot1_camera_orientation_env.substr(0, 1);
+#endif
+		GolfSimCamera::kSystemSlot1CameraOrientation = CameraHardware::string_to_camera_orientation(slot1_camera_orientation_env);
+	}
+
+	std::string slot2_camera_orientation_env = safe_getenv("PITRAC_SLOT2_CAMERA_ORIENTATION");
+	GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT2_CAMERA_ORIENTATION environment variable was: " + slot2_camera_orientation_env);
+	if (slot2_camera_orientation_env.empty()) {
+		if (GolfSimOptions::GetCommandLineOptions().run_single_pi_) {
+			// We somewhat arbitrarily require the slot2 lens type to be set if we're running in single-pi mode.
+			GS_LOG_TRACE_MSG(error, "GolfSimConfiguration - PITRAC_SLOT2_CAMERA_ORIENTATION environment variable must be set when running in single-pi mode, but was not.  Exiting.");
+			return false;
+		}
+		else {
+			GS_LOG_TRACE_MSG(info, "GolfSimConfiguration - PITRAC_SLOT2_CAMERA_ORIENTATION environment variable was not set.  Assuming default of: " + std::to_string(GolfSimCamera::kSystemSlot2CameraOrientation));
+		}
+	}
+	else {
+#ifndef __unix__  // Ignore in Windows environment
+		// Ensure we don't have any trailing spaces
+		slot2_camera_orientation_env = slot2_camera_orientation_env.substr(0, 1);
+#endif
+		GolfSimCamera::kSystemSlot2CameraOrientation = CameraHardware::string_to_camera_orientation(slot2_camera_orientation_env);
+	}
+
+
 	return true;
 }
 

@@ -113,6 +113,24 @@ namespace golf_sim {
         return lens_type;
     }
     
+
+    CameraHardware::CameraOrientation CameraHardware::string_to_camera_orientation(const std::string& lens_enum_value_string) {
+
+        std::map<std::string, int> orientation_table =
+        { { "1", CameraOrientation::kUpsideUp },
+            { "2", CameraOrientation::kUpsideDown },
+            { "100", CameraOrientation::kCameraOrientationUnknown },
+        };
+        if (orientation_table.count(lens_enum_value_string) == 0)
+            throw std::runtime_error("Invalid camera lens_enum_value_string: " + lens_enum_value_string + ".  Expected an integer. Check environment variables.");
+
+        CameraHardware::CameraOrientation orientation_type = (CameraHardware::CameraOrientation)orientation_table[lens_enum_value_string];
+
+        return orientation_type;
+    }
+
+
+
     bool CameraHardware::camera_is_mono() const {
         return (camera_model_ == CameraModel::InnoMakerIMX296GS_Mono);
     }
@@ -190,15 +208,16 @@ namespace golf_sim {
 
     // TBD - Need to change signature to accept the desired resolution.  Different resolutions can result in
     // very different calibration matrices.
-    void CameraHardware::init_camera_parameters(const GsCameraNumber camera_number, const CameraModel model, const LensType lens_type, const bool use_default_focal_length) {
+    void CameraHardware::init_camera_parameters(const GsCameraNumber camera_number, const CameraModel model, const LensType lens_type, const CameraOrientation orientation, const bool use_default_focal_length) {
 
-        GS_LOG_TRACE_MSG(trace, "init_camera_parameters called with camera number = " + std::to_string(camera_number) + " and model = " + std::to_string(model) + ", and lens_type = " + std::to_string(lens_type) );
+        GS_LOG_TRACE_MSG(trace, "init_camera_parameters called with camera number = " + std::to_string(camera_number) + " and model = " + std::to_string(model) + " and oreientation = " + std::to_string(orientation) + ", and lens_type = " + std::to_string(lens_type) );
 
         int sizes[3] = { 3, 3 };
         
         camera_number_ = camera_number;
         camera_model_ = model;
         lens_type_ = lens_type;
+        camera_orientation_ = camera_orientation_;
 
         if (lens_type == Lens_6mm) {
             focal_length_ = 6.0f;

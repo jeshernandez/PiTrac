@@ -419,12 +419,12 @@ bool GsAutomatedTesting::TestFinalShotResultData() {
 
 
 
-cv::Mat GsAutomatedTesting::UndistortImage(const cv::Mat& img, CameraHardware::CameraModel camera_model, CameraHardware::LensType lens_type) {
+cv::Mat GsAutomatedTesting::UndistortImage(const cv::Mat& img, CameraHardware::CameraModel camera_model, CameraHardware::LensType lens_type, CameraHardware::CameraOrientation camera_orientation) {
     // Get a camera object just to be able to get the calibration values
     GolfSimCamera c;
     c.camera_hardware_.resolution_x_override_ = img.cols;
     c.camera_hardware_.resolution_y_override_ = img.rows;
-    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_model, lens_type);
+    c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, camera_model, lens_type, camera_orientation);
     cv::Mat cameracalibrationMatrix_ = c.camera_hardware_.calibrationMatrix_;
     cv::Mat cameraDistortionVector_ = c.camera_hardware_.cameraDistortionVector_;
 
@@ -490,8 +490,8 @@ bool GsAutomatedTesting::ReadTestImages(const std::string& img_1_base_filename, 
 
     if (undistort) {
         // TBD - Parametersize the lens_type later
-        unDistortedBall1Img = GsAutomatedTesting::UndistortImage(ball1Img, camera_model, CameraHardware::LensType::Lens_6mm);
-        unDistortedBall2Img = GsAutomatedTesting::UndistortImage(ball2Img, camera_model, CameraHardware::LensType::Lens_6mm);
+        unDistortedBall1Img = GsAutomatedTesting::UndistortImage(ball1Img, camera_model, CameraHardware::LensType::Lens_6mm, CameraHardware::CameraOrientation::kUpsideUp);
+        unDistortedBall2Img = GsAutomatedTesting::UndistortImage(ball2Img, camera_model, CameraHardware::LensType::Lens_6mm, CameraHardware::CameraOrientation::kUpsideUp);
 
         // Show the center point to help aim the camera
         LoggingTools::DebugShowImage("Undistorted " + img1FileName, unDistortedBall1Img, std::vector<cv::Point>({ cv::Point(ball1Img.cols / 2, ball1Img.rows / 2) }));
@@ -583,7 +583,7 @@ bool GsAutomatedTesting::TestBallPosition() {
         c.camera_hardware_.firstCannedImage = ball1ImgColor;
         c.camera_hardware_.secondCannedImage = ball2ImgColor;
         // TBD - Add the lens type to the tests
-        c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, t.camera_model, CameraHardware::LensType::Lens_6mm);
+        c.camera_hardware_.init_camera_parameters(GsCameraNumber::kGsCamera1, t.camera_model, CameraHardware::LensType::Lens_6mm, CameraHardware::CameraOrientation::kUpsideUp);
 
         long timeDelayuS = 7000;
         GolfBall result_ball;
