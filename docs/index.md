@@ -14,7 +14,7 @@ last_modified_date: 2025-01-04
 
 The PiTrac project is a fully-functional golf launch monitor that avoids the need for expensive high-shutter-speed and high frame-rate cameras. We've developed techniques for high-speed, infrared, strobe-based image capture and processing using low-cost cameras such as the Pi Global Shutter camera (~US$50 retail) and Raspberry Pi single board computers.
 
-![PiTrac Overview]({{ '/assets/images/logos/PiTracV2EnclosureWithGolfBall.png' | relative_url }}){: width="300"}
+![PiTrac Overview]({{ '/assets/images/PiTracV2EnclosureWithGolfBall.png' | relative_url }}){: width="300"}
 
 ## What Does PiTrac Do?
 
