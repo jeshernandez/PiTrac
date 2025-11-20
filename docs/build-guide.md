@@ -12,7 +12,7 @@ last_modified_date: 2025-01-04
 
 Welcome to PiTrac! This guide will walk you through the complete process of building your own DIY golf launch monitor.
 
-## Build Process Overview
+## Build Process 
 
 Building a PiTrac system involves three main phases:
 
@@ -21,6 +21,23 @@ Building a PiTrac system involves three main phases:
 3. **Software Installation** - Install PiTrac software and calibrate cameras
 
 Each phase builds on the previous one, so follow them in order for the best experience.
+
+## Supporting Tutorial Videos
+
+We're developing companion videos to the written documentation to better visually show how to build your PiTrac.  Here's what we have so far (no link means this video is still in the works):
+
+- Part  1 - Introduction to PiTrac 
+- Part 2A - 3D Printing the PiTrac Tower  
+- Part 2B - [3D Printing the BaseBox] (https://youtu.be/DwA4mXsMMAY)
+- Part 3B - [Tower Build] (https://youtu.be/8COCvxQgKR8)
+- Part 4A - [Component Installation] (https://youtu.be/93e-ukvGhJ0)
+- Part 4B - [PiTrac Software Setup] (https://youtu.be/M0pMmwSKbK4)
+- Part 4C - [Optional Software] (https://youtu.be/0mW1fRwRDdU)
+- Part 4D - [Final Assembly] (https://youtu.be/sgJq0n0NwYA)
+- Part 5A - De-Distortion Configuration 
+- Part 5B - Calibration 
+
+Please note that the written documentation is meant to be the most up-to-date and accurate information on building PiTrac systems.  If there's a discrepancy between that documentation nand the vidoes, rely on the documents.  Or, ask a question on the Discord server!
 
 ---
 
