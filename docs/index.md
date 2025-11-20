@@ -14,7 +14,7 @@ last_modified_date: 2025-01-04
 
 The PiTrac project is a fully-functional golf launch monitor that avoids the need for expensive high-shutter-speed and high frame-rate cameras. We've developed techniques for high-speed, infrared, strobe-based image capture and processing using low-cost cameras such as the Pi Global Shutter camera (~US$50 retail) and Raspberry Pi single board computers.
 
-![PiTrac Overview](https://github.com/user-attachments/assets/fbdc9825-b340-47b5-83ad-6c58d4588f34)
+![PiTrac Overview]({{ '/assets/images/logos/PiTracV2EnclosureWithGolfBall.png' | relative_url }}){: width="300"}
 
 ## What Does PiTrac Do?
 
@@ -22,7 +22,7 @@ PiTrac determines golf ball launch speed, angles, and spin in 3 axes. Its output
 
 ## Is PiTrac For You?
 
-PiTrac is **not a commercial product** for sale – the full design is being released as open source on GitHub for folks to build themselves. The two Pi computers and cameras are the most expensive parts, costing around **$250 in total**. PiTrac uses off-the-shelf hardware with a [parts list]({% link hardware/parts-list.md %}) including supplier links. The only custom part is a small printed circuit board that can be manufactured for a few dollars.
+PiTrac is **not a commercial product** for sale – the full design is being released as open source on GitHub for folks to build themselves. The two Pi computers and cameras are the most expensive parts, costing around **US$250 in total**. PiTrac uses off-the-shelf hardware with a [parts list]({% link hardware/parts-list.md %}) including supplier links. The only custom part is a small printed circuit board that can be manufactured for a few dollars.
 
 **It's not easy**, but if you're handy with a soldering iron, can figure out how to 3D print the parts, and are willing to burrow into the Linux operating system to compile and install software, you should be able to create your own PiTrac!
 
