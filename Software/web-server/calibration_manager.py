@@ -393,6 +393,9 @@ class CalibrationManager:
 
         """
 
+        generated_config_path = self.config_manager.generate_golf_sim_config()
+        logger.info(f"Generated config file at: {generated_config_path}")
+
         if camera == "camera2":
             return await self._run_camera2_auto_calibration()
         else:
