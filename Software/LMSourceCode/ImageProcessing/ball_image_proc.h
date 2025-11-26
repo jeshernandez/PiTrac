@@ -20,7 +20,11 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/dnn.hpp>
 
+#ifdef __unix__
 #include <onnxruntime/core/session/onnxruntime_cxx_api.h>
+#else
+#include <onnxruntime_cxx_api.h>
+#endif
 
 #include "logging_tools.h"
 #include "gs_camera.h"
@@ -246,6 +250,9 @@ public:
 
     BallImageProc();
     ~BallImageProc();
+
+
+    static BallImageProc* get_ball_image_processor();
 
     enum BallSearchMode {
         kUnknown = 0,

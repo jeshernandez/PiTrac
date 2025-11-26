@@ -5,7 +5,12 @@
 
 #pragma once
 
+#ifdef __unix__
 #include <onnxruntime/core/session/onnxruntime_cxx_api.h>
+#else
+#include <onnxruntime_cxx_api.h>
+#endif
+
 #include <opencv2/opencv.hpp>
 #include <memory>
 #include <vector>
