@@ -3597,6 +3597,19 @@
       "passedVia": "json",
       "passedTo": "both"
     },
+    "gs_config.calibration.kNumberOfCalibrationFailuresToTolerate": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Number Of Calibration Failures To Tolerate",
+      "description": "Allows a few ball-ID failures to be skipped over and re-tried.",
+      "type": "number",
+      "min": 0,
+      "max": 20,
+      "default": 4,
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
     "gs_config.user_interface.kRefreshTimeSeconds": {
       "category": "Network",
       "subcategory": "advanced",
@@ -3926,27 +3939,133 @@
       "category": "calibration",
       "ui_name": "Camera 2 Position"
     },
-    "gs_config.calibration.kAutoCalibrationBallPositionFromCamera1Meters": {
+    "gs_config.cameras.kAutoCalibrationBallPositionFromCamera1Meters": {
       "type": "array",
       "default": [
         "-0.120",
         "-0.28",
         "0.44"
       ],
-      "description": "Auto calibration ball position from Camera 1 (meters)",
+      "description": "Auto calibration ball position from Camera 1 (meters). DEPRECATED - will now use (and be overwritten by) baseline (reference) or custom positions at runtime based on gs_config.calibration.kCalibrationRigType",
       "category": "calibration",
       "ui_name": "Auto Cal Ball Pos Cam1"
     },
-    "gs_config.calibration.kAutoCalibrationBallPositionFromCamera2Meters": {
+    "gs_config.cameras.kAutoCalibrationBallPositionFromCamera2Meters": {
       "type": "array",
       "default": [
         "0.00",
         "0.095",
         "0.435"
       ],
-      "description": "Auto calibration ball position from Camera 2 (meters)",
+      "description": "Auto calibration ball position from Camera 2 (meters). DEPRECATED - will now use (and be overwritten by) baseline (reference) or custom positions at runtime based on gs_config.calibration.kCalibrationRigType",
       "category": "calibration",
       "ui_name": "Auto Cal Ball Pos Cam2"
+    },
+    "gs_config.calibration.kCalibrationRigType": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Calibration Rig Type",
+      "description": "Type of auto-calibration rig in use",
+      "type": "select",
+      "options": {
+        "1": "Standard camera-straight-forward rig (both cameras pointed down centerline)",
+        "2": "Standard camera1-skewed rig (ball for cam 1 is skewed far left or right)",
+        "3": "Custom rig (user will provide ball positions - see custom parameters below)"
+      },
+      "default": "1",
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kCustomCalibrationRigPositionFromCamera1": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Custom Calibration Rig Ball Position (x,y,z) (in meters) for camera 1",
+      "description": "Position of ball if using non-standard calibration rig",
+      "type": "array",
+      "default": [
+        -0.120,
+        -0.28,
+        0.44
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kCustomCalibrationRigPositionFromCamera2": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Custom Calibration Rig Ball Position (x,y,z) (in meters) for camera 2",
+      "description": "Position of ball if using non-standard calibration rig",
+      "type": "array",
+      "default": [
+        "0.00",
+        "0.095",
+        "0.435"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal Baseline Reference Ball Pos Cam1 Straight Out Positioning",
+      "description": "Baseline calibration rig ball position from Camera 1 (meters) for both cameras pointing straight out the centerline",
+      "type": "array",
+      "default": [
+        "-0.120",
+        "-0.28",
+        "0.44"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal Baseline Reference Ball Pos Cam2 Straight Out Positioning",
+      "description": "Baseline calibration rig ball position from Camera 2 (meters) for both cameras pointing straight out the centerline",
+      "type": "array",
+      "default": [
+        "0.00",
+        "0.095",
+        "0.435"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal Baseline Reference Ball Pos Cam1 Skewed Positioning",
+      "description": "Baseline calibration rig ball position from Camera 1 (meters) for camera 1 skewed back from the centerline",
+      "type": "array",
+      "default": [
+        "-0.52",
+        "-0.28",
+        "0.44"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal Baseline Reference Ball Pos Cam2 Skewed Positioning",
+      "description": "Baseline calibration rig ball position from Camera 2 (meters) for camera 1 skewed back from the centerline.  Generally, camera 2 is always straight out - only camera 1 is skewed.",
+      "type": "array",
+      "default": [
+        "0.00",
+        "0.095",
+        "0.435"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
     },
     "gs_config.calibration.kTestAutoCalibrationFileName": {
       "type": "string",
@@ -3954,61 +4073,6 @@
       "description": "Test file for auto calibration",
       "category": "calibration",
       "ui_name": "Test Auto Cal File"
-    },
-    "gs_config.calibration.k_VERSION_1_ENCLOSURE_AutoCalibrationBallPositionFromCamera1Meters": {
-      "type": "array",
-      "default": [
-        "-0.525",
-        "-0.275",
-        "0.45"
-      ],
-      "description": "V1 enclosure auto calibration ball position from Camera 1 (meters)",
-      "category": "calibration",
-      "ui_name": "V1 Auto Cal Ball Pos Cam1"
-    },
-    "gs_config.calibration.k_VERSION_1_ENCLOSURE_AutoCalibrationBallPositionFromCamera2Meters": {
-      "type": "array",
-      "default": [
-        "0.0",
-        "0.095",
-        "0.435"
-      ],
-      "description": "V1 enclosure auto calibration ball position from Camera 2 (meters)",
-      "category": "calibration",
-      "ui_name": "V1 Auto Cal Ball Pos Cam2"
-    },
-    "gs_config.calibration.k_VERSION_2_ENCLOSURE_AutoCalibrationBallPositionFromCamera1Meters": {
-      "type": "array",
-      "default": [
-        "-0.504",
-        "-0.234",
-        "0.491"
-      ],
-      "description": "V2 enclosure auto calibration ball position from Camera 1 (meters)",
-      "category": "calibration",
-      "ui_name": "V2 Auto Cal Ball Pos Cam1"
-    },
-    "gs_config.calibration.k_VERSION_2_ENCLOSURE_AutoCalibrationBallPositionFromCamera2Meters": {
-      "type": "array",
-      "default": [
-        "0.0",
-        "0.088",
-        "0.466"
-      ],
-      "description": "V2 enclosure auto calibration ball position from Camera 2 (meters)",
-      "category": "calibration",
-      "ui_name": "V2 Auto Cal Ball Pos Cam2"
-    },
-    "gs_config.calibration.k_VERSION_2_ENCLOSURE_CENTER_BALL__AutoCalibrationBallPositionFromCamera1Meters": {
-      "type": "array",
-      "default": [
-        "-0.118",
-        "-0.234",
-        "0.491"
-      ],
-      "description": "V2 enclosure center ball auto calibration position from Camera 1 (meters)",
-      "category": "calibration",
-      "ui_name": "V2 Center Ball Cal Pos Cam1"
     },
     "gs_config.ball_identification.kStrobedBallsAltPreHoughBlurSize HAS TO BE ODD": {
       "type": "integer",
@@ -4018,121 +4082,121 @@
       "ui_name": "ALT Pre-Hough Blur Size"
     }
   },
-  "categoryList": [
-    "System",
-    "Cameras",
-    "Simulators",
-    "Ball Detection",
-    "AI Detection",
-    "Storage",
-    "Network",
-    "Logging",
-    "Strobing",
-    "Spin Analysis",
-    "Calibration",
-    "Testing",
-    "Debugging",
-    "Club Data",
-    "Display"
-  ],
-  "categories": {
-    "System": {
-      "displayName": "System Settings",
-      "description": "Core system configuration",
-      "icon": "settings"
+    "categoryList": [
+      "System",
+      "Cameras",
+      "Simulators",
+      "Ball Detection",
+      "AI Detection",
+      "Storage",
+      "Network",
+      "Logging",
+      "Strobing",
+      "Spin Analysis",
+      "Calibration",
+      "Testing",
+      "Debugging",
+      "Club Data",
+      "Display"
+    ],
+    "categories": {
+      "System": {
+        "displayName": "System Settings",
+        "description": "Core system configuration",
+        "icon": "settings"
+      },
+      "Ball Detection": {
+        "displayName": "Ball Detection",
+        "description": "Ball detection algorithms and parameters",
+        "icon": "target"
+      },
+      "AI Detection": {
+        "displayName": "AI Detection",
+        "description": "Neural network detection settings",
+        "icon": "brain"
+      },
+      "Cameras": {
+        "displayName": "Cameras",
+        "description": "Camera hardware and settings",
+        "icon": "camera"
+      },
+      "Simulators": {
+        "displayName": "Simulator Interfaces",
+        "description": "Golf simulator connections",
+        "icon": "game"
+      },
+      "Strobing": {
+        "displayName": "LED Strobing",
+        "description": "LED timing and speed adjustments",
+        "icon": "flash"
+      },
+      "Storage": {
+        "displayName": "Storage",
+        "description": "File paths and directories",
+        "icon": "folder"
+      },
+      "Logging": {
+        "displayName": "Logging",
+        "description": "Image and data logging options",
+        "icon": "file"
+      },
+      "Network": {
+        "displayName": "Network",
+        "description": "Network and communication settings",
+        "icon": "network"
+      },
+      "Spin Analysis": {
+        "displayName": "Spin Analysis",
+        "description": "Spin calculation settings",
+        "icon": "rotate"
+      },
+      "Calibration": {
+        "displayName": "Calibration",
+        "description": "Camera calibration parameters",
+        "icon": "adjust"
+      },
+      "Advanced": {
+        "displayName": "Advanced",
+        "description": "Advanced configuration options",
+        "icon": "expert"
+      }
     },
-    "Ball Detection": {
-      "displayName": "Ball Detection",
-      "description": "Ball detection algorithms and parameters",
-      "icon": "target"
-    },
-    "AI Detection": {
-      "displayName": "AI Detection",
-      "description": "Neural network detection settings",
-      "icon": "brain"
-    },
-    "Cameras": {
-      "displayName": "Cameras",
-      "description": "Camera hardware and settings",
-      "icon": "camera"
-    },
-    "Simulators": {
-      "displayName": "Simulator Interfaces",
-      "description": "Golf simulator connections",
-      "icon": "game"
-    },
-    "Strobing": {
-      "displayName": "LED Strobing",
-      "description": "LED timing and speed adjustments",
-      "icon": "flash"
-    },
-    "Storage": {
-      "displayName": "Storage",
-      "description": "File paths and directories",
-      "icon": "folder"
-    },
-    "Logging": {
-      "displayName": "Logging",
-      "description": "Image and data logging options",
-      "icon": "file"
-    },
-    "Network": {
-      "displayName": "Network",
-      "description": "Network and communication settings",
-      "icon": "network"
-    },
-    "Spin Analysis": {
-      "displayName": "Spin Analysis",
-      "description": "Spin calculation settings",
-      "icon": "rotate"
-    },
-    "Calibration": {
-      "displayName": "Calibration",
-      "description": "Camera calibration parameters",
-      "icon": "adjust"
-    },
-    "Advanced": {
-      "displayName": "Advanced",
-      "description": "Advanced configuration options",
-      "icon": "expert"
-    }
-  },
-  "basicSubcategories": {
-    "System": {
-      "displayName": "System",
-      "order": 1
-    },
-    "Detection Methods": {
-      "displayName": "Detection Methods",
-      "order": 2
-    },
-    "Cameras": {
-      "displayName": "Cameras",
-      "order": 3
-    },
-    "Simulators": {
-      "displayName": "Simulators",
-      "order": 4
-    },
-    "Ball Detection": {
-      "displayName": "Ball Detection",
-      "order": 5
-    },
-    "Strobing": {
-      "displayName": "Strobing",
-      "order": 6
-    },
-    "Storage": {
-      "displayName": "Storage",
-      "order": 7
-    },
-    "Network": {
-      "displayName": "Network",
-      "order": 8
-    },
-    "Spin": {
-      "displayName": "Spin",
-      "order": 9
+    "basicSubcategories": {
+      "System": {
+        "displayName": "System",
+        "order": 1
+      },
+      "Detection Methods": {
+        "displayName": "Detection Methods",
+        "order": 2
+      },
+      "Cameras": {
+        "displayName": "Cameras",
+        "order": 3
+      },
+      "Simulators": {
+        "displayName": "Simulators",
+        "order": 4
+      },
+      "Ball Detection": {
+        "displayName": "Ball Detection",
+        "order": 5
+      },
+      "Strobing": {
+        "displayName": "Strobing",
+        "order": 6
+      },
+      "Storage": {
+        "displayName": "Storage",
+        "order": 7
+      },
+      "Network": {
+        "displayName": "Network",
+        "order": 8
+      },
+      "Spin": {
+        "displayName": "Spin",
+        "order": 9
+      }
     }
   }
-}

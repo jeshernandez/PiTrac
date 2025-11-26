@@ -186,6 +186,7 @@ pitrac_lm_sources += ([
 			'EllipseDetectorYaed.cpp',
 			'golf_ball.cpp',
 			'gs_automated_testing.cpp',
+			'gs_calibration.cpp',
 			'gs_camera.cpp',
 			'gs_web_api.cpp',
 			'gs_clubs.cpp',

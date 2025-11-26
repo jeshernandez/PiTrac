@@ -282,6 +282,9 @@
     <ClCompile Include="ImageAnalysis\infrastructure\opencv_image_analyzer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gs_calibration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="golf_ball.h">
@@ -548,6 +551,9 @@
     <ClInclude Include="ImageAnalysis\infrastructure\opencv_image_analyzer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gs_calibration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="golf_sim_config.json">
@@ -622,6 +628,7 @@
     <None Include="RunScripts\runTestSpin.sh" />
     <None Include="RunScripts\shutdown_gs.sh" />
     <None Include="create_closed_source_objects.sh" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="core\CMakeLists.txt">

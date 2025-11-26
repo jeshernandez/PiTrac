@@ -537,6 +537,14 @@ bool DiscoverCameraLocation(const GsCameraNumber camera_number, int& media_numbe
 
     const std::string script_name = "/tmp/pi_cam_location.sh";
 
+	// Ensure that we can write to the output file if it was already created
+    std::string script_command = "sudo rm " + script_name;
+    system(script_command.c_str());
+
+    int cmdResult = system(script_command.c_str());
+
+	// It's ok if the file wasn't there.  No need to check the return code
+    
     // Write the script out to file to run.  
     // Otherwise, system() would try to run the script as a sh script,
     // not a bash script
@@ -552,12 +560,12 @@ bool DiscoverCameraLocation(const GsCameraNumber camera_number, int& media_numbe
     script_file.close();
 
     // At least currently, we need to make the script file executable before calling it
-    std::string script_command = "chmod 777 " + script_name;
+    script_command = "sudo chmod 777 " + script_name;
     system(script_command.c_str());
 
     script_command = script_name;
 
-    int cmdResult = system(script_command.c_str());
+    cmdResult = system(script_command.c_str());
 
     if (cmdResult != 0) {
         GS_LOG_TRACE_MSG(error, "system(DiscoverCameraLocation) failed.  Return value was: " + std::to_string(cmdResult));
@@ -933,7 +941,7 @@ bool RetrieveCameraInfo(const GsCameraNumber camera_number, cv::Vec2i& resolutio
 
 cv::Mat LibCameraInterface::undistort_camera_image(const cv::Mat& img, const GolfSimCamera& camera) {
 
-    if (!camera.camera_hardware_.use_calibration_matrix_) {
+    if (!camera.camera_hardware_.use_undistortion_matrix_) {
         GS_LOG_MSG(trace, "undistort_camera_image ignoring camera with no undistortion matrix. Returning original image.");
         return img;
     }

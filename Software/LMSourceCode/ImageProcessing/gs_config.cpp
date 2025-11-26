@@ -470,6 +470,21 @@ bool GolfSimConfiguration::ReadValues() {
 		 }
 	 }
 
+	 void GolfSimConfiguration::SetConstant(const std::string& tag_name, cv::Vec3f& vec) {
+		 try {
+			 int i = 0;
+			 for (boost::property_tree::ptree::value_type& element : configuration_root_.get_child(tag_name)) {
+				 // vec[i] = std::stod(element.second.data());
+				 vec[i] = element.second.get_value<float>();
+				 i++;
+			 }
+		 }
+		 catch (std::exception const& e)
+		 {
+			 GS_LOG_MSG(error, "GolfSimConfiguration::SetConstant failed. ERROR: *** " + std::string(e.what()) + " ***");
+		 }
+	 }
+
 	 void GolfSimConfiguration::SetConstant(const std::string& tag_name, cv::Vec2d& vec) {
 		 try {
 			 int i = 0;
@@ -655,7 +670,7 @@ bool GolfSimConfiguration::ReadValues() {
 				", system_mode_ = " + std::to_string(GolfSimOptions::GetCommandLineOptions().system_mode_) + ".");
 
 		 // Ensure we identify who we are so that we can avoid getting our own
-		 // messages reflected back to su (and chewing up time + bandwidth)
+		 // messages reflected back to us (and chewing up time + bandwidth)
 		 // Note that if the system is in still or auto-calibrate modes, this is system 1, regardless of which
 		 // camera is going to take the picture.
 		 // In cases where the Pi 2/ Camera 2 system needs to take a picture, that will happen in a separate

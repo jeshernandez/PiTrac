@@ -42,7 +42,7 @@ namespace golf_sim {
 
 		// Reads any values that need to be initialized early, such as static members of
 		// classes that won't otherwise have a good place to be otherwise initialized because,
-		// e.g., there's not constructur that will be called.
+		// e.g., there's not constructor that will be called.
 		static bool ReadValues();
 
 		static bool PropertyExists(const std::string& value_tag);
@@ -55,6 +55,7 @@ namespace golf_sim {
 		static void SetConstant(const std::string& value_tag, double& constant_value);
 		static void SetConstant(const std::string& value_tag, std::string& constant_value);
 		static void SetConstant(const std::string& tag_name, cv::Vec3d& vec);
+		static void SetConstant(const std::string& tag_name, cv::Vec3f& vec);
 		static void SetConstant(const std::string& tag_name, cv::Vec2d& vec);
 		static void SetConstant(const std::string& tag_name, std::vector<cv::Vec3d>& vec);
 		static void SetConstant(const std::string& tag_name, std::vector<float>& vec);

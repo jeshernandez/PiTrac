@@ -212,6 +212,12 @@ class PiTracServer:
                 # Set the value
                 success, message, requires_restart = self.config_manager.set_config(key, value)
 
+                # Rebuild the generated .json file in case the thing that was changed is
+                # in the calibration.json or user_settings.json file and needs to be merged.
+
+                generated_config_path = self.config_manager.generate_golf_sim_config()
+                logger.info(f"Generated config file at: {generated_config_path}")
+
                 if success:
                     # Broadcast update to WebSocket clients
                     await self.connection_manager.broadcast(

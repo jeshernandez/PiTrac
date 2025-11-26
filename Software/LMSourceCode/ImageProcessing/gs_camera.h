@@ -187,9 +187,6 @@ namespace golf_sim {
 
         static bool kPlacedBallUseLargestBall;
 
-        static cv::Vec3d kAutoCalibrationBallPositionFromCameraMeters;
-        static int kNumberPicturesForFocalLengthAverage;
-
         // Here, the "1" refers not necessarily to the camera that is named camera 1 functionally 
         // (the camera that watches the teed-up ball).
         static CameraHardware::CameraModel kSystemSlot1CameraType;
@@ -205,7 +202,7 @@ namespace golf_sim {
 
         // Refers to the camera_hardware device object associated with this higher-level camera object
         CameraHardware camera_hardware_;
-        
+
         GolfSimCamera();
 
         ~GolfSimCamera();
@@ -505,18 +502,9 @@ namespace golf_sim {
         // Returns the lines used to try to remove the golf club shaft artifacts
         static bool CleanExternalStrobeArtifacts(const cv::Mat& image, cv::Mat& output_image, std::vector<cv::Vec4i>& lines);
 
-        static bool AutoCalibrateCamera(GsCameraNumber camera_number);
-
-        static bool RetrieveAutoCalibrationConstants(GsCameraNumber camera_number);
-
-        static bool DetermineCameraAngles(const cv::Mat& color_image, const GolfSimCamera& camera, cv::Vec2d& camera_angles);
-
         // Take a single still picture with the specified camera.  May require the Pi 2 (Camera 2) 
         // process to be running if that is the specified camera.
         static bool TakeStillPicture(const GolfSimCamera& camera, cv::Mat& color_image);
-
-        // Returns -1.0 on error, otherwise a positive focal length (e.g., 6.3)
-        static double DetermineFocalLengthForAutoCalibration(const cv::Mat& color_image, const GolfSimCamera& camera);
 
         // Determine how much we widen the color mask from the average color of the ball
         // TBD - determine whether H, S, and V need different multipliers ?
@@ -533,16 +521,16 @@ namespace golf_sim {
         static constexpr int S_MAX_CAL_COLOR_WIDENING_AMOUNT = 80;
         static constexpr int V_MAX_CAL_COLOR_WIDENING_AMOUNT = 60;
 
-
-    private:
-
         // Distance is meters that the ball is from the lens.
         // The size of the ball is assumed to be a standard constant
         // NOTE - getCameraParameters must already have been called before this function is called
-        static int getExpectedBallRadiusPixels(const CameraHardware& camera_hardware, const int resolution_x_, const double distance);
+        static int GetExpectedBallRadiusPixels(const CameraHardware& camera_hardware, const int resolution_x_, const double distance);
+        static int GetExpectedBallRadiusPixelsUsingKnownFocalLength(const CameraHardware& camera_hardware, const int resolution_x_, const double distance);
+
+    private:
 
         // Return the distance of the ball in meters
-        double getBallDistance(const GolfBall& calibrated_ball);
+        // TBD _ REMOVE double getBallDistance(const GolfBall& calibrated_ball);
 
         // Compute the distance to the ball based on the known radius of the ball in the real world
         static double ComputeDistanceToBallUsingRadius(const GolfSimCamera& camera, const GolfBall& ball);

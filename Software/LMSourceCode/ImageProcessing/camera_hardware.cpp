@@ -311,7 +311,7 @@ namespace golf_sim {
                 cameraDistortionVector_ = (cv::Mat_<float>(1, 5) <<
                     1, 1, 1, 1, 1);
 
-                use_calibration_matrix_ = false;
+                use_undistortion_matrix_ = false;
             }
             else {
                 GS_LOG_TRACE_MSG(trace, calibration_element_name + " = ");
@@ -327,7 +327,8 @@ namespace golf_sim {
                 calibrationMatrix_ = camera_calibration_matrix_values;
                 cameraDistortionVector_ = camera_distortion_values;
 
-                use_calibration_matrix_ = false;
+				// TBD - Don't use the matrix for a while until we can confirm things are working well
+                use_undistortion_matrix_ = true;
             }
         }
         else if (model == PiHQ) {
@@ -362,7 +363,7 @@ namespace golf_sim {
 
                 cameraDistortionVector_ = (cv::Mat_<float>(1, 5) <<
                     -0.505410, 0.293051, -0.008886, 0.002192, -0.126480);
-                use_calibration_matrix_ = true;
+                use_undistortion_matrix_ = true;
             }
             else {
                 // We don't have calibration parameters for this resolution
@@ -376,7 +377,7 @@ namespace golf_sim {
                 cameraDistortionVector_ = (cv::Mat_<float>(1, 5) <<
                     1, 1, 1, 1, 1);
 
-                use_calibration_matrix_ = false;
+                use_undistortion_matrix_ = false;
             }
         }
         else if (model == PiCam2) {
@@ -416,7 +417,7 @@ namespace golf_sim {
 
                 cameraDistortionVector_ = (cv::Mat_<float>(1, 5) <<
                     0.180546, -0.486020,   0.015867,  0.020743,  0.242820);
-                use_calibration_matrix_ = true;
+                use_undistortion_matrix_ = true;
             }
             else if (resolution_x_ == 2592) {
                 calibrationMatrix_ = (cv::Mat_<float>(3, 3) <<
@@ -427,7 +428,7 @@ namespace golf_sim {
                 cameraDistortionVector_ = (cv::Mat_<float>(1, 5) <<
                     0.159431, -0.181717, 0.004414, -0.004092, -0.427269);
 
-                    use_calibration_matrix_ = true;
+                    use_undistortion_matrix_ = true;
             }
             else {
                 // We don't have calibration parameters for this resolution
@@ -441,7 +442,7 @@ namespace golf_sim {
                 cameraDistortionVector_ = (cv::Mat_<float>(1, 5) <<
                     1, 1, 1, 1, 1);
 
-                use_calibration_matrix_ = false;
+                use_undistortion_matrix_ = false;
             }
          }
         else if (model == PiCam13) {

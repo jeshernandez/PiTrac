@@ -19,9 +19,9 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-CAMERA1_CALIBRATION_TIMEOUT = 30.0  # Camera1 has faster hardware detection
-CAMERA2_CALIBRATION_TIMEOUT = 120.0  # Camera2 needs background process initialization
-CAMERA2_BACKGROUND_INIT_WAIT = 3.0  # Time to wait for background process to initialize
+CAMERA1_CALIBRATION_TIMEOUT = 40.0  # Camera1 has faster hardware detection
+CAMERA2_CALIBRATION_TIMEOUT = 140.0  # Camera2 needs background process initialization
+CAMERA2_BACKGROUND_INIT_WAIT = 4.0  # Time to wait for background process to initialize
 
 
 class CalibrationManager:
@@ -390,7 +390,9 @@ class CalibrationManager:
 
         Returns:
             Dict with calibration results
+
         """
+
         if camera == "camera2":
             return await self._run_camera2_auto_calibration()
         else:
@@ -555,7 +557,7 @@ class CalibrationManager:
                     if proc.returncode is None:
                         logger.info(f"{camera} process still running after completion, waiting for graceful exit...")
                         try:
-                            await asyncio.wait_for(proc.wait(), timeout=3.0)
+                            await asyncio.wait_for(proc.wait(), timeout=5.0)
                             logger.info(f"{camera} process exited gracefully")
                         except asyncio.TimeoutError:
                             logger.warning(f"Terminating {camera} process after timeout")
@@ -619,7 +621,7 @@ class CalibrationManager:
             "--system_mode",
             "runCam2ProcessForPi1Processing",
             f"--camera_gain={camera2_gain}",
-            "--logging_level=info",
+            f"--logging_level={logging_level}",
             "--artifact_save_level=final_results_only",
         ]
         bg_cmd.extend(self._build_cli_args_from_metadata(camera))

@@ -78,7 +78,7 @@ namespace golf_sim {
         float sensor_width_ = 0;        // The physical size of the camera sensor, inclusive of all the pixels.  In mm
         float sensor_height_ = 0;       // In mm
 
-        bool use_calibration_matrix_ = false;
+        bool use_undistortion_matrix_ = false;
 
         cv::Mat calibrationMatrix_;
         cv::Mat cameraDistortionVector_;

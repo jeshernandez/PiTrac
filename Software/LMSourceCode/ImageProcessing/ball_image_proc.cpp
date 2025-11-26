@@ -242,6 +242,16 @@ namespace golf_sim {
     std::vector<float> BallImageProc::yolo_detection_confidences_;
     std::vector<cv::Mat> BallImageProc::yolo_outputs_;
 
+    BallImageProc* BallImageProc::get_ball_image_processor() {
+        static BallImageProc* ip = nullptr;
+
+        if (ip == nullptr) {
+            ip = new BallImageProc;
+        }
+
+        return ip;
+    }
+
 
     BallImageProc::BallImageProc() {
         min_ball_radius_ = -1;
@@ -608,6 +618,7 @@ namespace golf_sim {
 
                     return_balls.push_back(ball);
                 }
+
                 return !return_balls.empty();
             } else {
                 GS_LOG_MSG(warning, "ONNX detection failed - no balls found");
@@ -1108,6 +1119,9 @@ namespace golf_sim {
             
             std::vector<GsCircle> test_circles;
             if (DetectBalls(final_search_image, search_mode, test_circles)) {
+
+                GS_LOG_MSG(trace, "DetectBalls succeeded - initially found " + std::to_string(test_circles.size()) + " circles.");
+
                 // Apply radius filtering to ONNX results
                 auto it = test_circles.begin();
                 while (it != test_circles.end()) {
@@ -1308,6 +1322,8 @@ namespace golf_sim {
 
     post_detection_processing:
         // Post-detection processing continues here for both HoughCircles and ONNX
+
+        GS_LOG_MSG(trace, "Stating post_detection_processing.");
 
         cv::Mat candidates_image_ = rgbImg.clone();
 
@@ -1561,6 +1577,7 @@ namespace golf_sim {
 
         final_result_image_ = rgbImg.clone();
         LoggingTools::DrawCircleOutlineAndCenter(final_result_image_, finalCircle, "Ball");
+        GS_LOG_MSG(trace, "Saved final_result_image_");
 
         // LoggingTools::DebugShowImage(image_name_ + "  Resulting Circle on image", final_result_image_);
 
@@ -4561,9 +4578,9 @@ namespace golf_sim {
             for (int idx : indices) {
                 const cv::Rect& box = yolo_detection_boxes_[idx];
                 GsCircle circle;
-                circle[0] = box.x + box.width / 2;
-                circle[1] = box.y + box.height / 2;
-                circle[2] = std::max(box.width, box.height) / 2;
+                circle[0] = (float)(box.x + (int)(std::round(box.width / 2.0)));
+                circle[1] = (float)(box.y + (int)(std::round(box.height / 2.0)));
+                circle[2] = (float)(std::max(box.width, (int)(std::round(box.height) / 2.0)));
                 detected_circles.push_back(circle);
             }
 
