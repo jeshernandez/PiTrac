@@ -11,7 +11,7 @@ last_modified_date: 2025-01-04
 
 # Auto-Calibration
 
-Auto-calibration is the recommended way to calibrate PiTrac cameras. It automatically determines focal lengths and camera angles through a 4-step web wizard - no tape measures, no manual JSON editing, no shell scripts.
+Auto-calibration is the recommended way to calibrate PiTrac cameras. It automatically determines focal lengths and camera angles through a 4-step web wizard - no tape measures, no manual JSON editing, no shell scripts.  These measurements are used by PiTrac during operation to determine the location of the ball in real space relative to the unit.
 
 ## What Auto-Calibration Does
 
@@ -28,13 +28,13 @@ Auto-calibration is the recommended way to calibrate PiTrac cameras. It automati
 
 ## Physical Setup
 
-Before you can run auto-calibration in the web UI, you need a calibration rig with golf balls at known positions.
+Before you can run auto-calibration in the web UI, you need a calibration rig to hold golf balls at known positions.
 
 ### 1. Print the Calibration Rig
 
 **Files**: [GitHub - Calibration Rig STL files](https://github.com/PiTracLM/PiTrac/tree/main/3D%20Printed%20Parts/Enclosure%20Version%202/Calibration%20Rig)
 
-The rig works with both V1.0 and V2.0 enclosures. Only difference is the measurement values you'll configure.
+The rig works with both V1.0 and V2.0 enclosures, though V1 is not as well-supported and may need custom measurements (ask on Discord). Only difference is the measurement values you'll configure.
 
 **Print Settings**:
 - Material: PETG preferred (less warping), PLA works fine
@@ -43,17 +43,22 @@ The rig works with both V1.0 and V2.0 enclosures. Only difference is the measure
 - Filament: < 100 grams
 
 **Assembly**:
+- The assembly process will depend on whether your PiTrac has both cameras pointed straight forward, or if Camera 1 (the "Teed Ball Camera") is angled over to the side to accomodate faster shots.
+- The skewed version looks like this:
+- [Skewed Camera Calibration Rig]({{ '/assets/images/enclosure_assembly/Autocalibration_Skewed_Cam1_Option.jpeg' | relative_url }}){: width="300"}
+- The cameras-straight-out version replaces the long arm with two short pieces and looks like this:
+- [Straight-out Camera Calibration Rig]({{ '/assets/images/enclosure_assembly/Autocalibration_Straight-Out_Option.jpeg' | relative_url }}){: width="300"}
 - Push pieces together snugly (can be tight - that's normal)
 - Make sure connections are fully seated for accurate dimensions
-- Ball 1 (right-most) sits on floor, Ball 2 (mid-air)
+- Ball 1 (right-most) sits on floor, Ball 2 (mid-air).  NOTE - only place one ball at a time during calibration or the system will get confused.
 
 ### 2. Position the Rig
 
 **Version 2.0 Enclosure**:
-- Insert tab into square hole in bottom front of enclosure
-- Check that rig is square to the enclosure
+- Insert the square tab into the square hole in bottom front of enclosure.  You may need to nudge the LED light strip to get at the hole.
+- Check that rig is square to the enclosure and that the arm for the ball on the floor is 90° to the other leg.  Also ensure the ball in the air is held straight up.
 
-**Version 1.0 Enclosure**:
+**Version 1.0 Enclosure (Deprecated)**:
 - Center tab underneath lowest camera
 - Place tab on diagonal part of enclosure
 - Align end edge of rear part with outside of lower enclosure section
@@ -63,9 +68,8 @@ The rig works with both V1.0 and V2.0 enclosures. Only difference is the measure
 ### 3. Aim the Cameras
 
 **Camera 1** (Tee Camera):
-- Point directly at Ball 1 (on floor)
-- Doesn't need to be perfect - calibration figures out exact angle
-- Just get it close
+- Point directly at Ball 1 (on floor).  For straight-out camera, then move the camera slightly so it is still aimed down, but is aimed straight out along the leg of the rig that attachs to the PiTrac.
+- Doesn't need to be perfect - calibration figures out exact angle.  Just get it close.
 
 **Camera 2** (Flight Camera):
 - Point straight out from monitor
@@ -76,7 +80,9 @@ The rig works with both V1.0 and V2.0 enclosures. Only difference is the measure
 
 ### 4. Configure Ball Positions
 
-The calibration wizard needs to know where the balls are relative to the cameras. These measurements are in the Configuration page under "Calibration" settings.
+The calibration wizard needs to know where the balls are relative to the cameras. These measurements (for each of the "standard" rig setups) are already store in the system settings for each camera, and can be selected (or modified) in the Configuration page under "Calibration" settings.
+
+Use the UI to select one of the three calibration rig options:
 
 **For Version 1.0 Enclosure** (with standard rig):
 
@@ -108,14 +114,16 @@ If you built your own rig, measure from camera lens center to ball center and en
 
 ### Step 1: Open Calibration Wizard
 
-1. Navigate to web dashboard (usually `http://raspberrypi.local:8080`)
-2. Click menu (3 dots) → **Calibration**
-3. Select which camera(s) to calibrate:
+1. Select the type of calibration rig you will be using (depending on the camera arrangement and enclosure version) in Configuration → Calibration → kCalibrationRigType:
+[Calibration Rig Selection]({{ '/assets/images/enclosure_assembly/AutoCalibration_Rig_Type_Selection.png' | relative_url }}){: width="300"}
+3. Navigate to the PiTrac web dashboard (usually `http://raspberrypi.local:8080`) where raspberrypi is the name of your pi on the network.
+4. Click menu (3 dots) → **Calibration**
+5. Select which camera(s) to calibrate:
    - **Camera 1** - Recommended starting point (~30 seconds)
    - **Camera 2** - Do this second (~2 minutes, yes really)
    - **Both** - Only after you've done each individually
 
-**Always calibrate Camera 1 first.** It's faster and gives you immediate feedback if something's wrong.
+**Calibrate Camera 1 first.** It's faster and gives you immediate feedback if something's wrong.
 
 Click **Next**.
 
@@ -130,12 +138,14 @@ This step confirms PiTrac can actually see the ball before trying to calibrate.
    - Red X = Ball not detected
 
 2. Click **Capture Still Image**
-   - Shows what camera sees
+   - Shows what camera sees (not quite finished yet)
    - Ball should be visible and roughly centered
    - Focus should be good (twist M12 lens if not)
 
 **If ball detection fails**:
-- Check lighting (turn on strobes, adjust camera gain in Configuration)
+- Check the images that the process captures (usually at ~/LM_Shares/Images)
+- Check the latest log files for errors (~/.pitrac/logs)
+- - Check lighting (turn on strobes, adjust camera gain in Configuration)
 - Verify ball is actually on the rig
 - Make sure camera is aimed at ball
 - Check focus
