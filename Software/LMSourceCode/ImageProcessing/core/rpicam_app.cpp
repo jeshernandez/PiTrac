@@ -135,8 +135,13 @@ std::string const &RPiCamApp::CameraId() const
 
 std::string RPiCamApp::CameraModel() const
 {
+	/* This worked with prior version of 0.6.0 libcamera, but no longer
 	auto model = camera_->properties().get(properties::Model);
 	return model ? *model : camera_->id();
+	*/
+        
+	return std::string(camera_->properties().get(properties::Model).value_or(camera_->id()));;
+	
 }
 
 void RPiCamApp::OpenCamera()

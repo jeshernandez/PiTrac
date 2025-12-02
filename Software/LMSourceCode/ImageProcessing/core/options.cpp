@@ -397,7 +397,9 @@ bool Options::Parse(int argc, char *argv[])
 	std::vector<std::shared_ptr<libcamera::Camera>> cameras = app_->GetCameras();
 	if (camera < cameras.size())
 	{
-		const std::string cam_id = *cameras[camera]->properties().get(libcamera::properties::Model);
+		// Prior version this next line of code broke with the latest libcamera version
+		// (version v0.6.0+rpt20251202 ). To fix, we just have to use a std::string_view, not a std::string
+		const std::string_view cam_id = *cameras[camera]->properties().get(libcamera::properties::Model);
 
 		if (cam_id.find("imx708") != std::string::npos)
 		{
