@@ -559,7 +559,7 @@ extract_all_dependencies() {
             install_deb_dependency "$artifacts_dir/liblgpio1_0.2.2-1_arm64.deb" "liblgpio1" "true"
             install_deb_dependency "$artifacts_dir/libactivemq-cpp_3.9.5-1_arm64.deb" "libactivemq-cpp"
             install_deb_dependency "$artifacts_dir/libopencv4.11_4.11.0-1_arm64.deb" "libopencv4.11"
-            install_deb_dependency "$artifacts_dir/libonnxruntime1.17.3_1.17.3-xnnpack-verified_arm64.deb" "libonnxruntime1.17.3"
+            install_deb_dependency "$artifacts_dir/libonnxruntime1.17.3_1.17.3-xnnpack3_arm64.deb" "libonnxruntime1.17.3"
 
             # Install development packages (these depend on runtime packages)
             install_deb_dependency "$artifacts_dir/libactivemq-cpp-dev_3.9.5-1_arm64.deb" "libactivemq-cpp-dev"
@@ -865,17 +865,15 @@ install_dependencies_from_apt() {
         "libopencv-dev"
     )
 
-    # Add ONNX Runtime based on distribution
+    # Add ONNX Runtime - using 1.17.3 for both distros (1.22.x has Pi5 issues)
     local codename=$(detect_debian_codename)
     case "$codename" in
-        bookworm)
+        bookworm|trixie)
             packages+=("libonnxruntime1.17.3")
-            ;;
-        trixie)
-            packages+=("libonnxruntime1.22.1")
             ;;
         *)
             log_warn "Unknown distribution, will attempt generic ONNX install"
+            packages+=("libonnxruntime1.17.3")
             ;;
     esac
 
