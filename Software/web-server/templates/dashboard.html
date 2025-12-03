@@ -74,6 +74,16 @@
 
 <div class="image-gallery">
     <h2>Shot Images</h2>
+    <div class="ball-ready-image" id="ball-ready-image">
+        <img src="/images/log_ball_final_found_ball_img.png" alt="Ball Ready View" loading="lazy">
+    </div>
+    <div class="ball-hit-image" id="ball-hit-image">
+        <img
+            src="/images/ball_exposure_candidates.png"
+            data-base-src="/images/ball_exposure_candidates.png"
+            alt="Ball Exposure Candidate"
+            loading="lazy">
+    </div>
     <div class="image-grid" id="image-grid">
         {% for image in shot.images %}
         <img src="/images/{{ image }}" alt="Shot {{ loop.index }}" class="shot-image" loading="lazy">
