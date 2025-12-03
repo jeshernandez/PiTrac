@@ -111,6 +111,44 @@
     font-size: clamp(1.25rem, 3vw, 1.5rem);
 }
 
+.ball-ready-image {
+    display: none;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.ball-ready-image.visible {
+    display: block;
+}
+
+.ball-ready-image img {
+    max-width: 320px;
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.ball-hit-image {
+    display: none;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.ball-hit-image.visible {
+    display: block;
+}
+
+.ball-hit-image img {
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
 .image-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
