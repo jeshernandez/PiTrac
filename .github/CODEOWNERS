@@ -9,7 +9,7 @@
 /Software/ @jamespilgrim
 
 # Python Web Server
-/Software/web-server/ @connorgallopo @jeshernandez
+/Software/web-server/ @connorgallopo
 
 # Yolo Model + Tooling
 /Software/GroundTruthAnnotator/ @connorgallopo
@@ -26,5 +26,5 @@
 /Hardware/ @markjonharman
 
 # Packaging
-/packaging/ @connorgallopo @jeshernandez
+/packaging/ @connorgallopo
 
