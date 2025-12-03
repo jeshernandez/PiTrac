@@ -60,10 +60,7 @@ const BALL_STATUS_RULES = [
 
 const HIT_IMAGE_NAME = 'ball_exposure_candidates.png';
 const HIT_IMAGE_URL = `/images/${HIT_IMAGE_NAME}`;
-let holdShotImagesUntilReady = false;
-let hitImageVisible = false;
-let hitImageLoading = false;
-let lastShotImagesHTML = '';
+let hitImageTimer = null;
 
 const setBallReadyImageVisible = (isVisible) => {
     const container = document.getElementById('ball-ready-image');
@@ -82,10 +79,14 @@ const clearShotImages = () => {
     if (imageGrid) {
         imageGrid.innerHTML = '';
     }
-    lastShotImagesHTML = '';
 };
 
 const hideBallHitImage = () => {
+    if (hitImageTimer) {
+        clearTimeout(hitImageTimer);
+        hitImageTimer = null;
+    }
+
     const container = document.getElementById('ball-hit-image');
     if (!container) {
         return;
@@ -98,9 +99,6 @@ const hideBallHitImage = () => {
         img.onload = null;
         img.onerror = null;
     }
-    hitImageVisible = false;
-    holdShotImagesUntilReady = false;
-    hitImageLoading = false;
 };
 
 const resolveImagePath = (path) => {
@@ -124,19 +122,15 @@ const showBallHitImage = (overridePath = null) => {
         return;
     }
 
-    hitImageLoading = true;
-    holdShotImagesUntilReady = true;
-
     const cleanup = () => {
         img.onload = null;
         img.onerror = null;
-        hitImageLoading = false;
+        hitImageTimer = null;
     };
 
     img.onload = () => {
         cleanup();
         container.classList.add('visible');
-        hitImageVisible = true;
     };
 
     img.onerror = () => {
@@ -208,17 +202,11 @@ function updateDisplay(data) {
 
     if (resultType.includes('hit')) {
         imageGrid.innerHTML = '';
-        lastShotImagesHTML = '';
     } else if (resultType.includes('ready')) {
-        holdShotImagesUntilReady = false;
-        lastShotImagesHTML = '';
         imageGrid.innerHTML = '';
         hideBallHitImage();
-    } else if (holdShotImagesUntilReady && lastShotImagesHTML) {
-        imageGrid.innerHTML = lastShotImagesHTML;
     } else {
         imageGrid.innerHTML = '';
-        lastShotImagesHTML = '';
     }
 }
 
@@ -253,10 +241,11 @@ function updateBallStatus(resultType, message, isPiTracRunning) {
 
             if (rule.className === 'ready') {
                 hideBallHitImage();
-                holdShotImagesUntilReady = false;
-                lastShotImagesHTML = '';
             } else if (rule.className === 'hit') {
-                showBallHitImage();
+                if (hitImageTimer) {
+                    clearTimeout(hitImageTimer);
+                }
+                hitImageTimer = setTimeout(() => showBallHitImage(), 2000);
             }
         } else {
             statusTitle.textContent = 'System Status';
