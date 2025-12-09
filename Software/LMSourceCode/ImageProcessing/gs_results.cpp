@@ -32,6 +32,9 @@ namespace golf_sim {
         // but this is a reasonable default for now
         club_type_ = GolfSimClubs::GetCurrentClubType();
 
+        // Real shot data implies a ball was definitely detected.
+        heartbeat_ball_detected_ = true;
+
         // TBD - Even though this is a constructor, it might be a reasonable
         // place to calculate the Carry yardarge.
     }
