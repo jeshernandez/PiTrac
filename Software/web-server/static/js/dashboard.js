@@ -1,148 +1,6 @@
 // Dashboard-specific functionality (theme and dropdown handled by common.js)
 let ws = null;
 
-const normalizeText = (value) => (value || '').toLowerCase();
-
-const BALL_STATUS_RULES = [
-    {
-        className: 'initializing',
-        title: 'System Initializing',
-        defaultMessage: 'Starting up PiTrac system...',
-        match: ({ type }) => type.includes('initializing'),
-    },
-    {
-        className: 'waiting',
-        title: 'Waiting for Ball',
-        defaultMessage: 'Please place ball on tee',
-        match: ({ type }) => type.includes('waiting for ball'),
-    },
-    {
-        className: 'waiting',
-        title: 'Waiting for Simulator',
-        defaultMessage: 'Waiting for simulator to be ready',
-        match: ({ type }) => type.includes('waiting for simulator'),
-    },
-    {
-        className: 'stabilizing',
-        title: 'Ball Detected',
-        defaultMessage: 'Waiting for ball to stabilize...',
-        match: ({ type }) => type.includes('pausing') || type.includes('stabilization'),
-    },
-    {
-        className: 'ready',
-        title: 'Ready to Hit!',
-        defaultMessage: 'Ball is ready - take your shot!',
-        match: ({ type, message }) =>
-            type.includes('ball ready') ||
-            type.includes('ready') ||
-            type.includes('ball placed') ||
-            message.includes("let's golf"),
-    },
-    {
-        className: 'hit',
-        title: 'Ball Hit!',
-        defaultMessage: 'Processing shot data...',
-        match: ({ type }) => type.includes('hit'),
-    },
-    {
-        className: 'error',
-        title: 'Error',
-        defaultMessage: 'An error occurred',
-        match: ({ type }) => type.includes('error'),
-    },
-    {
-        className: 'error',
-        title: 'Multiple Balls Detected',
-        defaultMessage: 'Please remove extra balls',
-        match: ({ type }) => type.includes('multiple balls'),
-    },
-];
-
-const HIT_IMAGE_NAME = 'ball_exposure_candidates.png';
-const HIT_IMAGE_URL = `/images/${HIT_IMAGE_NAME}`;
-let hitImageTimer = null;
-
-const setBallReadyImageVisible = (isVisible) => {
-    const container = document.getElementById('ball-ready-image');
-    if (!container) {
-        return;
-    }
-    if (isVisible) {
-        container.classList.add('visible');
-    } else {
-        container.classList.remove('visible');
-    }
-};
-
-const clearShotImages = () => {
-    const imageGrid = document.getElementById('image-grid');
-    if (imageGrid) {
-        imageGrid.innerHTML = '';
-    }
-};
-
-const hideBallHitImage = () => {
-    if (hitImageTimer) {
-        clearTimeout(hitImageTimer);
-        hitImageTimer = null;
-    }
-
-    const container = document.getElementById('ball-hit-image');
-    if (!container) {
-        return;
-    }
-    container.classList.remove('visible');
-    const img = container.querySelector('img');
-    if (img) {
-        const baseSrc = img.dataset.baseSrc || HIT_IMAGE_URL;
-        img.src = baseSrc;
-        img.onload = null;
-        img.onerror = null;
-    }
-};
-
-const resolveImagePath = (path) => {
-    if (!path) {
-        return null;
-    }
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-        return path;
-    }
-    if (path.startsWith('/')) {
-        return path;
-    }
-    return `/images/${path.replace(/^\/+/, '')}`;
-};
-
-const showBallHitImage = (overridePath = null) => {
-    const container = document.getElementById('ball-hit-image');
-    const img = container ? container.querySelector('img') : null;
-
-    if (!container || !img) {
-        return;
-    }
-
-    const cleanup = () => {
-        img.onload = null;
-        img.onerror = null;
-        hitImageTimer = null;
-    };
-
-    img.onload = () => {
-        cleanup();
-        container.classList.add('visible');
-    };
-
-    img.onerror = () => {
-        cleanup();
-        hideBallHitImage();
-        clearShotImages();
-    };
-
-    const baseSrc = resolveImagePath(overridePath) || img.dataset.baseSrc || HIT_IMAGE_URL;
-    img.src = `${baseSrc}?t=${Date.now()}`;
-};
-
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
@@ -198,14 +56,14 @@ function updateDisplay(data) {
 
     // Update images - only show images for actual hits, clear for status messages
     const imageGrid = document.getElementById('image-grid');
-    const resultType = normalizeText(data.result_type);
+    const resultType = (data.result_type || '').toLowerCase();
 
-    if (resultType.includes('hit')) {
-        imageGrid.innerHTML = '';
-    } else if (resultType.includes('ready')) {
-        imageGrid.innerHTML = '';
-        hideBallHitImage();
-    } else {
+    // Only show images for hit results
+    if (resultType.includes('hit') && data.images && data.images.length > 0) {
+        imageGrid.innerHTML = data.images.map((img, idx) =>
+            `<img src="/images/${img}" alt="Shot ${idx + 1}" class="shot-image" loading="lazy" onclick="openImage('${img}')">`
+        ).join('');
+    } else if (!resultType.includes('hit')) {
         imageGrid.innerHTML = '';
     }
 }
@@ -216,43 +74,53 @@ function updateBallStatus(resultType, message, isPiTracRunning) {
     const statusMessage = document.getElementById('ball-status-message');
 
     indicator.classList.remove('initializing', 'waiting', 'stabilizing', 'ready', 'hit', 'error');
-    setBallReadyImageVisible(false);
 
     if (isPiTracRunning === false) {
         indicator.classList.add('error');
         statusTitle.textContent = 'System Stopped';
-        statusMessage.textContent = 'Start PiTrac...';
-        hideBallHitImage();
-        clearShotImages();
+        statusMessage.textContent = 'PiTrac is not running - click Start to begin';
         return;
     }
 
     if (resultType) {
-        const normalizedType = normalizeText(resultType);
-        const normalizedMessage = normalizeText(message);
-        const statusContext = { type: normalizedType, message: normalizedMessage };
-        const rule = BALL_STATUS_RULES.find((r) => r.match(statusContext));
+        const normalizedType = resultType.toLowerCase();
 
-        if (rule) {
-            indicator.classList.add(rule.className);
-            statusTitle.textContent = rule.title;
-            statusMessage.textContent = message || rule.defaultMessage;
-            setBallReadyImageVisible(rule.className === 'ready');
-
-            if (rule.className === 'ready') {
-                hideBallHitImage();
-            } else if (rule.className === 'hit') {
-                if (hitImageTimer) {
-                    clearTimeout(hitImageTimer);
-                }
-                hitImageTimer = setTimeout(() => showBallHitImage(), 2000);
-            }
+        if (normalizedType.includes('initializing')) {
+            indicator.classList.add('initializing');
+            statusTitle.textContent = 'System Initializing';
+            statusMessage.textContent = message || 'Starting up PiTrac system...';
+        } else if (normalizedType.includes('waiting for ball')) {
+            indicator.classList.add('waiting');
+            statusTitle.textContent = 'Waiting for Ball';
+            statusMessage.textContent = message || 'Please place ball on tee';
+        } else if (normalizedType.includes('waiting for simulator')) {
+            indicator.classList.add('waiting');
+            statusTitle.textContent = 'Waiting for Simulator';
+            statusMessage.textContent = message || 'Waiting for simulator to be ready';
+        } else if (normalizedType.includes('pausing') || normalizedType.includes('stabilization')) {
+            indicator.classList.add('stabilizing');
+            statusTitle.textContent = 'Ball Detected';
+            statusMessage.textContent = message || 'Waiting for ball to stabilize...';
+        } else if (normalizedType.includes('ball ready') || normalizedType.includes('ready')) {
+            indicator.classList.add('ready');
+            statusTitle.textContent = 'Ready to Hit!';
+            statusMessage.textContent = message || 'Ball is ready - take your shot!';
+        } else if (normalizedType.includes('hit')) {
+            indicator.classList.add('hit');
+            statusTitle.textContent = 'Ball Hit!';
+            statusMessage.textContent = message || 'Processing shot data...';
+        } else if (normalizedType.includes('error')) {
+            indicator.classList.add('error');
+            statusTitle.textContent = 'Error';
+            statusMessage.textContent = message || 'An error occurred';
+        } else if (normalizedType.includes('multiple balls')) {
+            indicator.classList.add('error');
+            statusTitle.textContent = 'Multiple Balls Detected';
+            statusMessage.textContent = message || 'Please remove extra balls';
         } else {
             statusTitle.textContent = 'System Status';
             statusMessage.textContent = message || resultType;
         }
-    } else {
-        setBallReadyImageVisible(false);
     }
 }
 

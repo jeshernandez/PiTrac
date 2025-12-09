@@ -13,7 +13,7 @@
 
 # Yolo Model + Tooling
 /Software/GroundTruthAnnotator/ @connorgallopo
-/Software/LMSourceCode/ImageProcessing/ @jamespilgrim @connorgallopo @jeshernandez
+/Software/LMSourceCode/ImageProcessing/ @jamespilgrim @connorgallopo
 
 # Documentation files
 /docs/ @jeshernandez @connorgallopo
