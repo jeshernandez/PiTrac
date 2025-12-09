@@ -237,6 +237,26 @@ namespace golf_sim {
         shot_counter_++;
     }
 
+    void GsSimInterface::SendHeartbeat(bool ball_detected) {
+#ifdef __unix__  // Ignore in Windows environment
+        if (!sims_initialized_) {
+            return;
+        }
+
+        GsResults heartbeat;
+        heartbeat.result_message_is_keepalive_ = true;
+        heartbeat.heartbeat_ball_detected_ = ball_detected;
+        heartbeat.heartbeat_launch_monitor_ready_ = true;
+
+        for (auto interface : interfaces_) {
+            if (interface == nullptr) {
+                continue;
+            }
+            interface->SendResults(heartbeat);
+        }
+#endif
+    }
+
     bool GsSimInterface::InterfaceIsPresent() {
         // The base interface isn't a real interface, so cannot be 'present'
         return false;

@@ -52,6 +52,8 @@ namespace golf_sim {
 
         // Some systems need a keep-alive
         bool result_message_is_keepalive_ = false;
+        bool heartbeat_launch_monitor_ready_ = true;
+        bool heartbeat_ball_detected_ = false;
 
     };
 

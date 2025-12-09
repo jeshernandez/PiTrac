@@ -76,14 +76,14 @@ namespace golf_sim {
             shot_data_options_child.put("ContainsClubData", false);
             // TBD - Consider if we want to send the next two values in a heartbeat?
             shot_data_options_child.put("LaunchMonitorIsReady", true);
-            shot_data_options_child.put("LaunchMonitorBallDetected", true);
+            shot_data_options_child.put("LaunchMonitorBallDetected", heartbeat_ball_detected_);
             shot_data_options_child.put("IsHeartBeat", false);
         }
         else {
             shot_data_options_child.put("ContainsBallData", false);
             shot_data_options_child.put("ContainsClubData", false);
             shot_data_options_child.put("LaunchMonitorIsReady", true);
-            shot_data_options_child.put("LaunchMonitorBallDetected", true);
+            shot_data_options_child.put("LaunchMonitorBallDetected", heartbeat_ball_detected_);
             shot_data_options_child.put("IsHeartBeat", true);
         }
 
