@@ -182,7 +182,8 @@ namespace golf_sim {
         }
 
         if (found) {
-
+            // Inform connected sims that the ball is on the tee.
+            GsSimInterface::SendHeartbeat(true);
             if (GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera1Calibrate ||
                 GolfSimOptions::GetCommandLineOptions().system_mode_ == SystemMode::kCamera2Calibrate) {
 
@@ -983,4 +984,3 @@ namespace golf_sim {
 } // GolfSim namespace
 
 #endif // #ifdef __unix__  // Ignore in Windows environment
-
