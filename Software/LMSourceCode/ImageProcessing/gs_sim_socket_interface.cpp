@@ -18,6 +18,7 @@
 #include "gs_events.h"
 #include "gs_ipc_control_msg.h"
 
+#include "gs_sim_socket_interface.h"
 #include "gs_gspro_interface.h"
 #include "gs_gspro_response.h"
 #include "gs_gspro_results.h"
@@ -94,6 +95,10 @@ namespace golf_sim {
 #endif
 
         initialized_ = true;
+
+        // Connection just came up – make sure the first heartbeat reports no ball detected.
+        GsSimInterface::ResetHeartbeatState();
+        GsSimInterface::SendHeartbeat(false);
 
         // Derived classes will need to deal with any initial messaging after the socket is established.
 
