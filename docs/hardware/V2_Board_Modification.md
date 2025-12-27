@@ -36,17 +36,22 @@ The solution described here essentially places a dual-MOSFET switching module in
 The schematic for the modification is shown here:  ![V2 Board Modification Schematic]({{ '/assets/images/hardware/V2_Board_MOSFET_Module_Modification_Schematic.png' | relative_url }})
 
 The completed modification will look like this:
-![V2 Board Modification]({{ '/assets/images/hardware/V2_Connector_Board_MOSFET_module_addition.jpeg' | relative_url }}).  
+![V2 Board Modification]({{ '/assets/images/hardware/V2_Connector_Board_MOSFET_module_addition.jpeg' | relative_url }})
 
-Finally, an annotated image of the completed modification is shown here to help identify the various connections: ![V2 Board Modification Annotated]({{ '/assets/images/hardware/MOSFET_Module_Installation_Annotated.png' | relative_url }}).
+Finally, an annotated image of the completed modification is shown here to help identify the various connections: ![V2 Board Modification Annotated]({{ '/assets/images/hardware/MOSFET_Module_Installation_Annotated.png' | relative_url }})
 
 When completed, the test V2 board that we modified produced this ball-exposure identification image:  ![Image from fixed V2 Connector Board]({{ '/assets/images/hardware/v2_board_ball_exposure_candidates_with_mosfet_mod.png' | relative_url }}).  Note how the smear is gone and the ball images are now sharp and well-defined.
 
 The modification steps further below will guide you through the process of making this change.
 
-Before detailing those steps, however, please note that it is also necessary to move the resistor from R19 to R20 on the board.  The results of this mod are shown in the image below:
-![V2 Board Resistor R19/R20 Modification]({{ '/assets/images/hardware/Moving_R19_To_R20.png' | relative_url }}).
+## Moving Resistor R19 to R20
+
+Before detailing those steps for the MOSFET module, however, please note that it is also necessary to move the resistor from R19 to R20 on the board.  The results of this mod are shown in the image below:
+![V2 Board Resistor R19/R20 Modification]({{ '/assets/images/hardware/Moving_R19_To_R20.png' | relative_url }})
+
+
 A few suggestions when moving the resistor:
+
 	1. Using a knife-edge solder tip can make it easier to apply heat simultaneously to both of the terminals of the resistor when removing it. Just remember to have a good pair of tweezers handy to make sure the resistor doesn't end up stuck to and baking on the solder tip.   
 	2. When soldering the resistor into its new position, use some flux first to make sure the pads will accept the solder readily.  It is often easier to flux just one pad, then apply a little blob of solder to that pad, and then use tweezers and the iron to get the resistor connected and positioned to just that first pad.  After that is done, flux and solder the other end to the other pad.
 	3. If you lose or damage the resistor during its relocation, you may also be able to get things working by simply bridging a small piece of wire across the R20 terminal pads.
@@ -83,9 +88,11 @@ A few suggestions when moving the resistor:
 		h.  For those with an oscilloscope, you can verify that the trigger wire is transferring the proper 5v signal when the strobe is supposed to be firing.  To do so, trigger on an upward edge and run the Pulse Test from the PiTrac UI.  
 
 Here is the soldering close up for the U9 chip: 
-![U9 Pin Soldering Closeup]({{ '/assets/images/hardware/Soldering_Trigger_Wire_To_U9.png' | relative_url }}).
+![U9 Pin Soldering Closeup]({{ '/assets/images/hardware/Soldering_Trigger_Wire_To_U9.png' | relative_url }})
+
 You should see something like this if you look at the signal from the wire connected to U9 Pin 2:  
-![Trigger Signal on Oscilloscope]({{ '/assets/images/hardware/U9_Chip_Trigger_Signal_From_Pin_2.jpeg' | relative_url }}).
+![Trigger Signal on Oscilloscope]({{ '/assets/images/hardware/U9_Chip_Trigger_Signal_From_Pin_2.jpeg' | relative_url }})
+
 
 
 
