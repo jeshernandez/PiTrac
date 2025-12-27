@@ -1,11 +1,11 @@
 ---
 title: V2_Board_Modification
 layout: default
-nav_order: 4
-has_children: true
+nav_order: 5
+has_children: false
 description: Describes how to modify the original V2 Connector Board to fix a problem with the strobe not shutting off fully and/or quickly.
 keywords: DIY golf hardware, launch monitor parts, raspberry pi golf components, PCB assembly golf, Connector Board, V2
-og_image: /assets/images/logos/v2_board_ball_exposure_candidates_before_mosfet_mod.png
+og_image: /assets/images/hardware/v2_board_ball_exposure_candidates_before_mosfet_mod.png
 last_modified_date: 2025-12-26
 ---
 
@@ -67,11 +67,14 @@ The modification steps below will guide you through the process of making this c
 		b.  First, solder the  ground wire from the MOSFET module to any convenient ground point on the V2 Connector Board.  A good place may be to one of the ground Pins of the USB cable connectors, as they are relatively large and easy to access.  Just make sure that the connector's metal shell is actually connected to ground, however!
 		c.  Next, solder the trigger wire from the MOSFET module to Pin 2 of chip U9 on the V2 Connector Board.  This is the Pin that provides the 5v trigger signal for the strobe.  You may need to use a magnifying glass or jeweler's loupe to see this area clearly.  
 		d.  A trick here is to exploit the fact that Pin 1 is an unused Pin on the chip and is not electrically connected to anything (at least for the component we've been using).  So, you can solder the trigger wire to both Pins 1 and 2 (with the wire coming in from the right (edge) side of the board.  
+
 See this close up: ![U9 Pin Soldering Closeup]({{ '/assets/images/hardware/Soldering_Trigger_Wire_To_U9.png' | relative_url }}).
+
 		e.  Use a little external solder flux on Pins 1 and 2 (making sure none of it gets near Pin 3) and heat it up a bit with your soldering iron before adding some solder at least Pin 2, but also maybe between Pins 1 and 2 to have more material to work with.  Make sure you also put some flux on the trigger wire coming from the MOSFET module, and then heat up the blob on Pin 2 and insert the wire into the blob and then pull the iron out.
 		f.  Lower-temperature solder (e.g., leaded solder) may help here to avoid damaging the chip with too much heat and just to make it easier generally.  HOWEVER, be very careful if you use leaded solder, as it's dangerously toxic and absolutely requires good ventilation and proper handling/disposal.  Lead-free solder is safer, but harder to work with.
 		g.  Be very careful not to create any solder bridges to adjacent Pins on the chip.
 		h.  For those with an oscilloscope, you can verify that the trigger wire is transferring the proper 5v signal when the strobe is supposed to be firing.  To do so, trigger on an upward edge and run the Pulse Test from the PiTrac UI.  
+
 You should see something like this:  ![Trigger Signal on Oscilloscope]({{ '/assets/images/hardware/U9_Chip_Trigger_Signal_From_Pin_2.jpeg' | relative_url }}).
 
 
