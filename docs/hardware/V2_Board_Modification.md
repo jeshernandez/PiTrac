@@ -34,7 +34,7 @@ The solution described here essentially places a dual-MOSFET switching module in
 The schematic for the modification is shown here:  ![V2 Board Modification Schematic]({{ '/assets/images/hardware/V2_Board_MOSFET_Module_Modification_Schematic.png' | relative_url }})
 
 The completed modification will look like this:
-![V2 Board Modification]({{ '/assets/images/hardware/V2_Connector_Board_MOSFET_module_addition.png' | relative_url }}).  
+![V2 Board Modification]({{ '/assets/images/hardware/V2_Connector_Board_MOSFET_module_addition.jpeg' | relative_url }}).  
 
 Finally, an annotated image of the completed modification is shown here to help identify the various connections: ![V2 Board Modification Annotated]({{ '/assets/images/hardware/MOSFET_Module_Installation_Annotated.png' | relative_url }}).
 
