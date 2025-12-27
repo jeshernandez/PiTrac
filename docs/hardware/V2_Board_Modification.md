@@ -70,7 +70,7 @@ The modification steps below will guide you through the process of making this c
 		e.  Use a little external solder flux on Pins 1 and 2 (making sure none of it gets near Pin 3) and heat it up a bit with your soldering iron before adding some solder at least Pin 2, but also maybe between Pins 1 and 2 to have more material to work with.  Make sure you also put some flux on the trigger wire coming from the MOSFET module, and then heat up the blob on Pin 2 and insert the wire into the blob and then pull the iron out.
 		f.  Lower-temperature solder (e.g., leaded solder) may help here to avoid damaging the chip with too much heat and just to make it easier generally.  HOWEVER, be very careful if you use leaded solder, as it's dangerously toxic and absolutely requires good ventilation and proper handling/disposal.  Lead-free solder is safer, but harder to work with.
 		g.  Be very careful not to create any solder bridges to adjacent Pins on the chip.
-		h.  For those with an oscilloscope, you can verify that the trigger wire is transferring the proper 5v signal when the strobe is supposed to be firing.  To do so, trigger on an upward edge and run the Pulse Test from the PiTrac UI.  You should see something like this:  ![Trigger Signal on Oscilloscope]({{ '/assets/images/hardware/U9_Chip_Trigger_Signal_From_Pin_2.png' | relative_url }}).
+		h.  For those with an oscilloscope, you can verify that the trigger wire is transferring the proper 5v signal when the strobe is supposed to be firing.  To do so, trigger on an upward edge and run the Pulse Test from the PiTrac UI.  You should see something like this:  ![Trigger Signal on Oscilloscope]({{ '/assets/images/hardware/U9_Chip_Trigger_Signal_From_Pin_2.jpeg' | relative_url }}).
 
 
 
