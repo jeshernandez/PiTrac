@@ -13,6 +13,8 @@ last_modified_date: 2025-12-26
 
 This document describes how to modify the original V2 Connector Board to fix a problem with the strobe not shutting off fully and/or quickly.  It's pretty hack-y, and involves a bit of small hand-soldering.  But, it does seem to work pretty well and is relatively inexpensive.
 
+In order for the V2 board to work correctly, there is also a second modification that will be included in this document, even though the mod is not strictly related to the shut-off problem.  This second mod involves moving the resistor that is currently in the "R19" position to the previously-empty "R20" position.
+
 ## The Problem
 The initial version of the V2 Connector Board had an issue where the strobe light would not turn off completely or quickly enough after each pulse. This could lead to unwanted light exposure between pulses, which in turn created smearing and poor focus/sharpness of the individual ball images. This problem would then degrade the accuracy of the launch monitor, especially in regard to sPin analysis.
 
@@ -40,9 +42,17 @@ Finally, an annotated image of the completed modification is shown here to help 
 
 When completed, the test V2 board that we modified produced this ball-exposure identification image:  ![Image from fixed V2 Connector Board]({{ '/assets/images/hardware/v2_board_ball_exposure_candidates_with_mosfet_mod.png' | relative_url }}).  Note how the smear is gone and the ball images are now sharp and well-defined.
 
-The modification steps below will guide you through the process of making this change.
+The modification steps further below will guide you through the process of making this change.
 
-## Modification Steps
+Before detailing those steps, however, please note that it is also necessary to move the resistor from R19 to R20 on the board.  The results of this mod are shown in the image below:
+![V2 Board Resistor R19/R20 Modification]({{ '/assets/images/hardware/Moving_R19_To_R20.png' | relative_url }}).
+A few suggestions when moving the resistor:
+	1. Using a knife-edge solder tip can make it easier to apply heat simultaneously to both of the terminals of the resistor when removing it. Just remember to have a good pair of tweezers handy to make sure the resistor doesn't end up stuck to and baking on the solder tip.   
+	2. When soldering the resistor into its new position, use some flux first to make sure the pads will accept the solder readily.  It is often easier to flux just one pad, then apply a little blob of solder to that pad, and then use tweezers and the iron to get the resistor connected and positioned to just that first pad.  After that is done, flux and solder the other end to the other pad.
+	3. If you lose or damage the resistor during its relocation, you may also be able to get things working by simply bridging a small piece of wire across the R20 terminal pads.
+
+
+## Modification Steps for Fixing the Strobe Shutoff Problem
 
 	1.  Attach trigger + and trigger ground wires to the MOSFET module:  
 		a.  (This step is more easily done prior to mounting the MOSFET module onto your PiTrac.)
