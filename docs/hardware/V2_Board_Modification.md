@@ -72,8 +72,10 @@ The modification steps below will guide you through the process of making this c
 		g.  Be very careful not to create any solder bridges to adjacent Pins on the chip.
 		h.  For those with an oscilloscope, you can verify that the trigger wire is transferring the proper 5v signal when the strobe is supposed to be firing.  To do so, trigger on an upward edge and run the Pulse Test from the PiTrac UI.  
 
-Here is the soldering close up for the U9 chip: ![U9 Pin Soldering Closeup]({{ '/assets/images/hardware/Soldering_Trigger_Wire_To_U9.png' | relative_url }}).
-You should see something like this if you look at the signal from the wire connected to U9 Pin 2:  ![Trigger Signal on Oscilloscope]({{ '/assets/images/hardware/U9_Chip_Trigger_Signal_From_Pin_2.jpeg' | relative_url }}).
+Here is the soldering close up for the U9 chip: 
+![U9 Pin Soldering Closeup]({{ '/assets/images/hardware/Soldering_Trigger_Wire_To_U9.png' | relative_url }}).
+You should see something like this if you look at the signal from the wire connected to U9 Pin 2:  
+![Trigger Signal on Oscilloscope]({{ '/assets/images/hardware/U9_Chip_Trigger_Signal_From_Pin_2.jpeg' | relative_url }}).
 
 
 
