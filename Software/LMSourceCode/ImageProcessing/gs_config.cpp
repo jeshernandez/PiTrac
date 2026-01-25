@@ -22,9 +22,13 @@
 #include "libcamera_interface.h"
 
 
+
 namespace golf_sim {
 
 	boost::property_tree::ptree GolfSimConfiguration::configuration_root_;
+
+	GolfSimConfiguration::EnclosureType GolfSimConfiguration::kEnclosureVersion = GolfSimConfiguration::EnclosureType::kEnclosureVersion_Unknown;
+
 
 	bool GolfSimConfiguration::Initialize(const std::string& configuration_filename) {
 
@@ -161,6 +165,11 @@ bool GolfSimConfiguration::ReadValues() {
 	SetConstant("gs_config.cameras.kCamera1PositionsFromExpectedBallMeters", GolfSimCamera::kCamera1PositionsFromExpectedBallMeters);
 	SetConstant("gs_config.cameras.kCamera2PositionsFromExpectedBallMeters", GolfSimCamera::kCamera2PositionsFromExpectedBallMeters);
 	SetConstant("gs_config.cameras.kCamera2OffsetFromCamera1OriginMeters", GolfSimCamera::kCamera2OffsetFromCamera1OriginMeters);
+
+
+	int enclosure_type = 0;
+	GolfSimConfiguration::SetConstant("gs_config.system.kEnclosureVersion", enclosure_type);
+	kEnclosureVersion = (GolfSimConfiguration::EnclosureType)enclosure_type;
 
 #ifdef __unix__  // Ignore in Windows environment
 

@@ -200,6 +200,13 @@ namespace golf_sim {
         static CameraHardware::CameraOrientation kSystemSlot1CameraOrientation;
         static CameraHardware::CameraOrientation kSystemSlot2CameraOrientation;
 
+		// The following angles are used to adjust the final HLA and VLA to account for
+		// problems such as the auto-calibration rig being slightly off.
+		// See the HLA and VLA calculations in gs_camera.cpp for more details on the meaning of negative versus positive angles
+        static float kHLAOffsetAngleDegrees;
+        static float kVLAOffsetAngleDegrees;
+
+
         // Refers to the camera_hardware device object associated with this higher-level camera object
         CameraHardware camera_hardware_;
 

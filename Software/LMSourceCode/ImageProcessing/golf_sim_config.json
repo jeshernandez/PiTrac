@@ -132,25 +132,45 @@
       "kTeedBallSearchAreaMaskRadiusRatio": "0.0"
     },
     "calibration": {
-      "kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras": [
+      "kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV2Enclosure": [
         "-0.52",
         "-0.28",
         "0.44"
       ],
-      "kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras": [
+      "kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV2Enclosure": [
         "-0.120",
         "-0.28",
         "0.44"
       ],
-      "kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras": [
+      "kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV2Enclosure": [
         "0.00",
         "0.095",
         "0.435"
       ],
-      "kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras": [
+      "kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV2Enclosure": [
         "0.00",
         "0.095",
         "0.435"
+      ],
+      "kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV3Enclosure": [
+        "-0.52",
+        "-0.243",
+        "0.481"
+      ],
+      "kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV3Enclosure": [
+        "-0.120",
+        "-0.243",
+        "0.481"
+      ],
+      "kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV3Enclosure": [
+        "0.00",
+        "0.095",
+        "0.435"
+      ],
+      "kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV3Enclosure": [
+        "0.00",
+        "0.095",
+        "0.481"
       ],
       "kCalibrationRigType": "1",
       "kCustomCalibrationRigPositionFromCamera1": [
@@ -216,12 +236,12 @@
         "-0.001576282874523095",
         "0.0"
       ],
-      "kAutoCalibrationBallPositionFromCamera1Meters": [
+      "kAutoCalibrationBallPositionFromCam1MeterForEnclosureV2s": [
         "-0.120",
         "-0.28",
         "0.44"
       ],
-      "kAutoCalibrationBallPositionFromCamera2Meters": [
+      "kAutoCalibrationBallPositionFromCam2MeterForEnclosureV2s": [
         "0.00",
         "0.095",
         "0.435"
@@ -391,6 +411,7 @@
       "kBaudRatePulseMultiplier": "1.0",
       "kCam2SetupPeriodMilliseconds": "2000",
       "kConnectionBoardVersion": "2",
+      "kEnclosureVersion": "2",
       "kDynamicFollowOnPulseVectorPutter": [
         444.0
       ],

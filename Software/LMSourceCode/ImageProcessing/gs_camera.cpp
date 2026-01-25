@@ -125,6 +125,8 @@ namespace golf_sim {
     CameraHardware::CameraOrientation GolfSimCamera::kSystemSlot1CameraOrientation = CameraHardware::CameraOrientation::kUpsideUp;
     CameraHardware::CameraOrientation GolfSimCamera::kSystemSlot2CameraOrientation = CameraHardware::CameraOrientation::kUpsideUp;
 
+    float GolfSimCamera::kHLAOffsetAngleDegrees = 0.0;
+    float GolfSimCamera::kVLAOffsetAngleDegrees = 0.0;
 
 
     GolfSimCamera::GolfSimCamera() {
@@ -229,6 +231,8 @@ namespace golf_sim {
 
         GolfSimConfiguration::SetConstant("gs_config.ball_identification.kPlacedBallUseLargestBall", kPlacedBallUseLargestBall);
 
+        GolfSimConfiguration::SetConstant("gs_config.cameras.kHLAOffsetAngleDegrees", kHLAOffsetAngleDegrees);
+        GolfSimConfiguration::SetConstant("gs_config.cameras.kVLAOffsetAngleDegrees", kVLAOffsetAngleDegrees);
     }
 
     GolfSimCamera::~GolfSimCamera() {
@@ -3628,6 +3632,28 @@ namespace golf_sim {
                 }
             }
 
+            // Finally, apply and HLA or VLA offsets to the results
+
+            float vla_offset = 0.0;
+            float hla_offset = 0.0;
+
+            GolfSimConfiguration::SetConstant("gs_config.cameras.kVLAOffset", vla_offset);
+            GolfSimConfiguration::SetConstant("gs_config.cameras.kHLAOffset", hla_offset);
+
+            if (hla_offset > 0.01 || vla_offset > 0.01) {
+                GS_LOG_MSG(trace, "Applying HLA offset of " + std::to_string(hla_offset) + " and VLA offset of " + std::to_string(vla_offset) + " to results.");
+			}
+
+			result_ball.angles_ball_perspective_[1] += vla_offset;
+            result_ball.angles_ball_perspective_[0] += hla_offset;
+
+			// TBD- We're not really working with the angles from the camera ortho perspective here, so
+            // do we really need to set that data?
+            result_ball.ball_rotation_angles_camera_ortho_perspective_[1] += vla_offset;
+            result_ball.ball_rotation_angles_camera_ortho_perspective_[0] += hla_offset;
+
+
+			// It's useful to have each hit ball's data printed to the log for later analysis
             result_ball.PrintBallFlightResults();
 
             return true;

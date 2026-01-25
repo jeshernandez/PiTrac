@@ -280,6 +280,22 @@
       "passedVia": "json",
       "passedTo": "both"
     },
+    "gs_config.system.kEnclosureVersion": {
+      "category": "System",
+      "subcategory": "advanced",
+      "basicSubcategory": "System",
+      "displayName": "Enclosure Version",
+      "description": "The enclosure version (type) can affect various aspects of the system.  For example, the distance of the reference ball in the calibration rig, as different enclosures position the cameras at different locations.",
+      "type": "select",
+      "options": {
+        "2": "Version 2.0 (Circa 2025 - Flat base bottom under a tower with triangular supports on the sides of the floors)",
+        "3": "Version 3.0 (Circa 2026 - Streamlined tower with stacked modules)"
+      },
+      "default": "2",
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
     "system.camera_role": {
       "category": "System",
       "subcategory": "advanced",
@@ -688,6 +704,36 @@
       "passedVia": "cli",
       "passedTo": "camera1",
       "cliArgument": "--search_center_y"
+    },
+    "gs_config.cameras.kHLAOffset": {
+      "category": "Cameras",
+      "subcategory": "advanced",
+      "basicSubcategory": "HLA Offset",
+      "displayName": "HLA Offset",
+      "description": "Number degrees to add to the pre-final HLA result.  Can be used to make up for PiTrac placement issues or calibration problems.",
+      "type": "float",
+      "min": -45.0,
+      "max": 45.0,
+      "step": 1.0,
+      "default": 0.0,
+      "requiresRestart": false,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.cameras.kVLAOffset": {
+      "category": "Cameras",
+      "subcategory": "advanced",
+      "basicSubcategory": "VLA Offset",
+      "displayName": "VLA Offset",
+      "description": "Number degrees to add to the pre-final VLA result.  Can be used to make up for PiTrac placement issues or calibration problems.",
+      "type": "float",
+      "min": -45.0,
+      "max": 45.0,
+      "step": 1.0,
+      "default": 0.0,
+      "requiresRestart": false,
+      "passedVia": "json",
+      "passedTo": "both"
     },
     "gs_config.golf_simulator_interfaces.E6.kE6ConnectAddress": {
       "category": "Simulators",
@@ -4000,28 +4046,6 @@
       "category": "calibration",
       "ui_name": "Camera 2 Position"
     },
-    "gs_config.cameras.kAutoCalibrationBallPositionFromCamera1Meters": {
-      "type": "array",
-      "default": [
-        "-0.120",
-        "-0.28",
-        "0.44"
-      ],
-      "description": "Auto calibration ball position from Camera 1 (meters). DEPRECATED - will now use (and be overwritten by) baseline (reference) or custom positions at runtime based on gs_config.calibration.kCalibrationRigType",
-      "category": "calibration",
-      "ui_name": "Auto Cal Ball Pos Cam1"
-    },
-    "gs_config.cameras.kAutoCalibrationBallPositionFromCamera2Meters": {
-      "type": "array",
-      "default": [
-        "0.00",
-        "0.095",
-        "0.435"
-      ],
-      "description": "Auto calibration ball position from Camera 2 (meters). DEPRECATED - will now use (and be overwritten by) baseline (reference) or custom positions at runtime based on gs_config.calibration.kCalibrationRigType",
-      "category": "calibration",
-      "ui_name": "Auto Cal Ball Pos Cam2"
-    },
     "gs_config.calibration.kCalibrationRigType": {
       "category": "Calibration",
       "subcategory": "advanced",
@@ -4068,14 +4092,14 @@
       "passedVia": "json",
       "passedTo": "both"
     },
-    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras": {
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV2Enclosure": {
       "category": "Calibration",
       "subcategory": "advanced",
-      "displayName": "Auto Cal Baseline Reference Ball Pos Cam1 Straight Out Positioning",
+      "displayName": "Auto Cal. Ball Position Cam1 - Straight-Out Positioning Using V2 Enclosure",
       "description": "Baseline calibration rig ball position from Camera 1 (meters) for both cameras pointing straight out the centerline",
       "type": "array",
       "default": [
-        "-0.120",
+        "-0.12",
         "-0.28",
         "0.44"
       ],
@@ -4083,10 +4107,10 @@
       "passedVia": "json",
       "passedTo": "both"
     },
-    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras": {
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV2Enclosure": {
       "category": "Calibration",
       "subcategory": "advanced",
-      "displayName": "Auto Cal Baseline Reference Ball Pos Cam2 Straight Out Positioning",
+      "displayName": "Auto Cal. Ball Position Cam2 - Straight-Out Positioning Using V2 Enclosure",
       "description": "Baseline calibration rig ball position from Camera 2 (meters) for both cameras pointing straight out the centerline",
       "type": "array",
       "default": [
@@ -4098,10 +4122,10 @@
       "passedVia": "json",
       "passedTo": "both"
     },
-    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras": {
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV2Enclosure": {
       "category": "Calibration",
       "subcategory": "advanced",
-      "displayName": "Auto Cal Baseline Reference Ball Pos Cam1 Skewed Positioning",
+      "displayName": "Auto Cal. Ball Position Cam1 - Skewed Positioning Using V2 Enclosure",
       "description": "Baseline calibration rig ball position from Camera 1 (meters) for camera 1 skewed back from the centerline",
       "type": "array",
       "default": [
@@ -4113,16 +4137,76 @@
       "passedVia": "json",
       "passedTo": "both"
     },
-    "gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras": {
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV2Enclosure": {
       "category": "Calibration",
       "subcategory": "advanced",
-      "displayName": "Auto Cal Baseline Reference Ball Pos Cam2 Skewed Positioning",
+      "displayName": "Auto Cal. Ball Position Cam2 - Skewed Positioning Using V2 Enclosure",
       "description": "Baseline calibration rig ball position from Camera 2 (meters) for camera 1 skewed back from the centerline.  Generally, camera 2 is always straight out - only camera 1 is skewed.",
       "type": "array",
       "default": [
         "0.00",
         "0.095",
         "0.435"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV3Enclosure": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal. Ball Position Cam1 - Straight-Out Positioning Using V3 Enclosure",
+      "description": "Baseline calibration rig ball position from Camera 1 (meters) for both cameras pointing straight out the centerline",
+      "type": "array",
+      "default": [
+        "-0.12",
+        "-0.243",
+        "0.481"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV3Enclosure": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal. Ball Position Cam2 - Straight-Out Positioning Using V3 Enclosure",
+      "description": "Baseline calibration rig ball position from Camera 2 (meters) for both cameras pointing straight out the centerline",
+      "type": "array",
+      "default": [
+        "0.00",
+        "0.109",
+        "0.481"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV3Enclosure": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal. Ball Position Cam1 - Skewed Positioning Using V3 Enclosure",
+      "description": "Baseline calibration rig ball position from Camera 1 (meters) for camera 1 skewed back from the centerline",
+      "type": "array",
+      "default": [
+        "-0.521",
+        "-0.243",
+        "0.481"
+      ],
+      "requiresRestart": true,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
+    "gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV3Enclosure": {
+      "category": "Calibration",
+      "subcategory": "advanced",
+      "displayName": "Auto Cal. Ball Position Cam2 - Skewed Positioning Using V3 Enclosure",
+      "description": "Baseline calibration rig ball position from Camera 2 (meters) for camera 1 skewed back from the centerline.  Generally, camera 2 is always straight out - only camera 1 is skewed.",
+      "type": "array",
+      "default": [
+        "0.00",
+        "0.109",
+        "0.472"
       ],
       "requiresRestart": true,
       "passedVia": "json",

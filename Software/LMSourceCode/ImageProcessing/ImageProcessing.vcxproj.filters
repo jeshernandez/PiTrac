@@ -638,6 +638,18 @@
     <None Include="RunScripts\shutdown_gs.sh" />
     <None Include="create_closed_source_objects.sh" />
     <None Include="packages.config" />
+    <None Include="..\..\web-server\calibration_manager.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\web-server\camera_detector.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\web-server\config_manager.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\web-server\configurations.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="core\CMakeLists.txt">

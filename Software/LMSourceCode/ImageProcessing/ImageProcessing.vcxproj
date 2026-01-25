@@ -133,14 +133,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BOOST_BIND_GLOBAL_PLACEHOLDERS;BOOST_ALL_DYN_LINK;BOOST_USE_WINAPI_VERSION=0x0A00;YAML_CPP_STATIC_DEFINE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\Dev_Libs\opencv\build\include;E:\Dev_Libs\boost_1_87_0\;E:\Dev_Libs\yaml-cpp\include;..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Dev_Libs\opencv\build\include;E:\Dev_Libs\yaml-cpp\include;..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\Dev_Libs\opencv\build\x64\vc16\lib;E:\Dev_Libs\boost_1_87_0\lib64-msvc-14.3</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Dev_Libs\opencv\build\x64\vc16\lib;</AdditionalLibraryDirectories>
       <AdditionalDependencies>E:\Dev_Libs\opencv\build\x64\vc16\lib\opencv_world4120d.lib;E:\dev_libs\yaml-cpp\build\Debug\yaml-cppd.lib;..\packages\Microsoft.ML.OnnxRuntime.1.23.2\runtimes\win-x64\native\onnxruntime.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -481,6 +481,10 @@
     <ClInclude Include="worker_thread.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\web-server\calibration_manager.py" />
+    <None Include="..\..\web-server\camera_detector.py" />
+    <None Include="..\..\web-server\configurations.json" />
+    <None Include="..\..\web-server\config_manager.py" />
     <None Include="CameraTools\imx296_noir.json" />
     <None Include="CameraTools\lc.sh" />
     <None Include="CameraTools\lcGS.sh" />
@@ -544,6 +548,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\Microsoft.ML.OnnxRuntime.targets" Condition="Exists('..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\Microsoft.ML.OnnxRuntime.targets')" />
+    <Import Project="..\packages\boost.1.87.0\build\boost.targets" Condition="Exists('..\packages\boost.1.87.0\build\boost.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -551,5 +556,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\Microsoft.ML.OnnxRuntime.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\Microsoft.ML.OnnxRuntime.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\Microsoft.ML.OnnxRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ML.OnnxRuntime.1.23.2\build\native\Microsoft.ML.OnnxRuntime.targets'))" />
+    <Error Condition="!Exists('..\packages\boost.1.87.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.87.0\build\boost.targets'))" />
   </Target>
 </Project>
