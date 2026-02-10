@@ -26,8 +26,8 @@ namespace golf_sim {
 
     cv::Vec3d GolfSimCalibration::kFinalAutoCalibrationBallPositionFromCameraMeters;
 
-    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCamera1Meters;
-    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCamera2Meters;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam1Meters;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam2Meters;
 
 
     // If kCalibrationRigType is custom, then these constants will hold the position of the ball from each camera
@@ -39,11 +39,18 @@ namespace golf_sim {
     // These next two pairs of constants hold the ball position from each camera for the two supported
     // standard calibration rig types.
 
-    cv::Vec3d GolfSimCalibration::kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras;
-    cv::Vec3d GolfSimCalibration::kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV2Enclosure;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV2Enclosure;
 
-    cv::Vec3d GolfSimCalibration::kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras;
-    cv::Vec3d GolfSimCalibration::kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV2Enclosure;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV2Enclosure;
+
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV3Enclosure;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV3Enclosure;
+
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV3Enclosure;
+    cv::Vec3d GolfSimCalibration::kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV3Enclosure;
+
 
     // Number of pictures to average when determining focal length.  Because the focal length can tend
     // to bounce around a bit due to small variations in ball detection, averaging multiple pictures can help.
@@ -61,43 +68,54 @@ namespace golf_sim {
         GS_LOG_TRACE_MSG(trace, "GolfSimCalibration reading constants from JSON file.");
 
         GolfSimConfiguration::SetConstant("gs_config.calibration.kNumberPicturesForFocalLengthAverage", kNumberPicturesForFocalLengthAverage);
+
+        int rig_type = 0;
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kCalibrationRigType", rig_type);
+        kCalibrationRigType = (GolfSimCalibration::CalibrationRigType)rig_type;
+
         GolfSimConfiguration::SetConstant("gs_config.calibration.kNumberOfCalibrationFailuresToTolerate", kNumberOfCalibrationFailuresToTolerate);
 
         GolfSimConfiguration::SetConstant("gs_config.calibration.kCustomCalibrationRigPositionFromCamera1", kCustomCalibrationRigPositionFromCamera1);
         GolfSimConfiguration::SetConstant("gs_config.calibration.kCustomCalibrationRigPositionFromCamera2", kCustomCalibrationRigPositionFromCamera2);
-        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras", kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras);
-        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras", kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras);
-        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras", kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras);
-        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras", kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras);
-		GolfSimConfiguration::SetConstant("gs_config.calibration.kCalibrationRigType", reinterpret_cast<int&>(kCalibrationRigType));
 
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV2Enclosure", kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV2Enclosure);
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV2Enclosure", kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV2Enclosure);
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV2Enclosure", kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV2Enclosure);
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV2Enclosure", kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV2Enclosure);
+
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV3Enclosure", kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV3Enclosure);
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV3Enclosure", kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV3Enclosure);
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV3Enclosure", kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV3Enclosure);
+        GolfSimConfiguration::SetConstant("gs_config.calibration.kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV3Enclosure", kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV3Enclosure);
     }
 
     GolfSimCalibration::~GolfSimCalibration() {
     }
-
+    
     bool GolfSimCalibration::RetrieveAutoCalibrationConstants(const GsCameraNumber camera_number) {
 
         GS_LOG_TRACE_MSG(trace, "RetrieveAutoCalibrationConstants called with camera number = " + std::to_string(camera_number));
         GS_LOG_TRACE_MSG(trace, "RetrieveAutoCalibrationConstants using kCalibrationRigType = " + std::to_string(kCalibrationRigType));
+        GS_LOG_TRACE_MSG(trace, "RetrieveAutoCalibrationConstants using kEnclosureVersion = " + std::to_string(GolfSimConfiguration::kEnclosureVersion));
 
-        // Set the ball position based on the rig type
+        // Set the ball position based on the rig and enclosure type
         // These constants should already have been set by the constructor
+
         switch (kCalibrationRigType) {
         case CalibrationRigType::kStraightForwardCameras:
-            kAutoCalibrationBallPositionFromCamera1Meters = kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras;
-            kAutoCalibrationBallPositionFromCamera2Meters = kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras;
+            kAutoCalibrationBallPositionFromCam1Meters = (GolfSimConfiguration::kEnclosureVersion == GolfSimConfiguration::EnclosureType::kEnclosureVersion_2) ? kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV2Enclosure : kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV3Enclosure;
+            kAutoCalibrationBallPositionFromCam2Meters = (GolfSimConfiguration::kEnclosureVersion == GolfSimConfiguration::EnclosureType::kEnclosureVersion_2) ? kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV2Enclosure : kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV3Enclosure;
             break;
 
         case CalibrationRigType::kSkewedCamera1:
-            kAutoCalibrationBallPositionFromCamera1Meters = kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras;
-            kAutoCalibrationBallPositionFromCamera2Meters = kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras;
+            kAutoCalibrationBallPositionFromCam1Meters = (GolfSimConfiguration::kEnclosureVersion == GolfSimConfiguration::EnclosureType::kEnclosureVersion_2) ? kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV2Enclosure : kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV3Enclosure;
+            kAutoCalibrationBallPositionFromCam2Meters = (GolfSimConfiguration::kEnclosureVersion == GolfSimConfiguration::EnclosureType::kEnclosureVersion_2) ? kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV2Enclosure : kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV3Enclosure;
             break;
 
         case kSCustomRig:
             // Use custom values
-            kAutoCalibrationBallPositionFromCamera1Meters = kCustomCalibrationRigPositionFromCamera1;
-            kAutoCalibrationBallPositionFromCamera2Meters = kCustomCalibrationRigPositionFromCamera2;
+            kAutoCalibrationBallPositionFromCam1Meters = kCustomCalibrationRigPositionFromCamera1;
+            kAutoCalibrationBallPositionFromCam2Meters = kCustomCalibrationRigPositionFromCamera2;
             break;
 
         case CalibrationRigType::kCalibrationRigTypeUnknown:
@@ -107,8 +125,9 @@ namespace golf_sim {
             break;
         }
 
+		// Now set the final ball position based on the camera number
         kFinalAutoCalibrationBallPositionFromCameraMeters = (camera_number == GsCameraNumber::kGsCamera1) ? 
-                            kAutoCalibrationBallPositionFromCamera1Meters : kAutoCalibrationBallPositionFromCamera2Meters;
+            kAutoCalibrationBallPositionFromCam1Meters : kAutoCalibrationBallPositionFromCam2Meters;
 
         GS_LOG_TRACE_MSG(trace, "kFinalAutoCalibrationBallPositionFromCameraMeters (x,y,z) distances to ball: " + LoggingTools::FormatVec3f(kFinalAutoCalibrationBallPositionFromCameraMeters));
 

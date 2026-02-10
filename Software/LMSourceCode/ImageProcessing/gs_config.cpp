@@ -22,9 +22,13 @@
 #include "libcamera_interface.h"
 
 
+
 namespace golf_sim {
 
 	boost::property_tree::ptree GolfSimConfiguration::configuration_root_;
+
+	GolfSimConfiguration::EnclosureType GolfSimConfiguration::kEnclosureVersion = GolfSimConfiguration::EnclosureType::kEnclosureVersion_Unknown;
+
 
 	bool GolfSimConfiguration::Initialize(const std::string& configuration_filename) {
 
@@ -162,6 +166,11 @@ bool GolfSimConfiguration::ReadValues() {
 	SetConstant("gs_config.cameras.kCamera2PositionsFromExpectedBallMeters", GolfSimCamera::kCamera2PositionsFromExpectedBallMeters);
 	SetConstant("gs_config.cameras.kCamera2OffsetFromCamera1OriginMeters", GolfSimCamera::kCamera2OffsetFromCamera1OriginMeters);
 
+
+	int enclosure_type = 0;
+	GolfSimConfiguration::SetConstant("gs_config.system.kEnclosureVersion", enclosure_type);
+	kEnclosureVersion = (GolfSimConfiguration::EnclosureType)enclosure_type;
+
 #ifdef __unix__  // Ignore in Windows environment
 
 	SetConstant("gs_config.user_interface.kWebServerResultBallExposureCandidates",GsUISystem::kWebServerResultBallExposureCandidates);
@@ -174,9 +183,11 @@ bool GolfSimConfiguration::ReadValues() {
 	SetConstant("gs_config.image_capture.kMaxWatchingCropWidth", LibCameraInterface::kMaxWatchingCropWidth);
 	SetConstant("gs_config.image_capture.kMaxWatchingCropHeight", LibCameraInterface::kMaxWatchingCropHeight);
 	SetConstant("gs_config.cameras.kCamera1Gain", LibCameraInterface::kCamera1Gain);
+	SetConstant("gs_config.cameras.kCamera1Saturation", LibCameraInterface::kCamera1Saturation);
 	SetConstant("gs_config.cameras.kCamera1HighFPSGain", LibCameraInterface::kCamera1HighFPSGain);
 	SetConstant("gs_config.cameras.kCamera1Contrast", LibCameraInterface::kCamera1Contrast);
 	SetConstant("gs_config.cameras.kCamera2Gain", LibCameraInterface::kCamera2Gain);
+	SetConstant("gs_config.cameras.kCamera2Saturation", LibCameraInterface::kCamera2Saturation);
 
 	// Let the command-line gain parameter override the .json config file parameter 
 	// TBD - May want to have separate gain options?

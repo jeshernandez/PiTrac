@@ -506,6 +506,11 @@ namespace golf_sim {
 				lgGpioWrite(lggpio_chip_handle_, kPulseTriggerOutputPin, kOFF);
 			}
 
+			// The cnclosure version will affect where the ball on the auto-calibration target is located relative to the cameras
+			int kEnclosureVersionIntValue = 0;
+			GolfSimConfiguration::SetConstant("gs_config.strobing.kEnclosureVersion", kEnclosureVersionIntValue);
+			GolfSimConfiguration::EnclosureType knclosureVersion = (GolfSimConfiguration::EnclosureType)kEnclosureVersionIntValue;
+
 			if (callback_function != nullptr) {
 				/* TBD
 				gpioSetSignalFunc(SIGUSR1, callback_function);

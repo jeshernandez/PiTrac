@@ -285,6 +285,12 @@
     <ClCompile Include="gs_calibration.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="onnx_runtime_detector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gs_web_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="golf_ball.h">
@@ -554,6 +560,9 @@
     <ClInclude Include="gs_calibration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="onnx_runtime_detector.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="golf_sim_config.json">
@@ -629,6 +638,18 @@
     <None Include="RunScripts\shutdown_gs.sh" />
     <None Include="create_closed_source_objects.sh" />
     <None Include="packages.config" />
+    <None Include="..\..\web-server\calibration_manager.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\web-server\camera_detector.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\web-server\config_manager.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\web-server\configurations.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="core\CMakeLists.txt">

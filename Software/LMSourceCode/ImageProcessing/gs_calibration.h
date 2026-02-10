@@ -29,7 +29,7 @@ namespace golf_sim {
     {
     public:
 
-        // Note that the skewed camera rig sets up the ball for the teed ball camear to be 
+        // Note that the skewed camera rig sets up the ball for the teed ball cameara to be 
         // rotated away from the centerline in order to give the ball-movement detection more time to 
         // detect movement.
 
@@ -42,8 +42,10 @@ namespace golf_sim {
 
         static CalibrationRigType kCalibrationRigType;
 
-        static cv::Vec3d kAutoCalibrationBallPositionFromCamera1Meters;
-        static cv::Vec3d kAutoCalibrationBallPositionFromCamera2Meters;
+		// These next two constants hold the finally-selected ball position from each camera for the auto-calibration
+		// after we figure out which rig and enclosure type we are using.
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam1Meters;
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam2Meters;
 
 
 		// If kCalibrationRigType is custom, then these constants will hold the position of the ball from each camera
@@ -55,13 +57,19 @@ namespace golf_sim {
 		// These next two pairs of constants hold the ball position from each camera for the two supported
 		// standard calibration rig types.
         
-        static cv::Vec3d kAutoCalibrationBaselineBallPositionFromCamera1MetersForStraightOutCameras;
-        static cv::Vec3d kAutoCalibrationBaselineBallPositionFromCamera2MetersForStraightOutCameras;
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV2Enclosure;
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV2Enclosure;
 
-        static cv::Vec3d kAutoCalibrationBaselineBallPositionFromCamera1MetersForSkewedCameras;
-        static cv::Vec3d kAutoCalibrationBaselineBallPositionFromCamera2MetersForSkewedCameras;
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV2Enclosure;
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV2Enclosure;
 
-		// Number of pictures to average when determining focal length.  Because the focal length can tend
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam1MetersForStraightOutCamerasV3Enclosure;
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam2MetersForStraightOutCamerasV3Enclosure;
+
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam1MetersForSkewedCamerasV3Enclosure;
+        static cv::Vec3d kAutoCalibrationBallPositionFromCam2MetersForSkewedCamerasV3Enclosure;
+
+        // Number of pictures to average when determining focal length.  Because the focal length can tend
 		// to bounce around a bit due to small variations in ball detection, averaging multiple pictures can help.
         
         static int kNumberPicturesForFocalLengthAverage;

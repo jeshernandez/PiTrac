@@ -34,7 +34,7 @@ Before you can run auto-calibration in the web UI, you need a calibration rig to
 
 **Files**: [GitHub - Calibration Rig STL files](https://github.com/PiTracLM/PiTrac/tree/main/3D%20Printed%20Parts/Enclosure%20Version%202/Calibration%20Rig)
 
-The rig works with both V1.0 and V2.0 enclosures, though V1 is not as well-supported and may need custom measurements (ask on Discord). Only difference is the measurement values you'll configure.
+The rig works with both V1.0, 2.0, and StefanF's 3.0 enclosures, though V1 is not as well-supported and may need custom measurements (ask on Discord). Only difference is the measurement values you'll configure.  Because V3.0 is still under development, these values may need to be updated from time to time.
 
 **Print Settings**:
 - Material: PETG preferred (less warping), PLA works fine
@@ -50,11 +50,11 @@ The rig works with both V1.0 and V2.0 enclosures, though V1 is not as well-suppo
 - [Straight-out Camera Calibration Rig]({{ '/assets/images/enclosure_assembly/Autocalibration_Straight-Out_Option.jpeg' | relative_url }}){: width="300"}
 - Push pieces together snugly (can be tight - that's normal)
 - Make sure connections are fully seated for accurate dimensions
-- Ball 1 (right-most) sits on floor, Ball 2 (mid-air).  NOTE - only place one ball at a time during calibration or the system will get confused.
+- Ball 1 (right-most) sits on floor, Ball 2 (mid-air).  NOTE - only place *one* ball at a time during calibration or the system will get confused.
 
 ### 2. Position the Rig
 
-**Version 2.0 Enclosure**:
+**Version 2.0 and 3.0 Enclosure**:
 - Insert the square tab into the square hole in bottom front of enclosure.  You may need to nudge the LED light strip to get at the hole.
 - Check that rig is square to the enclosure and that the arm for the ball on the floor is 90° to the other leg.  Also ensure the ball in the air is held straight up.
 
@@ -63,7 +63,7 @@ The rig works with both V1.0 and V2.0 enclosures, though V1 is not as well-suppo
 - Place tab on diagonal part of enclosure
 - Align end edge of rear part with outside of lower enclosure section
 
-**Use a square** (carpenter's square or similar) to ensure rig is perpendicular to the enclosure. Precision here improves calibration accuracy.
+**Use a carpenter's square or similar** to ensure rig is perpendicular to the enclosure. Precision here improves calibration accuracy.
 
 ### 3. Aim the Cameras
 
@@ -84,19 +84,26 @@ The calibration wizard needs to know where the balls are relative to the cameras
 
 Use the UI to select one of the three calibration rig options:
 
-**For Version 1.0 Enclosure** (with standard rig):
+**For Version 1.0 Enclosure** (with "skewed" rig where the teed ball is out to one side):
 
 ```
 kAutoCalibrationBallPositionFromCamera1Meters: [-0.525, -0.275, 0.45]
 kAutoCalibrationBallPositionFromCamera2Meters: [0.0, 0.095, 0.435]
 ```
 
-**For Version 2.0 Enclosure** (with standard rig):
+**For Version 2.0 Enclosure** (with skewed rig):
 
 ```
 kAutoCalibrationBallPositionFromCamera1Meters: [-0.504, -0.234, 0.491]
 kAutoCalibrationBallPositionFromCamera2Meters: [0.0, 0.088, 0.466]
 ```
+**For Version 3.0 Enclosure** (with skewed rig):
+
+```
+kAutoCalibrationBallPositionFromCamera1Meters: [-0.521, -0.243, 0.481]
+kAutoCalibrationBallPositionFromCamera2Meters: [0.0, 0.109, 0.472]
+```
+
 
 **Coordinate system**:
 - X: Positive = right (from camera view)
@@ -116,7 +123,7 @@ If you built your own rig, measure from camera lens center to ball center and en
 
 1. Select the type of calibration rig you will be using (depending on the camera arrangement and enclosure version) in Configuration → Calibration → kCalibrationRigType:
 [Calibration Rig Selection]({{ '/assets/images/enclosure_assembly/AutoCalibration_Rig_Type_Selection.png' | relative_url }}){: width="300"}
-3. Navigate to the PiTrac web dashboard (usually `http://raspberrypi.local:8080`) where raspberrypi is the name of your pi on the network.
+3. Navigate to the PiTrac web dashboard (usually `http://raspberrypi.local:8080`) where raspberrypi is the name of your pi on the network, e.g. 'http://192.168.0.20.local:8080'.
 4. Click menu (3 dots) → **Calibration**
 5. Select which camera(s) to calibrate:
    - **Camera 1** - Recommended starting point (~30 seconds)
