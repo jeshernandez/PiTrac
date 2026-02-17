@@ -106,7 +106,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 	GS_LOG_TRACE_MSG(trace, "ball_flight_camera_event_loop started.  Opened Camera....");
 
 	// The RGB flag still works for grayscale mono images
-	uint flags = RPiCamApp::FLAG_STILL_RGB;
+	uint flags = RPiCamApp::FLAG_STILL_RGB | RPiCamApp::FLAG_STILL_DOUBLE_BUFFER;
 	app.ConfigureViewfinder(flags);
 
 	app.StartCamera();
@@ -166,7 +166,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 		{
 			GS_LOG_MSG(error, "ERROR: Device timeout detected, attempting a restart!!!");
 			app.StopCamera();
-			uint flags = RPiCamApp::FLAG_STILL_RGB;
+			uint flags = RPiCamApp::FLAG_STILL_RGB | RPiCamApp::FLAG_STILL_DOUBLE_BUFFER;
 			app.ConfigureViewfinder(flags);
 			app.StartCamera();
 			continue;

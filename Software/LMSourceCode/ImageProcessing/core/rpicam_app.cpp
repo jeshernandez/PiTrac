@@ -337,7 +337,11 @@ void RPiCamApp::ConfigureViewfinder(unsigned int flags)
 	// Now we get to override any of the default settings from the options_->Get().
 	configuration_->at(0).pixelFormat = libcamera::formats::YUV420;
 	configuration_->at(0).size = size;
-	if (options_->Get().viewfinder_buffer_count > 0)
+	if ((flags & FLAG_STILL_BUFFER_MASK) == FLAG_STILL_DOUBLE_BUFFER)
+		configuration_->at(0).bufferCount = 2;
+	else if ((flags & FLAG_STILL_BUFFER_MASK) == FLAG_STILL_TRIPLE_BUFFER)
+		configuration_->at(0).bufferCount = 3;
+	else if (options_->Get().viewfinder_buffer_count > 0)
 		configuration_->at(0).bufferCount = options_->Get().viewfinder_buffer_count;
 
 	if (have_lores_stream)

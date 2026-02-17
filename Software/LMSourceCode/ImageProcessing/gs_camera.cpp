@@ -163,15 +163,12 @@ namespace golf_sim {
         GolfSimConfiguration::SetConstant("gs_config.strobing.kPuttingBallSpeedSlowdownPercentage", kPuttingBallSpeedSlowdownPercentage);
         GolfSimConfiguration::SetConstant("gs_config.strobing.kCameraRequiresFlushPulse", kCameraRequiresFlushPulse);
         
-        /* TBD - InnoMaker cameras do not appear to need a flush image
         const CameraHardware::CameraModel  camera_model = GolfSimCamera::kSystemSlot2CameraType;
 
         if (camera_model == CameraHardware::CameraModel::InnoMakerIMX296GS_Mono) {
             GS_LOG_TRACE_MSG(trace, "Overriding kCameraRequiresFlushPulse to true.");
             kCameraRequiresFlushPulse = true;
         }
-        ***/
-        kCameraRequiresFlushPulse = false;
 
 
         GolfSimConfiguration::SetConstant("gs_config.ball_exposure_selection.kMaxIntermediateBallRadiusChangePercent", kMaxIntermediateBallRadiusChangePercent);
