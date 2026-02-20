@@ -223,7 +223,7 @@ void GolfBall::PrintBallFlightResults() const {
     GS_LOG_TRACE_MSG(trace, "Calculated ball spin (x,y,z) in RPM = " + std::to_string(ball.rotation_speeds_RPM_[0]) + ", " + std::to_string(ball.rotation_speeds_RPM_[1]) + ", " + std::to_string(ball.rotation_speeds_RPM_[2]) + ".");
 }
 
-void GolfBall::AverageBalls(const std::vector<GolfBall>& ball_vector, GolfBall& averaged_ball) {
+void GolfBall::AverageBalls(const std::vector<GolfBall>& ball_vector, GolfBall& averaged_ball, bool average_all_parameters) {
     double number_balls = (double)ball_vector.size();
 
     // Certain properties may not be averaged for every ball, so we need to
@@ -246,7 +246,7 @@ void GolfBall::AverageBalls(const std::vector<GolfBall>& ball_vector, GolfBall& 
 
     for (const GolfBall& b: ball_vector) {
 
-        if (b.shot_parameters_.ParameterIsPresent(GsShotParameters::ShotParameter::kBallVelocity)) {
+        if (average_all_parameters || b.shot_parameters_.ParameterIsPresent(GsShotParameters::ShotParameter::kBallVelocity)) {
             averaged_ball.velocity_ += b.velocity_;
             number_balls_averaged_for_velocity++;
 		}
@@ -266,13 +266,13 @@ void GolfBall::AverageBalls(const std::vector<GolfBall>& ball_vector, GolfBall& 
         averaged_ball.position_deltas_ball_perspective_[2] += b.position_deltas_ball_perspective_[2] / number_balls;
 
         // HLA
-        if (b.shot_parameters_.ParameterIsPresent(GsShotParameters::ShotParameter::kHLA)) {
+        if (average_all_parameters || b.shot_parameters_.ParameterIsPresent(GsShotParameters::ShotParameter::kHLA)) {
             averaged_ball.angles_ball_perspective_[0] += b.angles_ball_perspective_[0];
             number_balls_averaged_for_HLA++;
         }
 
         // VLA
-        if (b.shot_parameters_.ParameterIsPresent(GsShotParameters::ShotParameter::kVLA)) {
+        if (average_all_parameters || b.shot_parameters_.ParameterIsPresent(GsShotParameters::ShotParameter::kVLA)) {
             averaged_ball.angles_ball_perspective_[1] += b.angles_ball_perspective_[1];
             number_balls_averaged_for_VLA++;
         }

@@ -181,7 +181,7 @@ public:
     double PixelDistanceFromBall(const GolfBall& ball2) const;
 
     // Balls that have shot_parameter_ values other than kShotParameterAll will only be used for the purposes that the shot_parameters_ specify.
-    static void AverageBalls(const std::vector<GolfBall>& ball_vector, GolfBall& averaged_ball);
+    static void AverageBalls(const std::vector<GolfBall>& ball_vector, GolfBall& averaged_ball, bool average_all_parameters = true);
 
     bool PointIsInsideBall(const double x, const double y) const;
 
