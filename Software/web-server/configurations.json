@@ -2430,6 +2430,17 @@
       "passedVia": "json",
       "passedTo": "both"
     },
+    "gs_config.ball_exposure_selection.kUseOnlyHighQualityBallImagesForHLA": {
+      "category": "Ball Detection",
+      "subcategory": "advanced",
+      "displayName": "Use Only High Quality Ball Images For HLA",
+      "description": "Because earlier-in-time balls have more overlap and lower radius accuracy, this allows for some of those balls to be ignored for HLA calculations.",
+      "type": "boolean",
+      "default": false,
+      "requiresRestart": false,
+      "passedVia": "json",
+      "passedTo": "both"
+    },
     "gs_config.motion_detect_stage.kDifferenceM": {
       "category": "Ball Detection",
       "subcategory": "advanced",
