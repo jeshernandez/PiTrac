@@ -273,7 +273,8 @@
       "type": "select",
       "options": {
         "1": "Version 1.0",
-        "2": "Version 2.0"
+        "2": "Version 2.0",
+        "3": "Version 3.0"
       },
       "default": "1",
       "requiresRestart": true,
