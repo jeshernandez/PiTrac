@@ -143,6 +143,8 @@ bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg, bool send_pr
 					app.PostQuit();
 					return;
 				}
+				// Give the event loop time to transition before the capture trigger
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				if (!gs::PulseStrobe::SendExternalTrigger()) {
 					GS_LOG_MSG(error, "Failed to send external trigger.");
 					app.PostQuit();
