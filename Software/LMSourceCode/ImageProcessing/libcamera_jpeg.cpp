@@ -9,6 +9,7 @@
 #include <chrono>
 #include <signal.h>
 #include <sys/stat.h>
+#include <thread>
 
 #include "core/rpicam_encoder.hpp"
 #include "encoder/encoder.hpp"
@@ -86,7 +87,7 @@ void SetExternalTrigger(bool& flag) {
 // Run the triggered capture event loop on an already-opened camera.
 // The camera must have been opened and configured before calling this.
 // Calls StartCamera at entry and StopCamera when the final image arrives.
-bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
+bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg, bool send_priming_pulses)
 {
 	app.StartCamera();
 	GS_LOG_TRACE_MSG(trace, "cam2_run_event_loop: camera started, waiting for triggers");
@@ -128,6 +129,39 @@ bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 
 	bool dummy = false;
 	SetExternalTrigger(dummy);
+
+	// Send priming pulses + trigger in a background thread so the event loop
+	// can process the resulting hardware trigger events as they arrive.
+	// Skipped in normal mode -- the FSM handles pulse timing externally.
+	std::thread pulse_sender;
+	if (send_priming_pulses) {
+		GS_LOG_TRACE_MSG(trace, "Sending priming pulses from event loop");
+		pulse_sender = std::thread([&app]() {
+			try {
+				if (!gs::PulseStrobe::SendCameraPrimingPulses(true)) {
+					GS_LOG_MSG(error, "Failed to send priming pulses.");
+					app.PostQuit();
+					return;
+				}
+				if (!gs::PulseStrobe::SendExternalTrigger()) {
+					GS_LOG_MSG(error, "Failed to send external trigger.");
+					app.PostQuit();
+					return;
+				}
+			} catch (const std::exception& e) {
+				GS_LOG_MSG(error, "Pulse sender exception: " + std::string(e.what()));
+				app.PostQuit();
+			} catch (...) {
+				GS_LOG_MSG(error, "Pulse sender unknown exception.");
+				app.PostQuit();
+			}
+		});
+	}
+
+	struct PulseThreadGuard {
+		std::thread& t;
+		~PulseThreadGuard() { if (t.joinable()) t.join(); }
+	} pulse_guard{pulse_sender};
 
 	bool return_status = true;
 
@@ -389,7 +423,7 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 	app.OpenCamera();
 	uint flags = RPiCamApp::FLAG_STILL_RGB;
 	app.ConfigureViewfinder(flags);
-	bool result = cam2_run_event_loop(app, returnImg);
+	bool result = cam2_run_event_loop(app, returnImg, true);
 	return result;
 }
 

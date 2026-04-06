@@ -4293,13 +4293,6 @@ namespace golf_sim {
             }
 
             // Take a still picture with Camera2 directly (single-process mode)
-            if (!PulseStrobe::SendCameraPrimingPulses(true)) {
-                GS_LOG_MSG(error, "FAILED to PulseStrobe::SendCameraPrimingPulses");
-                return false;
-            }
-
-            PulseStrobe::SendExternalTrigger();
-
             if (!WaitForCam2Trigger(color_image)) {
                 GS_LOG_MSG(error, "FAILED to WaitForCam2Trigger for still picture.");
                 return false;

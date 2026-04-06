@@ -19,7 +19,7 @@
 #include "core/still_options.hpp"
 
 // Defined in libcamera_jpeg.cpp
-bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg);
+bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg, bool send_priming_pulses = false);
 
 namespace golf_sim {
 
