@@ -186,10 +186,14 @@ bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg, bool send_pr
 
 		if (msg.type == RPiCamApp::MsgType::Quit) {
 			GS_LOG_TRACE_MSG(trace, "Received Quit message.");
-			return false;
+			return_status = false;
+			break;
 		}
-		else if (msg.type != RPiCamApp::MsgType::RequestComplete)
-			throw std::runtime_error("Unrecognised message!");
+		else if (msg.type != RPiCamApp::MsgType::RequestComplete) {
+			GS_LOG_MSG(error, "Unrecognised camera message type, aborting event loop.");
+			return_status = false;
+			break;
+		}
 		else {
 			// GS_LOG_TRACE_MSG(trace, "RECEIVED libcamera-app message-------");
 		}
@@ -223,8 +227,9 @@ bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg, bool send_pr
 
 			if (stream == nullptr) {
 				GS_LOG_MSG(error, "Got a null stream");
-
-				return false;
+				return_status = false;
+				state = kFinalImageReceived;
+				break;
 			}
 
 			StreamInfo info = app.GetStreamInfo(stream);
@@ -239,8 +244,9 @@ bool cam2_run_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg, bool send_pr
 
 			if (image == nullptr) {
 				GS_LOG_MSG(error, "Got a null image");
-				
-				return false;
+				return_status = false;
+				state = kFinalImageReceived;
+				break;
 			}
 
 			GS_LOG_TRACE_MSG(trace, "About to create Mat frame in kWaitingForFinalImageFlush.  Info.height, width = " + std::to_string(info.height) + 
