@@ -777,6 +777,8 @@ class CalibrationManager:
         if "PITRAC_ROOT" not in env:
             env["PITRAC_ROOT"] = "/usr/lib/pitrac"
         env["OMP_WAIT_POLICY"] = "PASSIVE"
+        env.setdefault("LIBPISP_LOG_LEVEL", "4")
+        env.setdefault("LIBCAMERA_LOG_LEVELS", "*:ERROR")
 
         # Camera types come from cameras.slot1.type and cameras.slot2.type (default 5 = InnoMaker IMX296)
         slot1_type = config.get("cameras", {}).get("slot1", {}).get("type", 5)
