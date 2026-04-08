@@ -475,10 +475,16 @@ bool ball_flight_camera_event_loop(LibcameraJpegApp& app, cv::Mat& returnImg)
 				app.StartCamera();
 				continue;
 			}
-			if (msg.type == RPiCamApp::MsgType::Quit)
+			if (msg.type == RPiCamApp::MsgType::Quit) {
+				GS_LOG_TRACE_MSG(trace, "Received Quit message in still_image_event_loop.");
+				app.StopCamera();
 				return false;
-			else if (msg.type != RPiCamApp::MsgType::RequestComplete)
-				throw std::runtime_error("unrecognised message!");
+			}
+			else if (msg.type != RPiCamApp::MsgType::RequestComplete) {
+				GS_LOG_MSG(error, "Unrecognised camera message type in still_image_event_loop, aborting.");
+				app.StopCamera();
+				return false;
+			}
 
 			// In viewfinder mode, simply run until the timeout. When that happens, switch to
 			// capture mode.

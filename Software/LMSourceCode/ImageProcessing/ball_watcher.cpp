@@ -113,10 +113,22 @@ bool ball_watcher_event_loop(RPiCamEncoder &app, bool & motion_detected)
 			continue;
 		}
 
-		if (msg.type == RPiCamEncoder::MsgType::Quit)
+		if (msg.type == RPiCamEncoder::MsgType::Quit) {
+			GS_LOG_TRACE_MSG(trace, "Received Quit message in ball_watcher_event_loop.");
+			app.StopCamera();
+			app.StopEncoder();
+			sp.sched_priority = 0;
+			pthread_setschedparam(pthread_self(), SCHED_OTHER, &sp);
 			return motion_detected;
-		else if (msg.type != RPiCamEncoder::MsgType::RequestComplete)
-			throw std::runtime_error("unrecognised message!");
+		}
+		else if (msg.type != RPiCamEncoder::MsgType::RequestComplete) {
+			GS_LOG_MSG(error, "Unrecognised camera message type in ball_watcher_event_loop, aborting.");
+			app.StopCamera();
+			app.StopEncoder();
+			sp.sched_priority = 0;
+			pthread_setschedparam(pthread_self(), SCHED_OTHER, &sp);
+			return false;
+		}
 
 		CompletedRequestPtr &completed_request = std::get<CompletedRequestPtr>(msg.payload);
 
