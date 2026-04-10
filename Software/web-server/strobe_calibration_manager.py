@@ -94,20 +94,20 @@ class StrobeCalibrationManager:
             raise RuntimeError("gpiozero library not available -- not running on a Raspberry Pi?")
 
         saved_cwd = os.getcwd()
+        try:
+            self._spi_dac = spidev.SpiDev()
+            self._spi_dac.open(self.SPI_BUS, self.SPI_DAC_DEVICE)
+            self._spi_dac.max_speed_hz = self.SPI_MAX_SPEED_HZ
+            self._spi_dac.mode = 0
 
-        self._spi_dac = spidev.SpiDev()
-        self._spi_dac.open(self.SPI_BUS, self.SPI_DAC_DEVICE)
-        self._spi_dac.max_speed_hz = self.SPI_MAX_SPEED_HZ
-        self._spi_dac.mode = 0
+            self._spi_adc = spidev.SpiDev()
+            self._spi_adc.open(self.SPI_BUS, self.SPI_ADC_DEVICE)
+            self._spi_adc.max_speed_hz = self.SPI_MAX_SPEED_HZ
+            self._spi_adc.mode = 0
 
-        self._spi_adc = spidev.SpiDev()
-        self._spi_adc.open(self.SPI_BUS, self.SPI_ADC_DEVICE)
-        self._spi_adc.max_speed_hz = self.SPI_MAX_SPEED_HZ
-        self._spi_adc.mode = 0
-
-        self._diag_pin = DigitalOutputDevice(self.DIAG_GPIO_PIN)
-
-        os.chdir(saved_cwd)
+            self._diag_pin = DigitalOutputDevice(self.DIAG_GPIO_PIN)
+        finally:
+            os.chdir(saved_cwd)
 
     def _close_hardware(self):
         for name, resource in [("diag", self._diag_pin),
@@ -370,7 +370,7 @@ class StrobeCalibrationManager:
         self._cancel_requested = False
         self.status = {"state": "calibrating", "progress": 0, "message": "Starting calibration"}
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             result = await loop.run_in_executor(None, self._run_calibration_sync, target)
             return result
@@ -426,7 +426,7 @@ class StrobeCalibrationManager:
 
     async def read_diagnostics(self) -> Dict[str, Any]:
         """Read LDO voltage, LED current, and raw ADC values."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             return await loop.run_in_executor(None, self._read_diagnostics_sync)
         except Exception as e:
@@ -486,7 +486,7 @@ class StrobeCalibrationManager:
             return {"status": "error",
                     "message": f"DAC value must be {self.DAC_MIN}-{self.DAC_MAX}"}
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._set_dac_manual_sync, value)
 
     def _set_dac_manual_sync(self, value: int) -> Dict[str, Any]:
@@ -513,7 +513,7 @@ class StrobeCalibrationManager:
 
     async def get_dac_start(self) -> Dict[str, Any]:
         """Run the safe-start sweep and return the boundary DAC value."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._get_dac_start_sync)
 
     def _get_dac_start_sync(self) -> Dict[str, Any]:
@@ -602,8 +602,8 @@ class StrobeCalibrationManager:
             logger.warning("spidev not available, cannot set DAC")
             return False
 
+        spi = spidev.SpiDev()
         try:
-            spi = spidev.SpiDev()
             spi.open(self.SPI_BUS, self.SPI_DAC_DEVICE)
             spi.max_speed_hz = self.SPI_MAX_SPEED_HZ
             spi.mode = 0
@@ -612,7 +612,6 @@ class StrobeCalibrationManager:
             lsb = (dac_value << 4) & 0xF0
             spi.xfer2([msb, lsb])
 
-            spi.close()
             self._dac_applied = True
             logger.info(
                 f"V3 DAC initialized to calibrated value 0x{dac_value:02X}"
@@ -621,3 +620,5 @@ class StrobeCalibrationManager:
         except Exception as e:
             logger.error(f"Failed to initialize V3 DAC: {e}")
             return False
+        finally:
+            spi.close()
