@@ -52,8 +52,13 @@ class StrobeCalibrationManager:
     # Safe fallback DAC value if calibration fails
     SAFE_DAC_VALUE = 0x96
 
-    # If ADC CH0 reads above this with strobe off, something is wrong (blown MOSFET, shorted gate driver)
-    PREFLIGHT_CURRENT_THRESHOLD = 6
+    # If ADC CH0 reads above this with strobe off, something is wrong (blown MOSFET, shorted gate driver).
+    # NOTE: The MOSI line is OR'd through D3 (Schottky) to the gate driver input, so every SPI read
+    # transaction briefly pulses the gate driver, producing a systematic ~12-count (~96 mA) artifact.
+    # On-state current starts at 687 counts (5.5A); threshold of 50 gives 4× margin above SPI noise
+    # and 13× margin below the minimum detectable real fault.
+    PREFLIGHT_CURRENT_THRESHOLD = 50
+    PREFLIGHT_SAMPLES = 5
 
     # LDO voltage bounds
     LDO_MIN_V = 4.5
@@ -234,10 +239,21 @@ class StrobeCalibrationManager:
         Returns:
             (success, final_dac, led_current)
         """
-        # Pre-flight: check for current with strobe off — indicates blown MOSFET or gate driver
-        idle_adc = self._read_adc(self.ADC_CH0_CMD)
+        # Pre-flight: check for current with strobe off — indicates blown MOSFET or gate driver.
+        # Each SPI read briefly toggles MOSI→D3→gate driver, producing a systematic ~12-count
+        # artifact. Average multiple readings for a stable estimate before comparing to threshold.
+        idle_readings = [self._read_adc(self.ADC_CH0_CMD) for _ in range(self.PREFLIGHT_SAMPLES)]
+        idle_adc = round(sum(idle_readings) / len(idle_readings))
+        logger.debug(
+            f"Preflight idle ADC CH0 readings: {idle_readings} → avg={idle_adc} "
+            f"(threshold={self.PREFLIGHT_CURRENT_THRESHOLD})"
+        )
         if idle_adc > self.PREFLIGHT_CURRENT_THRESHOLD:
-            self.status["message"] = f"Current detected with strobe off (ADC CH0={idle_adc}). Likely blown MOSFET or gate driver — check V3 Connector Board."
+            self.status["message"] = (
+                f"Current detected with strobe off (ADC CH0 avg={idle_adc}, "
+                f"threshold={self.PREFLIGHT_CURRENT_THRESHOLD}). "
+                f"Likely blown MOSFET or gate driver — check V3 Connector Board."
+            )
             return False, -1, -1
 
         # Phase 1: find safe starting DAC
