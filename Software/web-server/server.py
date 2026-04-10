@@ -31,9 +31,11 @@ logger = logging.getLogger(__name__)
 
 class PiTracServer:
 
+    _BASE_DIR = Path(__file__).resolve().parent
+
     def __init__(self):
         self.app = FastAPI(title="PiTrac Dashboard")
-        self.templates = Jinja2Templates(directory="templates")
+        self.templates = Jinja2Templates(directory=str(self._BASE_DIR / "templates"))
         self.connection_manager = ConnectionManager()
         self.shot_store = ShotDataStore()
         self.parser = ShotDataParser()
@@ -46,7 +48,7 @@ class PiTracServer:
         self.background_tasks: set[asyncio.Task] = set()
         IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-        self.app.mount("/static", StaticFiles(directory="static"), name="static")
+        self.app.mount("/static", StaticFiles(directory=str(self._BASE_DIR / "static")), name="static")
         self.app.mount("/images", StaticFiles(directory=str(IMAGES_DIR)), name="images")
 
         self._setup_routes()

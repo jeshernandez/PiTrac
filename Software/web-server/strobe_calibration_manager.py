@@ -93,6 +93,8 @@ class StrobeCalibrationManager:
         if DigitalOutputDevice is None:
             raise RuntimeError("gpiozero library not available -- not running on a Raspberry Pi?")
 
+        saved_cwd = os.getcwd()
+
         self._spi_dac = spidev.SpiDev()
         self._spi_dac.open(self.SPI_BUS, self.SPI_DAC_DEVICE)
         self._spi_dac.max_speed_hz = self.SPI_MAX_SPEED_HZ
@@ -104,6 +106,8 @@ class StrobeCalibrationManager:
         self._spi_adc.mode = 0
 
         self._diag_pin = DigitalOutputDevice(self.DIAG_GPIO_PIN)
+
+        os.chdir(saved_cwd)
 
     def _close_hardware(self):
         for name, resource in [("diag", self._diag_pin),
