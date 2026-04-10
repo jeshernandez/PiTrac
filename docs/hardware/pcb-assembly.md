@@ -52,8 +52,13 @@ Original LED array is becoming expensive and challenging to source, this provide
 
 ## Board Versions
 
-### IRLED - (Current)
+### IRLED2 - (Current)
 
+**What changed from OG:**
+Fixed footprint mistake for last minute LED change.
+
+### IRLED - (Depreciated)
+Only work with more expensive LED PN SST-10-IRD-B90H-S810 [https://www.digikey.com/en/products/detail/luminus-devices-inc/SST-10-IRD-B90H-S810/13557593]
 Uses 10 LEDs in a 5S2P configuration to provide substantial illumination.
 
 ## Ordering the PCB
@@ -73,28 +78,9 @@ Both have easy file upload and offer assembly services.
 ### Fabrication and Assembly Files
 
 There are three different PCBs filesets, the combined PCB has two BOM variants determining how much of the assembly you want done by the vendor.
+For smaller order quantities (without assembly) the seperate PCB files is likely to be cheaper.
 
-# V3 Connector + IRLED (Recommended for complete system)
-
-There are two BOM variants due to it being a panel of two PCBs. It is recommended that you only use an assembler for the surface mount IR LEDs.
-It is more cost effective generally to purchase the components and assemble the entirely thru-hole connector by yourself.
-
-```
-Hardware/Fabrication Files/V3 Connector + IRLED Gerbers.zip
-```
-
-**Assemble IRLED (Recommended)**
-```
-Hardware/Assembly Files/V3 Connector + IRLED/IRLED Assembly/*
-```
-
-**Assemble V3 Connector + IRLED**
-**Assembly of V3 Connector with vendor not recommended**
-```
-Hardware/Assembly Files/V3 Connector + IRLED/V3 Connector + IRLED Assembly/*
-```
-
-# V3 Connector Only (Useful if you have LED array already)
+# V3 Connector Only
 
 ```
 Hardware/Fabrication Files/V3 Connector Only Gerbers.zip
@@ -106,14 +92,34 @@ Hardware/Fabrication Files/V3 Connector Only Gerbers.zip
 Hardware/Assembly Files/V3 Connector Only/V3 Connector Only Assembly/*
 ```
 
-# IRLED Only (Need to replace a broken LED array?)
+# IRLED2 Only
 
 ```
-Hardware/Fabrication Files/IRLED Only Gerbers.zip
+Hardware/Fabrication Files/IRLED2 Only Gerbers.zip
 ```
 
 ```
-Hardware/Assembly Files/IRLED Only/IRLED Only Assembly/*
+Hardware/Assembly Files/IRLED2 Only/IRLED2 Only Assembly/*
+```
+
+# V3 Connector + IRLED2
+
+There are two BOM variants due to it being a panel of two PCBs. It is recommended that you only use an assembler for the surface mount IR LEDs.
+It is more cost effective generally to purchase the components and assemble the entirely thru-hole V3 connector by yourself.
+
+```
+Hardware/Fabrication Files/V3 Connector + IRLED2 Gerbers.zip
+```
+
+**Assemble IRLED2 (Recommended)**
+```
+Hardware/Assembly Files/V3 Connector + IRLED2/IRLED2 Assembly/*
+```
+
+**Assemble V3 Connector + IRLED2**
+**Assembly of V3 Connector with vendor not recommended**
+```
+Hardware/Assembly Files/V3 Connector + IRLED2/V3 Connector + IRLED2 Assembly/*
 ```
 
 
@@ -211,7 +217,7 @@ After assembly, must run current calibration before you will be able to capture 
 
 ### Pi GPIO
 
-- **J3:** 8-pin GPIO header for control signals (see assembly guide for pinout)
+- **J3:** 8-pin GPIO header for control signals (see below for Connection Guide for Raspberry Pi 5)
 
 ### LED Output
 
@@ -221,6 +227,31 @@ After assembly, must run current calibration before you will be able to capture 
 ### Optional
 
 - **J6 (USB-A):** Originally for LED strip, but Pi5 has USB 2.0 ports already - this is redundant
+
+## Connection Guide for Raspberry Pi 5
+
+| V3 Connector Board | Raspberry Pi 5 |
+|----------|----------|
+| GND | GND (Pin 39) |
+| DIAG | GPIO 10 (Pin 19) |
+| CS0 | GPIO 18 (Pin 12) |
+| MOSI | GPIO 20 (Pin 38) |
+| MISO | GPIO 19 (Pin 35) |
+| CLK | GPIO 21 (Pin 40) |
+| CS1 | GPIO 17 (Pin 11) |
+| V3P3 | 3V3 (Pin 1) |
+
+| Global Shutter Camera 2 | Raspberry Pi 5 |
+|----------|----------|
+| Trig+ | GPIO 25 (Pin 22) |
+| Trig- | GND (Pin 20) |
+
+| V3 Connector Board | V3 IRLED Board |
+|----------|----------|
+| VIR+ | VIR+ |
+| VIR- | VIR- |
+
+   ![PiTrac V3 Connection Guide]({{ '/assets/images/enclosure_assembly/PiTrac_V3_Connection_Guide.svg' | relative_url }})
 
 ## Configuring PiTrac
 
