@@ -161,9 +161,9 @@ class StrobeCalibrationManager:
         return ((response[1] & 0x0F) << 8) | response[2]
 
     def get_ldo_voltage(self) -> float:
-        """Read the LDO gate voltage via ADC CH1 (2k/1k resistor divider)."""
+        """Read the LDO gate voltage via ADC CH1 (10k/1k resistor divider, R18/R22)."""
         adc_value = self._read_adc(self.ADC_CH1_CMD)
-        return (3.3 / 4096) * adc_value * 3.0
+        return (3.3 / 4096) * adc_value * 11.0
 
     def get_led_current(self) -> float:
         """Pulse DIAG, read LED current sense via ADC CH0 (0.1 ohm sense resistor).
@@ -209,9 +209,11 @@ class StrobeCalibrationManager:
 
         Returns:
             (dac_value, ldo_voltage) — dac_value is -1 if even DAC 0 is unsafe.
+            ldo_voltage is the reading at dac_value (the last good reading).
         """
         dac_start = 0
         ldo = 0.0
+        prev_ldo = 0.0
 
         for i in range(self.DAC_MAX + 1):
             if self._cancel_requested:
@@ -227,8 +229,9 @@ class StrobeCalibrationManager:
 
             if ldo < self.LDO_MIN_V:
                 dac_start = i - 1
-                return dac_start, ldo
+                return dac_start, prev_ldo  # return LDO reading at the safe DAC, not the failing one
 
+            prev_ldo = ldo
             dac_start = i
 
         return dac_start, ldo
@@ -328,6 +331,15 @@ class StrobeCalibrationManager:
 
             ldo = self.get_ldo_voltage()
             if ldo < self.LDO_MIN_V:
+                # LDO dropped below safe level — step back one DAC count.
+                # If led_current was never measured (first iteration), treat
+                # as failure rather than reporting 0.0 A as a valid result.
+                if led_current == 0.0:
+                    self.status["message"] = (
+                        f"LDO dropped below minimum ({ldo:.2f}V) before "
+                        "any current reading could be taken in refinement phase."
+                    )
+                    return False, -1, -1
                 final_dac -= 1
                 break
 

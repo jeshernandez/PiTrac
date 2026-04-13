@@ -782,7 +782,7 @@ class PiTracServer:
 
     async def startup_event(self) -> None:
         logger.info("Starting PiTrac Web Server...")
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         self.calibration_manager.loop = loop
         await self.calibration_manager._replay_pending_updates()
 
