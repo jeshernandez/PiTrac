@@ -52,8 +52,13 @@ class StrobeCalibrationManager:
     # Safe fallback DAC value if calibration fails
     SAFE_DAC_VALUE = 0x96
 
-    # If ADC CH0 reads above this with strobe off, something is wrong (blown MOSFET, shorted gate driver)
-    PREFLIGHT_CURRENT_THRESHOLD = 6
+    # If ADC CH0 reads above this with strobe off, something is wrong (blown MOSFET, shorted gate driver).
+    # NOTE: The MOSI line is OR'd through D3 (Schottky) to the gate driver input, so every SPI read
+    # transaction briefly pulses the gate driver, producing a systematic ~12-count (~96 mA) artifact.
+    # On-state current starts at 687 counts (5.5A); threshold of 50 gives 4× margin above SPI noise
+    # and 13× margin below the minimum detectable real fault.
+    PREFLIGHT_CURRENT_THRESHOLD = 50
+    PREFLIGHT_SAMPLES = 5
 
     # LDO voltage bounds
     LDO_MIN_V = 4.5
@@ -94,20 +99,20 @@ class StrobeCalibrationManager:
             raise RuntimeError("gpiozero library not available -- not running on a Raspberry Pi?")
 
         saved_cwd = os.getcwd()
+        try:
+            self._spi_dac = spidev.SpiDev()
+            self._spi_dac.open(self.SPI_BUS, self.SPI_DAC_DEVICE)
+            self._spi_dac.max_speed_hz = self.SPI_MAX_SPEED_HZ
+            self._spi_dac.mode = 0
 
-        self._spi_dac = spidev.SpiDev()
-        self._spi_dac.open(self.SPI_BUS, self.SPI_DAC_DEVICE)
-        self._spi_dac.max_speed_hz = self.SPI_MAX_SPEED_HZ
-        self._spi_dac.mode = 0
+            self._spi_adc = spidev.SpiDev()
+            self._spi_adc.open(self.SPI_BUS, self.SPI_ADC_DEVICE)
+            self._spi_adc.max_speed_hz = self.SPI_MAX_SPEED_HZ
+            self._spi_adc.mode = 0
 
-        self._spi_adc = spidev.SpiDev()
-        self._spi_adc.open(self.SPI_BUS, self.SPI_ADC_DEVICE)
-        self._spi_adc.max_speed_hz = self.SPI_MAX_SPEED_HZ
-        self._spi_adc.mode = 0
-
-        self._diag_pin = DigitalOutputDevice(self.DIAG_GPIO_PIN)
-
-        os.chdir(saved_cwd)
+            self._diag_pin = DigitalOutputDevice(self.DIAG_GPIO_PIN)
+        finally:
+            os.chdir(saved_cwd)
 
     def _close_hardware(self):
         for name, resource in [("diag", self._diag_pin),
@@ -156,9 +161,9 @@ class StrobeCalibrationManager:
         return ((response[1] & 0x0F) << 8) | response[2]
 
     def get_ldo_voltage(self) -> float:
-        """Read the LDO gate voltage via ADC CH1 (2k/1k resistor divider)."""
+        """Read the LDO gate voltage via ADC CH1 (10k/1k resistor divider, R18/R22)."""
         adc_value = self._read_adc(self.ADC_CH1_CMD)
-        return (3.3 / 4096) * adc_value * 3.0
+        return (3.3 / 4096) * adc_value * 11.0
 
     def get_led_current(self) -> float:
         """Pulse DIAG, read LED current sense via ADC CH0 (0.1 ohm sense resistor).
@@ -204,9 +209,11 @@ class StrobeCalibrationManager:
 
         Returns:
             (dac_value, ldo_voltage) — dac_value is -1 if even DAC 0 is unsafe.
+            ldo_voltage is the reading at dac_value (the last good reading).
         """
         dac_start = 0
         ldo = 0.0
+        prev_ldo = 0.0
 
         for i in range(self.DAC_MAX + 1):
             if self._cancel_requested:
@@ -222,8 +229,9 @@ class StrobeCalibrationManager:
 
             if ldo < self.LDO_MIN_V:
                 dac_start = i - 1
-                return dac_start, ldo
+                return dac_start, prev_ldo  # return LDO reading at the safe DAC, not the failing one
 
+            prev_ldo = ldo
             dac_start = i
 
         return dac_start, ldo
@@ -234,10 +242,21 @@ class StrobeCalibrationManager:
         Returns:
             (success, final_dac, led_current)
         """
-        # Pre-flight: check for current with strobe off — indicates blown MOSFET or gate driver
-        idle_adc = self._read_adc(self.ADC_CH0_CMD)
+        # Pre-flight: check for current with strobe off — indicates blown MOSFET or gate driver.
+        # Each SPI read briefly toggles MOSI→D3→gate driver, producing a systematic ~12-count
+        # artifact. Average multiple readings for a stable estimate before comparing to threshold.
+        idle_readings = [self._read_adc(self.ADC_CH0_CMD) for _ in range(self.PREFLIGHT_SAMPLES)]
+        idle_adc = round(sum(idle_readings) / len(idle_readings))
+        logger.debug(
+            f"Preflight idle ADC CH0 readings: {idle_readings} → avg={idle_adc} "
+            f"(threshold={self.PREFLIGHT_CURRENT_THRESHOLD})"
+        )
         if idle_adc > self.PREFLIGHT_CURRENT_THRESHOLD:
-            self.status["message"] = f"Current detected with strobe off (ADC CH0={idle_adc}). Likely blown MOSFET or gate driver — check V3 Connector Board."
+            self.status["message"] = (
+                f"Current detected with strobe off (ADC CH0 avg={idle_adc}, "
+                f"threshold={self.PREFLIGHT_CURRENT_THRESHOLD}). "
+                f"Likely blown MOSFET or gate driver — check V3 Connector Board."
+            )
             return False, -1, -1
 
         # Phase 1: find safe starting DAC
@@ -312,6 +331,15 @@ class StrobeCalibrationManager:
 
             ldo = self.get_ldo_voltage()
             if ldo < self.LDO_MIN_V:
+                # LDO dropped below safe level — step back one DAC count.
+                # If led_current was never measured (first iteration), treat
+                # as failure rather than reporting 0.0 A as a valid result.
+                if led_current == 0.0:
+                    self.status["message"] = (
+                        f"LDO dropped below minimum ({ldo:.2f}V) before "
+                        "any current reading could be taken in refinement phase."
+                    )
+                    return False, -1, -1
                 final_dac -= 1
                 break
 
@@ -370,7 +398,7 @@ class StrobeCalibrationManager:
         self._cancel_requested = False
         self.status = {"state": "calibrating", "progress": 0, "message": "Starting calibration"}
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             result = await loop.run_in_executor(None, self._run_calibration_sync, target)
             return result
@@ -426,7 +454,7 @@ class StrobeCalibrationManager:
 
     async def read_diagnostics(self) -> Dict[str, Any]:
         """Read LDO voltage, LED current, and raw ADC values."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             return await loop.run_in_executor(None, self._read_diagnostics_sync)
         except Exception as e:
@@ -486,7 +514,7 @@ class StrobeCalibrationManager:
             return {"status": "error",
                     "message": f"DAC value must be {self.DAC_MIN}-{self.DAC_MAX}"}
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._set_dac_manual_sync, value)
 
     def _set_dac_manual_sync(self, value: int) -> Dict[str, Any]:
@@ -513,7 +541,7 @@ class StrobeCalibrationManager:
 
     async def get_dac_start(self) -> Dict[str, Any]:
         """Run the safe-start sweep and return the boundary DAC value."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._get_dac_start_sync)
 
     def _get_dac_start_sync(self) -> Dict[str, Any]:
@@ -602,8 +630,8 @@ class StrobeCalibrationManager:
             logger.warning("spidev not available, cannot set DAC")
             return False
 
+        spi = spidev.SpiDev()
         try:
-            spi = spidev.SpiDev()
             spi.open(self.SPI_BUS, self.SPI_DAC_DEVICE)
             spi.max_speed_hz = self.SPI_MAX_SPEED_HZ
             spi.mode = 0
@@ -612,7 +640,6 @@ class StrobeCalibrationManager:
             lsb = (dac_value << 4) & 0xF0
             spi.xfer2([msb, lsb])
 
-            spi.close()
             self._dac_applied = True
             logger.info(
                 f"V3 DAC initialized to calibrated value 0x{dac_value:02X}"
@@ -621,3 +648,5 @@ class StrobeCalibrationManager:
         except Exception as e:
             logger.error(f"Failed to initialize V3 DAC: {e}")
             return False
+        finally:
+            spi.close()
