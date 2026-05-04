@@ -279,11 +279,10 @@ class CalibrationManager:
                 exit_code = process_task.result()
                 logger.info(f"Session {session_id}: Process exited with code {exit_code}")
 
-                api_result = (
-                    api_task.result()
-                    if api_task.done()
-                    else {"focal_length_received": False, "angles_received": False, "completed": False}
-                )
+                if api_task.done() and not api_task.cancelled():
+                    api_result = api_task.result()
+                else:
+                    api_result = {"focal_length_received": False, "angles_received": False, "completed": False}
 
                 return {
                     "completed": exit_code == 0,
@@ -472,9 +471,10 @@ class CalibrationManager:
             if camera in self.current_processes:
                 raise Exception(f"A calibration process is already running for {camera}")
 
+            log_fh = open(log_file, "w")
             try:
                 process = await asyncio.create_subprocess_exec(
-                    *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, env=env
+                    *cmd, stdout=log_fh, stderr=asyncio.subprocess.STDOUT, env=env
                 )
 
                 self.current_processes[camera] = process
@@ -485,21 +485,30 @@ class CalibrationManager:
                 async with self._calibration_lock:
                     self._active_calibrations.pop(session_id, None)
                 raise
+            finally:
+                log_fh.close()
 
         try:
             completion_result = await self.wait_for_calibration_completion(process, session_id, timeout=timeout)
 
             logger.info(f"{camera}: Completion result: {completion_result}")
 
-            output = ""
-            try:
-                if process.stdout and not process.stdout.at_eof():
-                    remaining_output = await asyncio.wait_for(process.stdout.read(), timeout=2.0)
-                    output = remaining_output.decode() if remaining_output else ""
-            except Exception as e:
-                logger.debug(f"Could not read remaining output: {e}")
+            if process.returncode is None:
+                try:
+                    process.terminate()
+                    await asyncio.wait_for(process.wait(), timeout=5.0)
+                except asyncio.TimeoutError:
+                    process.kill()
+                    await process.wait()
+                except ProcessLookupError:
+                    pass
 
-            # Check if output contains failure messages even if exit code was 0
+            try:
+                with open(log_file, "r") as f:
+                    output = f.read()
+            except OSError:
+                output = ""
+
             if output and self._check_calibration_failed(output):
                 logger.warning(
                     f"{camera}: Detected calibration failure in output despite exit code {process.returncode}"
@@ -507,11 +516,11 @@ class CalibrationManager:
                 completion_result["completed"] = False
                 completion_result["method"] = "output_parse"
 
-            with open(log_file, "w") as f:
+            with open(log_file, "a") as f:
+                f.write(f"\n--- Completion ---\n")
                 f.write(f"Completion method: {completion_result['method']}\n")
                 f.write(f"API success: {completion_result['api_success']}\n")
                 f.write(f"Process exit code: {completion_result['process_exit_code']}\n")
-                f.write(f"\n--- Output ---\n{output}")
 
             if completion_result["completed"]:
                 self.calibration_status[camera]["status"] = "completed"
@@ -1404,6 +1413,7 @@ class CalibrationManager:
             "--tuning-file", RPICAM_TUNING_FILE,
         ]
 
+        process = None
         try:
             process = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -1436,6 +1446,16 @@ class CalibrationManager:
         except Exception as e:
             logger.error(f"Error capturing image: {e}")
             return None
+        finally:
+            if process is not None and process.returncode is None:
+                try:
+                    process.terminate()
+                    await asyncio.wait_for(process.wait(), timeout=5.0)
+                except asyncio.TimeoutError:
+                    process.kill()
+                    await process.wait()
+                except ProcessLookupError:
+                    pass
 
     def _save_distortion_results(
         self, camera: str, camera_matrix, dist_coeffs, rms_error: float
